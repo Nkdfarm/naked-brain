@@ -1242,7 +1242,7 @@
   }
 
   // ─── VERSION CHECK ────────────────────────────────────────
-  const CURRENT_VERSION = '0.11.115';
+  const CURRENT_VERSION = '0.11.116';
   let updateAvailable = false;
 
   let lastSaid = null, notYetAt = 0;
@@ -1406,6 +1406,7 @@
   // Same idea as the console's Settings › Version log (release_note): one line per
   // release, what it changed, in plain words. Add the new release on top with each bump.
   const VERSION_LOG = [
+    ['0.11.116', '2026-10-05', 'Naked Brain moves to brain.nkd.farm', 'The app has a new address: brain.nkd.farm. At the old address a bar at the top says so: press Force send so nothing stays on this phone, then open brain.nkd.farm, sign in and install it. The phone sees the new address as a new app, so it asks for the sign-in once more.'],
     ['0.11.115', '2026-10-05', 'The people on a task in the order of the Tasks board', 'When a task has more than one person, their faces and names follow the order of the people column of the Tasks board in Naked Heart.'],
     ['0.11.114', '2026-10-05', 'Faces on the tasks, in the order of the Tasks board', 'Each task shows the face of who is responsible: their picture, or a figure in their own colour when they have none, the same colour as in Naked Heart and never the same for two people. The list of people above the day follows the order set on the Tasks board in Naked Heart, with the chosen person\'s face beside it. Pictures are fetched once and kept on the phone.'],
     ['0.11.113', '2026-10-05', 'An extra scouting is not closed over unsent photos', 'Swiping an Extra scouting card to done or cancelled now stops when one of its zones still holds photos that were not sent: it says how many and opens the zone, so Finish sends them first. Before, the task closed and the photos stayed in no report.'],
@@ -13834,6 +13835,21 @@ function sopOpen() {
 
 window.sopOpen = sopOpen;
 if (document.body.classList.contains('mode-sop') && !document.body.classList.contains('src-cloud')) sopOpen();
+})();
+</script>
+<script>
+// 0.11.116 — Naked Brain moved to https://brain.nkd.farm/ (5 Oct 2026). A new address is a new app to the phone: what
+// still waits here (reports, photos, drafts) cannot be reached from there. So the copy still served at the old
+// github.io address says it on every screen: empty this phone with Force send, then open the new address.
+(function () {
+  if (!/(^|\.)github\.io$/i.test(location.hostname)) return;
+  var bar = document.createElement('div');
+  bar.id = 'nb-moved';
+  bar.setAttribute('role', 'alert');
+  bar.style.cssText = 'background:#b45309;color:#fff;padding:10px 14px;font:600 14px/1.4 Inter,system-ui,sans-serif;text-align:center;position:relative;z-index:50';
+  bar.innerHTML = 'Naked Brain has moved. 1 · Press <b>Force send</b> here, so nothing stays on this phone. '
+    + '2 · Open <a href="https://brain.nkd.farm/" style="color:#fff;text-decoration:underline;font-weight:800">brain.nkd.farm</a>, sign in and install it.';
+  document.body.insertBefore(bar, document.body.firstChild);
 })();
 </script>
 </body>
