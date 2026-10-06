@@ -2,7 +2,7 @@
 <html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#f3f3f5" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#0b0b0d" media="(prefers-color-scheme: dark)">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -456,6 +456,13 @@
     .app-tab { flex: 1; min-height: 44px; border-radius: var(--radius-full); font-weight: 700; font-size: var(--text-sm); color: var(--text-muted); }
     .app-tab.active { background: var(--primary); color: var(--text-inverse); }
     .app-view { display: none; }
+    /* 0.11.117: nothing is ever wider than the phone (clip makes no scroll box, so the sticky bars still stick) */
+    html { overflow-x: hidden; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+    body { overflow-x: clip; max-width: 100vw; touch-action: pan-x pan-y; }
+    #viewFarmbox .fb-sendall { flex: none; }
+    /* the sign-in screen is only the sign-in: no Force send, no refresh, no name button */
+    #viewFarmbox:has(#fb-auth:not(.hidden)) .fb-sendall, #viewFarmbox:has(#fb-auth:not(.hidden)) #fb-sync { display: none; }
+    body.mode-sop:has(#fb-auth:not(.hidden)) #authorBtn { visibility: hidden; }
     body.mode-sop #viewSop { display: block; }
     body:not(.mode-capture) .tab-bar, body:not(.mode-capture) #main-content, body:not(.mode-capture) .submit-area { display: none; }
 
@@ -1242,7 +1249,7 @@
   }
 
   // ─── VERSION CHECK ────────────────────────────────────────
-  const CURRENT_VERSION = '0.11.116';
+  const CURRENT_VERSION = '0.11.117';
   let updateAvailable = false;
 
   let lastSaid = null, notYetAt = 0;
@@ -1406,6 +1413,7 @@
   // Same idea as the console's Settings › Version log (release_note): one line per
   // release, what it changed, in plain words. Add the new release on top with each bump.
   const VERSION_LOG = [
+    ['0.11.117', '2026-10-06', 'One sign-in, and a phone app again', 'The app opens on one sign-in: your FarmBox account, the same e-mail and password as in Naked Heart. No team password and no name card at the start — your name comes from the people list — and the Notion / cloud choice is gone from Settings: Tasks are the platform\'s for everybody. Capture asks the team password once, when it is first opened. The page keeps to the phone\'s width: no pinch-zoom, no zoom when a field is tapped, no sliding sideways. The Sign in button says what it is doing.'],
     ['0.11.116', '2026-10-05', 'Naked Brain moves to brain.nkd.farm', 'The app has a new address: brain.nkd.farm. At the old address a bar at the top says so: press Force send so nothing stays on this phone, then open brain.nkd.farm, sign in and install it. The phone sees the new address as a new app, so it asks for the sign-in once more.'],
     ['0.11.115', '2026-10-05', 'The people on a task in the order of the Tasks board', 'When a task has more than one person, their faces and names follow the order of the people column of the Tasks board in Naked Heart.'],
     ['0.11.114', '2026-10-05', 'Faces on the tasks, in the order of the Tasks board', 'Each task shows the face of who is responsible: their picture, or a figure in their own colour when they have none, the same colour as in Naked Heart and never the same for two people. The list of people above the day follows the order set on the Tasks board in Naked Heart, with the chosen person\'s face beside it. Pictures are fetched once and kept on the phone.'],
@@ -1657,7 +1665,7 @@ async function tryUnlockApp() {
       setAppPassword(pw);
       hidePasswordGate();
       if (typeof ensureAuthor === 'function') ensureAuthor();
-      if (window.sopOpen && document.body.classList.contains('mode-sop')) window.sopOpen();
+      if (window.sopOpen && document.body.classList.contains('mode-sop') && !document.body.classList.contains('src-cloud')) window.sopOpen();
     } else {
       err.textContent = 'Wrong password — try again.';
       err.style.display = 'block';
@@ -1720,7 +1728,7 @@ async function cfFetch(url, options = {}) {
 // FarmBox cloud, where every person signs in with their own account. Capture
 // still goes through the Worker, so the gate appears when that tab is opened.
 function appPasswordNeeded() {
-  return !getAppPassword() && localStorage.getItem('fb_source') !== 'cloud';
+  return false;   // 0.11.117: the app opens on the FarmBox sign-in; Capture asks the team password when it is opened
 }
 function ensureAppPassword() {
   if (!getAppPassword()) showPasswordGate();
@@ -1806,7 +1814,7 @@ document.addEventListener('DOMContentLoaded', () => {
   <main class="sop-main" id="fb-main">
     <!-- sign in -->
     <div id="fb-auth" class="doc hidden">
-      <div class="hero"><h1>Sign in</h1><p>Your FarmBox account. One account per person — no shared password.</p></div>
+      <div class="hero"><h1>Sign in</h1><p>Your FarmBox account — the same e-mail and password as in Naked Heart.</p></div>
       <form id="fb-authForm" class="set-group" autocomplete="on">
         <div class="field"><label for="fb-email">E-mail</label>
           <input id="fb-email" type="email" inputmode="email" autocomplete="username" required></div>
@@ -2092,13 +2100,13 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="config-hint">A skin is a small design-token file (skins/*.json) with the colours, corner radius and font — the same values a Figma variables export gives. It never changes the layout.</div>
     </div>
 
-    <div class="set-title">Data source</div>
+    <div class="set-title">Account</div>
     <div class="set-group">
-      <div class="segmented" role="group" aria-label="Data source">
+      <div class="segmented" role="group" aria-label="Data source" style="display:none">
         <button type="button" data-source="notion">Notion</button>
         <button type="button" data-source="cloud">FarmBox cloud</button>
       </div>
-      <div class="config-hint" id="fb-sourceHint">Notion is the current, proven path. FarmBox cloud is the new one: you sign in with your own account and the Tasks tab shows the week planned for your farm. Both can be switched at any time; nothing is lost either way.</div>
+      <div class="config-hint" id="fb-sourceHint">You sign in with your own FarmBox account — the same e-mail and password as in Naked Heart. Capture asks the team password once, the first time it is opened.</div>
       <div class="set-row" id="fb-accountRow" style="margin-top:var(--space-3);display:none">
         <span id="fb-account" style="color:var(--text-muted)"></span>
         <button type="button" class="btn-copy" id="fb-signout">Sign out</button>
@@ -7108,6 +7116,11 @@ function sopOpen() {
       // who is signed in, from every sync (0.11.103): a phone used by two people kept the first one — an extra
       // scouting of 4 Oct was made under one person's name while its photos were another's
       if (d.me !== undefined) await setKV('me', d.me || null);
+      // 0.11.117: no name card — the name is the signed-in person's, from the people database
+      try {
+        const mine = (d.workers || []).find(x => x.id === d.me);
+        if (mine && mine.name && typeof setAuthor === 'function' && typeof getAuthor === 'function' && getAuthor() !== mine.name) setAuthor(mine.name);
+      } catch (e) { /* the name stays as it was */ }
       if (Array.isArray(d.task_times)) await setKV('task_times', d.task_times);   // FarmBox 0161
       if (d.clock && !(await all('outbox')).some(r => r.payload && r.payload.__clock)) await setKV('clock', { ...d.clock, at: Date.now() });
       // sister units (FarmBox 0126): the tasks of every unit of the group come in one sync
@@ -13763,13 +13776,15 @@ function sopOpen() {
   $('authForm').addEventListener('submit', async e => {
     e.preventDefault();
     const btn = $('signin'); btn.disabled = true; $('authErr').textContent = '';
+    btn.textContent = 'Signing in…';
     try {
       await signIn($('email').value.trim(), $('pass').value);
       $('pass').value = '';
+      btn.textContent = 'Reading your tasks…';
       await sync(true);
     } catch (err) {
       $('authErr').textContent = String(err.message || err);
-    } finally { btn.disabled = false; }
+    } finally { btn.disabled = false; btn.textContent = 'Sign in'; }
   });
   $('sync').addEventListener('click', () => sync(false));
   $('sendall').addEventListener('click', () => sendAllNow());
@@ -13829,7 +13844,7 @@ function sopOpen() {
   addEventListener('online', () => liveOpen());
 
   window.fbOpen = fbOpen;
-  setSource(localStorage.getItem(SOURCE_KEY) || 'notion');
+  setSource('cloud');   // 0.11.117: Tasks are the platform's, for everybody — the Notion / cloud choice is gone from Settings
   netPill();
 })();
 
