@@ -1249,7 +1249,7 @@
   }
 
   // ─── VERSION CHECK ────────────────────────────────────────
-  const CURRENT_VERSION = '0.11.117';
+  const CURRENT_VERSION = '0.11.118';
   let updateAvailable = false;
 
   let lastSaid = null, notYetAt = 0;
@@ -1413,6 +1413,7 @@
   // Same idea as the console's Settings › Version log (release_note): one line per
   // release, what it changed, in plain words. Add the new release on top with each bump.
   const VERSION_LOG = [
+    ['0.11.118', '2026-10-06', 'Capture with the same sign-in', 'Capture no longer asks the team password: notes, photos and voice notes go through the platform on your own FarmBox sign-in. A phone that is not signed in, or a farm whose Notion pages the platform cannot see yet, keeps the team password as before.'],
     ['0.11.117', '2026-10-06', 'One sign-in, and a phone app again', 'The app opens on one sign-in: your FarmBox account, the same e-mail and password as in Naked Heart. No team password and no name card at the start — your name comes from the people list — and the Notion / cloud choice is gone from Settings: Tasks are the platform\'s for everybody. Capture asks the team password once, when it is first opened. The page keeps to the phone\'s width: no pinch-zoom, no zoom when a field is tapped, no sliding sideways. The Sign in button says what it is doing.'],
     ['0.11.116', '2026-10-05', 'Naked Brain moves to brain.nkd.farm', 'The app has a new address: brain.nkd.farm. At the old address a bar at the top says so: press Force send so nothing stays on this phone, then open brain.nkd.farm, sign in and install it. The phone sees the new address as a new app, so it asks for the sign-in once more.'],
     ['0.11.115', '2026-10-05', 'The people on a task in the order of the Tasks board', 'When a task has more than one person, their faces and names follow the order of the people column of the Tasks board in Naked Heart.'],
@@ -1681,9 +1682,53 @@ async function tryUnlockApp() {
 }
 
 // Wrapper for all Cloudflare proxy calls — injects password, handles 401, adds timeout
+// 0.11.118 — Capture behind the person's own sign-in. With a FarmBox session, Notion and Groq are reached through the
+// platform (edge function `capture`, which holds the keys): no team password. Which way this phone goes is decided once
+// (localStorage nb_capture_via): 'platform' when the platform's Notion key can see this phone's Capture database;
+// 'worker:<time>' when it cannot, or the function is not there — then the Cloudflare Worker and its password as before,
+// asked again after a day. A phone that is not signed in always uses the Worker.
+let captureProbe = null;
+async function captureDecide() {
+  let who = null;
+  try { who = typeof window.fbBearer === 'function' ? await window.fbBearer() : null; } catch (e) { who = null; }
+  if (!who) return { via: 'worker', who: null };
+  let kept = '';
+  try { kept = localStorage.getItem('nb_capture_via') || ''; } catch (e) { kept = ''; }
+  if (kept === 'platform') return { via: 'platform', who };
+  if (kept.startsWith('worker:') && Date.now() - Number(kept.slice(7)) < 24 * 3600 * 1000) return { via: 'worker', who };
+  captureProbe = captureProbe || (async () => {
+    try {
+      const ids = (typeof TAB_DB === 'object' ? Object.values(TAB_DB) : []).map(id => document.getElementById(id)?.value.trim()).filter(Boolean);
+      const path = ids.length ? '/v1/databases/' + ids[0] : '/ping';
+      const ctl = new AbortController(), tid = setTimeout(() => ctl.abort(), 15000);
+      const res = await fetch(who.base + '/functions/v1/capture' + path, { signal: ctl.signal,
+        headers: { Authorization: 'Bearer ' + who.token, apikey: who.apikey, 'Notion-Version': '2022-06-28' } }).finally(() => clearTimeout(tid));
+      if (res.ok) { try { localStorage.setItem('nb_capture_via', 'platform'); } catch (e) {} return 'platform'; }
+      // 401 with no X-Upstream is the session, not the route: nothing decided. Anything else: the Worker, for a day.
+      if (res.status === 401 && !res.headers.get('X-Upstream')) return null;
+      try { localStorage.setItem('nb_capture_via', 'worker:' + Date.now()); } catch (e) {}
+      return 'worker';
+    } catch (e) { return null; }                       // no signal: decided at the next call
+    finally { setTimeout(() => { captureProbe = null; }, 0); }
+  })();
+  const via = await captureProbe;
+  return { via: via || 'worker', who };
+}
+// Capture's tab is opened: the team password is asked only when this phone still goes through the Worker
+async function captureGate() {
+  const d = await captureDecide();
+  if (d.via !== 'platform') ensureAppPassword();
+}
+
 async function cfFetch(url, options = {}) {
   const headers = new Headers(options.headers || {});
-  headers.set('X-App-Password', getAppPassword());
+  const route = String(url).startsWith(PROXY) ? await captureDecide() : { via: 'worker', who: null };
+  const viaPlatform = route.via === 'platform' && !!route.who;
+  if (viaPlatform) {
+    url = route.who.base + '/functions/v1/capture' + String(url).slice(PROXY.length);
+    headers.set('Authorization', 'Bearer ' + route.who.token);
+    headers.set('apikey', route.who.apikey);
+  } else headers.set('X-App-Password', getAppPassword());
   const controller = new AbortController();
   const tid = setTimeout(() => controller.abort(), 120000); // 2-min hard cap (iOS hangs otherwise)
 
@@ -1712,6 +1757,7 @@ async function cfFetch(url, options = {}) {
     if (res.status === 401 && res.headers.get('X-Upstream')) {
       throw new Error(`${res.headers.get('X-Upstream')} refused the server's key — tell the admin (the app password is fine)`);
     }
+    if (res.status === 401 && viaPlatform) throw new Error('Your sign-in has ended — sign in again on the Tasks tab.');
     if (res.status === 401) {
       clearAppPassword();
       showPasswordGate();
@@ -2106,7 +2152,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <button type="button" data-source="notion">Notion</button>
         <button type="button" data-source="cloud">FarmBox cloud</button>
       </div>
-      <div class="config-hint" id="fb-sourceHint">You sign in with your own FarmBox account — the same e-mail and password as in Naked Heart. Capture asks the team password once, the first time it is opened.</div>
+      <div class="config-hint" id="fb-sourceHint">You sign in with your own FarmBox account — the same e-mail and password as in Naked Heart. Capture uses the same sign-in.</div>
       <div class="set-row" id="fb-accountRow" style="margin-top:var(--space-3);display:none">
         <span id="fb-account" style="color:var(--text-muted)"></span>
         <button type="button" class="btn-copy" id="fb-signout">Sign out</button>
@@ -2727,7 +2773,7 @@ function setAppMode(mode) {
     if (document.body.classList.contains('src-cloud')) { if (window.fbOpen) window.fbOpen(); }
     else if (window.sopOpen) window.sopOpen();
   }
-  if (mode === 'capture') ensureAppPassword();   // Capture still runs on the Worker
+  if (mode === 'capture') captureGate();   // 0.11.118: the team password only where this phone still goes through the Worker
 }
 document.querySelectorAll('.app-tab').forEach(btn =>
   btn.addEventListener('click', () => setAppMode(btn.dataset.mode)));
@@ -7058,6 +7104,12 @@ function sopOpen() {
     saveSession(await r.json());
     return true;
   }
+  // 0.11.118: Capture runs on the person's own session (edge function `capture`) — this is how it asks for it
+  window.fbBearer = async () => {
+    if (!session) return null;
+    try { if (session.expires_at && Date.now() > session.expires_at - 30000) await refresh(); } catch (e) { /* tried */ }
+    return session ? { token: session.access_token, apikey: ANON, base: URL_BASE } : null;
+  };
   // Every call to Supabase goes through here: it refreshes an expired token once.
   async function api(path, opts = {}, retry = true) {
     if (!session) throw new Error('signed out');
