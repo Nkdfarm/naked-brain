@@ -1249,7 +1249,7 @@
   }
 
   // ─── VERSION CHECK ────────────────────────────────────────
-  const CURRENT_VERSION = '0.11.118';
+  const CURRENT_VERSION = '0.11.119';
   let updateAvailable = false;
 
   let lastSaid = null, notYetAt = 0;
@@ -1413,6 +1413,7 @@
   // Same idea as the console's Settings › Version log (release_note): one line per
   // release, what it changed, in plain words. Add the new release on top with each bump.
   const VERSION_LOG = [
+    ['0.11.119', '2026-10-10', 'A scouting photo is uploaded once', 'Tapping Finish a second or two after a photo could send that photo twice: one copy in the report, one left over under Unfiled photos in Naked Heart. Finish now waits a moment for the photo on its way up, so it goes once. Force send no longer uploads again a photo that is already up.'],
     ['0.11.118', '2026-10-06', 'Capture with the same sign-in', 'Capture no longer asks the team password: notes, photos and voice notes go through the platform on your own FarmBox sign-in. A phone that is not signed in, or a farm whose Notion pages the platform cannot see yet, keeps the team password as before.'],
     ['0.11.117', '2026-10-06', 'One sign-in, and a phone app again', 'The app opens on one sign-in: your FarmBox account, the same e-mail and password as in Naked Heart. No team password and no name card at the start — your name comes from the people list — and the Notion / cloud choice is gone from Settings: Tasks are the platform\'s for everybody. Capture asks the team password once, when it is first opened. The page keeps to the phone\'s width: no pinch-zoom, no zoom when a field is tapped, no sliding sideways. The Sign in button says what it is doing.'],
     ['0.11.116', '2026-10-05', 'Naked Brain moves to brain.nkd.farm', 'The app has a new address: brain.nkd.farm. At the old address a bar at the top says so: press Force send so nothing stays on this phone, then open brain.nkd.farm, sign in and install it. The phone sees the new address as a new app, so it asks for the sign-in once more.'],
@@ -10172,23 +10173,32 @@ function sopOpen() {
     // a full photo goes up as soon as it is taken (0.11.99): on 4 Oct an extra scouting's last three full photos were
     // still waiting for Finish when the phone closed the app. One at a time, on the connection Settings allows; what
     // does not go up now goes after the report, as before. The path travels with the report.
-    const upBusy = new WeakSet(); let upChain = Promise.resolve();
+    const upBusy = new WeakSet(); let upChain = Promise.resolve(), upNow = null;
     function upSoon(holder, kind, name) {
       const R = run;
       upChain = upChain.then(async () => {
-        if (run !== R || R.edit || !(holder.full instanceof Blob) || holder.photo_path || upBusy.has(holder)) return;
+        if (run !== R || R.edit || R.upStop || !(holder.full instanceof Blob) || holder.photo_path || upBusy.has(holder)) return;
         if (!session || !navigator.onLine || !uploadAllowed()) return;
         upBusy.add(holder);
         const t = R.task.members[0] || {};
         const path = `${t.farm_id || farm.id}/${R.clientId}/${kind}-${String(name).replace(/[^A-Za-z0-9]/g, '')}-${Date.now()}.jpg`;
+        const ctl = upNow = new AbortController();
         try {
-          await api('/storage/v1/object/evidence/' + path, { method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: holder.full });
+          await api('/storage/v1/object/evidence/' + path, { method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: holder.full, signal: ctl.signal });
           holder.photo_path = path;
           if (run === R) { saveScDraft(); R.sc?.paintSafe?.(); }
         } catch (e) { /* after the report, from the outbox */ }
-        finally { upBusy.delete(holder); }
+        finally { upBusy.delete(holder); if (upNow === ctl) upNow = null; }
       }).catch(() => {});
     }
+    // Finish waits a moment for the photo on its way up (0.11.119): on 7 Oct Finish came 2 s after a photo, found it
+    // with no path yet and queued it again — the same photo twice in storage, one of them in no report. A photo still
+    // not up after the wait is stopped here and goes from the outbox, once.
+    sc.upSettle = async (R, ms) => {
+      R.upStop = true;
+      const t = setTimeout(() => { try { upNow?.abort(); } catch (e) { /* gone */ } }, ms);
+      try { await upChain; } finally { clearTimeout(t); }
+    };
 
     async function shoot(section, forTrap, fromGallery) {
       const hint = section === 'trap'
@@ -12158,6 +12168,7 @@ function sopOpen() {
     $('finish').disabled = true;
     $('runHint').textContent = 'Saving…';
     try {
+    if (sc.upSettle) await sc.upSettle(R, 4000);
     const finished = new Date().toISOString();
     const t = run.edit && !run.resume ? run.task.members[0] : (run.task.members.find(m => m.status !== 'done') || run.task.members[0]);
     const cid = run.edit?.run?.client_run_id || run.clientId;
@@ -12216,6 +12227,7 @@ function sopOpen() {
     R.sentOk = true;
     if (run === R) backFromRun();        // back to the day's zones (0.11.67)
     } catch (e) {
+      R.upStop = false;
       $('finish').disabled = false;
       $('runHint').textContent = 'Could not save: ' + String(e.message || e).slice(0, 100);
       showToast('Could not save — ' + String(e.message || e).slice(0, 60), 'error');
@@ -13656,7 +13668,7 @@ function sopOpen() {
             await api('/rest/v1/rpc/submit_run', { method: 'POST', body: JSON.stringify({ p: payload }) });
             // the full photos follow through the outbox; the draft keeps what it sent and the run it went to
             const ups = [...sides.filter(([, , S]) => !S.photo_path).map(([q, k, S]) => ({ kind: 'trap', ref: `${q.code}:${k}`, blob: S.full })),
-                         ...go.map(q => ({ kind: 'observation', ref: q.ref, blob: q.full }))];
+                         ...go.filter(q => !q.photo_path).map(q => ({ kind: 'observation', ref: q.ref, blob: q.full }))];
             await putAll('outbox', ups.map((u, n) => ({ id: `${cid}~up-${Date.now().toString(36)}-s${String(n).padStart(3, '0')}`, tries: 0, at: Date.now() + n,
               payload: { __upload: true, client_run_id: `${cid}~up-s${n}`, run_client_id: cid, farm_id: payload.farm_id, kind: u.kind, ref: u.ref, blob: u.blob } })));
             go.forEach(q => { q.sent = true; });
