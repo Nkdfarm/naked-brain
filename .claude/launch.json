@@ -4,7 +4,7 @@
     {
       "name": "Brain+",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["serve", "-l", "3000", "C:\\Users\\Francesco\\Ugly200"],
+      "runtimeArgs": ["serve", "-l", "3000", "C:\\Users\\Francesco\\FarmBox\\Ugly200"],
       "port": 3000
     }
   ]
