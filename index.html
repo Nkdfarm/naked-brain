@@ -1251,7 +1251,7 @@
   }
 
   // ─── VERSION CHECK ────────────────────────────────────────
-  const CURRENT_VERSION = '0.11.123';
+  const CURRENT_VERSION = '0.11.124';
   let updateAvailable = false;
 
   let lastSaid = null, notYetAt = 0;
@@ -1415,6 +1415,7 @@
   // Same idea as the console's Settings › Version log (release_note): one line per
   // release, what it changed, in plain words. Add the new release on top with each bump.
   const VERSION_LOG = [
+    ['0.11.124', '2026-10-12', 'No Ideas tab', 'Capture no longer has the Ideas tab: it was never used. The four tabs left are Ugly200, SoP, Daily and SU reports. An idea to improve FarmBox goes in SU reports.'],
     ['0.11.123', '2026-10-12', 'People off the task pages', 'A person can now be in the team without being on the task pages (a tick on the Team page of Naked Heart). They sign in like everybody, see every task and can do any of them, but their name is no longer in the list above the tasks, and the plan gives them no work.'],
     ['0.11.122', '2026-10-12', 'A note about the whole greenhouse', 'The scouting has a new card on top of its zones: All, the whole greenhouse. Open it to say or write what you saw across the greenhouse today, in your own words; it goes in the daily report in Naked Heart, above the zones. It is optional, it is in the planned scouting and in an extra scouting, and it works without signal. SU reports now says what it is for: ideas to improve FarmBox.'],
     ['0.11.121', '2026-10-12', 'SU reports: your own title', 'The SU Live tab is now called SU reports. Its Title starts empty and you write it yourself, a few words saying what the report is about; the report is not sent without one. Daily is unchanged.'],
@@ -1918,7 +1919,6 @@ document.addEventListener('DOMContentLoaded', () => {
 <nav class="tab-bar" role="tablist" aria-label="Notion database">
   <button class="tab-btn active" data-tab="ugly200" role="tab" aria-selected="true">Ugly200</button>
   <button class="tab-btn" data-tab="sop" role="tab" aria-selected="false">SoP</button>
-  <button class="tab-btn" data-tab="ideas" role="tab" aria-selected="false">Ideas</button>
   <button class="tab-btn" data-tab="daily" role="tab" aria-selected="false">Daily</button>
   <button class="tab-btn" data-tab="sulive" role="tab" aria-selected="false">SU reports</button>
 </nav>
@@ -2216,10 +2216,6 @@ document.addEventListener('DOMContentLoaded', () => {
         <input type="text" id="notionDbId_sop" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" autocomplete="off" spellcheck="false">
       </div>
       <div class="config-field">
-        <label for="notionDbId_ideas">Ideas — Database ID</label>
-        <input type="text" id="notionDbId_ideas" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" autocomplete="off" spellcheck="false">
-      </div>
-      <div class="config-field">
         <label for="notionDbId_daily">Daily — Database ID</label>
         <input type="text" id="notionDbId_daily" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" autocomplete="off" spellcheck="false">
         <div class="config-hint">From the database URL: notion.so/&lt;workspace&gt;/<strong>DATABASE_ID</strong>?v=…</div>
@@ -2241,7 +2237,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div style="display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap;">
           <button class="btn-generate" id="createDbBtn" style="padding:var(--space-2) var(--space-4);font-size:var(--text-sm);">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Create All 5 Databases
+            Create All 4 Databases
           </button>
           <div id="createDbResult" style="font-size:var(--text-xs);font-weight:600;display:none;align-items:center;gap:var(--space-1);"></div>
         </div>
@@ -2294,7 +2290,6 @@ const CONFIG_FIELDS = [
   'authorName',
   'notionDbId_ugly200',
   'notionDbId_sop',
-  'notionDbId_ideas',
   'notionDbId_daily',
   'notionDbId_sulive',
 ];
@@ -2302,8 +2297,9 @@ const CONFIG_FIELDS = [
 // SU reports (0.11.120 as "SU Live", renamed in 0.11.121; owner 12 Oct 2026) took the place of FB1Log, the FarmBox1
 // build log: its last entry was of 10 July. The FB1Log database stays in Notion; the app no longer writes to it.
 // The tab's key stays `sulive`: it names the setting and what each phone remembers.
-const TAB_LABELS = { ugly200: 'Ugly200', sop: 'SoP', ideas: 'Ideas', daily: 'Daily', sulive: 'SU reports' };
-const TAB_DB     = { ugly200: 'notionDbId_ugly200', sop: 'notionDbId_sop', ideas: 'notionDbId_ideas', daily: 'notionDbId_daily', sulive: 'notionDbId_sulive' };
+// Ideas is gone too (0.11.124, owner 12 Oct 2026): nothing was ever sent to it, and its Notion database was removed.
+const TAB_LABELS = { ugly200: 'Ugly200', sop: 'SoP', daily: 'Daily', sulive: 'SU reports' };
+const TAB_DB     = { ugly200: 'notionDbId_ugly200', sop: 'notionDbId_sop', daily: 'notionDbId_daily', sulive: 'notionDbId_sulive' };
 let activeTab = localStorage.getItem('brain_activeTab') || 'ugly200';
 if (!TAB_DB[activeTab]) activeTab = 'ugly200';   // a phone left on a tab that is gone
 // Daily's Title box starts as the author's name. SU reports had the same in 0.11.120; since 0.11.121 its Title
@@ -2328,12 +2324,6 @@ const TAB_SCHEMAS = {
   sop: [
     { key: 'Category', type: 'select', options: ['Hardware','Software','Field Ops','Safety'] },
     { key: 'Status',   type: 'select', options: ['Draft','In Review','Approved','Archived'] },
-  ],
-  ideas: [
-    { key: 'Category', type: 'multi_select', options: ['Product','Business','Technical','Marketing','Research'] },
-    { key: 'Status',   type: 'select',       options: ['Captured','Exploring','Validated','Building','Shipped','Parked'] },
-    { key: 'Priority', type: 'select',       options: ['High','Medium','Low'] },
-    { key: 'Effort',   type: 'select',       options: ['XS','S','M','L','XL'] },
   ],
   daily: [
     // Same order as the columns in the Notion Daily database, with the date first
@@ -2368,7 +2358,6 @@ function setTabValue(tab, key, value) {
 const APP_DEFAULTS = {
   notionDbId_ugly200: '3581301d4ab88196a51ed98b3ad9b219',
   notionDbId_sop:     '3581301d4ab8819693a1e1d1f958e6d6',
-  notionDbId_ideas:   '3581301d4ab881f8b21fe7a32e6d9876',
   notionDbId_daily:   '3581301d4ab88133a0e8c7349be6c857',
   notionDbId_sulive:  'dc909f3465674d41b57467457eb0770e',
   authorName:         '',
@@ -2730,7 +2719,6 @@ if (location.hash === '#settings') history.replaceState(null, '', location.pathn
 const TAB_HERO = {
   ugly200: ['Log an issue', 'Record what you see — it goes to the Ugly200 list.'],
   sop:     ['Capture a procedure', 'Talk or film the steps — it is saved to the SoP database.'],
-  ideas:   ['Capture an idea', 'Say it now, sort it later.'],
   daily:   ['Daily update', 'What got done, and what needs deciding.'],
   sulive:  ['SU report', 'Ideas to improve FarmBox — what you would change, and why. What you saw in the crops today goes in the scouting, under All.'],
 };
@@ -5362,7 +5350,7 @@ document.getElementById('createDbBtn').addEventListener('click', async () => {
   btn.disabled = true;
   result.style.display = 'none';
 
-  const tabs = Object.keys(TAB_LABELS); // ['ugly200','sop','ideas','daily']
+  const tabs = Object.keys(TAB_LABELS); // ['ugly200','sop','daily','sulive']
   const created = [];
   const failed  = [];
 
@@ -5394,7 +5382,7 @@ document.getElementById('createDbBtn').addEventListener('click', async () => {
         },
         body: JSON.stringify({
           parent: { type: 'page_id', page_id: parentId },
-          icon: { type: 'emoji', emoji: { ugly200: '💩', sop: '📋', ideas: '💡', daily: '📅', sulive: '🎓' }[tab] || '🧠' },
+          icon: { type: 'emoji', emoji: { ugly200: '💩', sop: '📋', daily: '📅', sulive: '🎓' }[tab] || '🧠' },
           title: [{ type: 'text', text: { content: TAB_LABELS[tab] } }],
           properties: dbProps,
         }),
@@ -5417,8 +5405,8 @@ document.getElementById('createDbBtn').addEventListener('click', async () => {
   result.style.display = 'flex';
   if (failed.length === 0) {
     result.className = 'test-ok';
-    result.textContent = `✓ All 5 databases created — IDs saved!`;
-    showToast('All 5 databases created ✓', 'success');
+    result.textContent = `✓ All 4 databases created — IDs saved!`;
+    showToast('All 4 databases created ✓', 'success');
   } else {
     result.className = 'test-err';
     result.textContent = `✗ ${failed.join(' | ')}`;
@@ -5427,7 +5415,7 @@ document.getElementById('createDbBtn').addEventListener('click', async () => {
   }
 
   btn.disabled = false;
-  btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Create All 5 Databases`;
+  btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Create All 4 Databases`;
 });
 
 // ─── TEST CONNECTION ──────────────────────────────────────────
