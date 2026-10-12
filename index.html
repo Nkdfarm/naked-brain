@@ -196,6 +196,8 @@
     .media-thumb { position: relative; aspect-ratio: 1; border-radius: var(--radius-md); overflow: hidden; background: var(--surface-offset); border: 1px solid var(--border); }
     .media-thumb img, .media-thumb video { width: 100%; height: 100%; object-fit: cover; }
     .remove-media { position: absolute; top: var(--space-1); right: var(--space-1); width: 20px; height: 20px; border-radius: var(--radius-full); background: rgba(0,0,0,0.55); color: #fff; font-size: 12px; display: flex; align-items: center; justify-content: center; }
+    /* the ✕ looks the same (20 px); what takes the tap is the 44 px corner of the picture round it */
+    .remove-media::after { content: ''; position: absolute; top: -4px; right: -4px; bottom: -20px; left: -20px; }
     .video-thumb-inner { position: relative; width: 100%; height: 100%; background: #111; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 3px; }
     .video-play-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.38); pointer-events: none; }
     .video-duration { position: absolute; bottom: 3px; right: 5px; font-size: 9px; color: #fff; background: rgba(0,0,0,0.55); padding: 1px 4px; border-radius: 3px; font-variant-numeric: tabular-nums; pointer-events: none; }
@@ -383,7 +385,7 @@
     #noteTitle { min-height: 48px; border-radius: var(--radius-md) !important; background: var(--surface) !important; font-size: var(--text-base) !important; }
 
     /* Pills */
-    .btn-copy, .btn-generate, .btn-attach, .btn-sm, .tag-chip { border-radius: var(--radius-full); min-height: 36px; padding: 0 var(--space-4); font-weight: 600; }
+    .btn-copy, .btn-generate, .btn-attach, .btn-sm, .tag-chip { border-radius: var(--radius-full); min-height: 40px; padding: 0 var(--space-4); font-weight: 600; }   /* 40 px: a thumb, a glove */
     .btn-copy { background: var(--surface); color: var(--text); }
     .btn-generate { background: var(--accent); color: #121212; border: none; }
     .btn-generate:hover { background: var(--primary); color: var(--text-inverse); }
@@ -688,7 +690,8 @@
     .editable-box-header { flex-wrap: nowrap; gap: var(--space-2); }
     .editable-box-header .section-label { white-space: nowrap; }
     .editable-box-actions { gap: 4px; flex-wrap: nowrap; justify-content: flex-end; flex-shrink: 0; }
-    .editable-box-actions .btn-copy, .editable-box-actions .btn-generate { min-height: 32px; padding: 0 8px; font-size: 12px; gap: 3px; white-space: nowrap; }
+    /* 40 px high (was 32); the width is as it was, so the title line of each box still holds on one line at 360 px */
+    .editable-box-actions .btn-copy, .editable-box-actions .btn-generate { min-height: 40px; padding: 0 8px; font-size: 12px; gap: 3px; white-space: nowrap; }
     .editable-box-actions svg { width: 11px; height: 11px; }
     @media (max-width: 320px) { .editable-box-header { flex-wrap: wrap; } }   /* tiny screens: let the buttons drop below */
     .editable-textarea { min-height: 72px; }
@@ -1251,7 +1254,7 @@
   }
 
   // ─── VERSION CHECK ────────────────────────────────────────
-  const CURRENT_VERSION = '0.11.124';
+  const CURRENT_VERSION = '0.11.125';
   let updateAvailable = false;
 
   let lastSaid = null, notYetAt = 0;
@@ -1273,9 +1276,12 @@
       const steady = data.version && data.version === lastSaid;
       lastSaid = data.version;
       if (Date.now() - notYetAt < 5 * 60 * 1000) return;
+      // only a number newer than this page's is an update: a version.json older than the page (the same CDN flip, the
+      // other way round) was offered as "available", and applied by itself when its old page was found
+      const isNew = versionNewer(data.version, CURRENT_VERSION);
       // 0.11.64: a new number seen once is asked again in 15 s, not in 5 minutes
-      if (!steady && data.version && data.version !== CURRENT_VERSION) { clearTimeout(recheckTimer); recheckTimer = setTimeout(checkForUpdates, 15000); return; }
-      if (steady && data.version !== CURRENT_VERSION && sessionStorage.getItem('nb_update_dismissed') !== data.version) {
+      if (!steady && data.version && isNew) { clearTimeout(recheckTimer); recheckTimer = setTimeout(checkForUpdates, 15000); return; }
+      if (steady && isNew) {
         updateAvailable = true;
         // "Update now" was already tapped for this version but the phone is
         // still on the old one: say so instead of offering the same button again.
@@ -1285,9 +1291,22 @@
           if (await arrived(data.version)) { autoUpdate(data.version); return; }
           notYetAt = Date.now();   // the files have not reached this phone yet: ask again in five minutes, not every two (0.11.92)
         }
-        showVersionNotification(data.version, stuck);
+        // the ✕ on the card puts the card away for this version, nothing more: it used to switch off the update by
+        // itself above as well, for as long as the page lived
+        if (sessionStorage.getItem('nb_update_dismissed') !== data.version) showVersionNotification(data.version, stuck);
       }
     } catch(e) {}
+  }
+  // is v a later release than cur? Both as three numbers (0.11.124); anything else is compared as before — any
+  // number that is not this page's counts — so an odd version string never stops the check
+  function versionNewer(v, cur) {
+    try {
+      const three = s => { const m = /^(\d+)\.(\d+)\.(\d+)$/.exec(String(s)); return m ? [Number(m[1]), Number(m[2]), Number(m[3])] : null; };
+      const a = three(v), b = three(cur);
+      if (!a || !b) return v !== cur;
+      for (let i = 0; i < 3; i++) if (a[i] !== b[i]) return a[i] > b[i];
+      return false;
+    } catch (_) { return v !== cur; }
   }
   let recheckTimer = null;
   // is the person in the middle of something? A checklist, a scouting, a sheet, the camera, a photo, a field being typed in
@@ -1298,6 +1317,15 @@
     if (document.querySelector('.fb-sheet, .fb-cam, .fb-viewer, .fb-measure')) return false;
     const a = document.activeElement;
     if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.isContentEditable)) return false;
+    // Capture, or a voice note on a task, holds something a reload would lose: a recording in progress, a transcription
+    // on its way, photos / a video / a voice note attached to a note not sent yet (kept in memory only), a send in
+    // progress. The Update now card still shows; the update by itself waits.
+    try {
+      if (document.querySelector('#recordBtn.recording, .fb-fbk-rec.on')) return false;
+      const tb = document.getElementById('transcribingBar');
+      if (tb && tb.style.display && tb.style.display !== 'none') return false;
+    } catch (_) {}
+    try { if (submitting || mediaFiles.length) return false; } catch (_) {}   // names of a later script: not there yet = nothing held
     return true;
   }
   function autoUpdate(v) {
@@ -1374,6 +1402,7 @@
         cursor:pointer;
         white-space:nowrap;
         flex-shrink:0;
+        min-height:40px;
       ">Update now</button>
       <button id="dismissUpdateBtn" style="
         background:none;
@@ -1384,6 +1413,8 @@
         padding:4px;
         flex-shrink:0;
         line-height:1;
+        min-width:40px;
+        min-height:40px;
       ">✕</button>
     `;
     document.body.appendChild(notification);
@@ -1415,6 +1446,7 @@
   // Same idea as the console's Settings › Version log (release_note): one line per
   // release, what it changed, in plain words. Add the new release on top with each bump.
   const VERSION_LOG = [
+    ['0.11.125', '2026-10-13', 'A review of the whole app', 'The app was read through from end to end and its faults fixed. Tasks: a checklist you finished with a bad signal stays done while its report waits to be sent, instead of going back to open; a request that gets no answer is given up after a while, so one stuck photo no longer holds everything else; the Undo bar no longer throws you out of the task you opened meanwhile; a second tap no longer opens a second camera; a photo already uploaded is not uploaded again; a person removed from the team leaves the list of names. Sign out first sends what you have not sent, and asks when something is still left, so that your work does not go up under the name of the next person. When the sign-in has ended the app says so and shows the sign-in form. No signal is said in plain words. Capture: the app no longer updates itself in the middle of a recording or with photos attached; the Voice summary now reaches Notion; a note is not sent without its date and author when Notion did not answer; Send lights up for a title or a pasted transcript; Clear and removing a voice note ask first; closing Settings with Back no longer leaves the checklist underneath; the buttons are bigger to tap.'],
     ['0.11.124', '2026-10-12', 'No Ideas tab', 'Capture no longer has the Ideas tab: it was never used. The four tabs left are Ugly200, SoP, Daily and SU reports. An idea to improve FarmBox goes in SU reports.'],
     ['0.11.123', '2026-10-12', 'People off the task pages', 'A person can now be in the team without being on the task pages (a tick on the Team page of Naked Heart). They sign in like everybody, see every task and can do any of them, but their name is no longer in the list above the tasks, and the plan gives them no work.'],
     ['0.11.122', '2026-10-12', 'A note about the whole greenhouse', 'The scouting has a new card on top of its zones: All, the whole greenhouse. Open it to say or write what you saw across the greenhouse today, in your own words; it goes in the daily report in Naked Heart, above the zones. It is optional, it is in the planned scouting and in an extra scouting, and it works without signal. SU reports now says what it is for: ideas to improve FarmBox.'],
@@ -1714,18 +1746,23 @@ async function captureDecide() {
       if (res.ok) { try { localStorage.setItem('nb_capture_via', 'platform'); } catch (e) {} return 'platform'; }
       // 401 with no X-Upstream is the session, not the route: nothing decided. Anything else: the Worker, for a day.
       if (res.status === 401 && !res.headers.get('X-Upstream')) return null;
+      // a busy server (5xx) or a rate limit (429) says nothing about the route either: it used to send the phone to the
+      // Worker and its team password for a day
+      if (res.status >= 500 || res.status === 429) return null;
       try { localStorage.setItem('nb_capture_via', 'worker:' + Date.now()); } catch (e) {}
       return 'worker';
     } catch (e) { return null; }                       // no signal: decided at the next call
     finally { setTimeout(() => { captureProbe = null; }, 0); }
   })();
   const via = await captureProbe;
-  return { via: via || 'worker', who };
+  return { via: via || 'worker', who, undecided: !via };
 }
-// Capture's tab is opened: the team password is asked only when this phone still goes through the Worker
+// Capture's tab is opened: the team password is asked only when this phone still goes through the Worker.
+// Not while nothing is decided yet (a signed-in phone with no signal the first time Capture is opened): the gate
+// covered the whole app, asked a password the workers no longer have, and Unlock needs the network.
 async function captureGate() {
   const d = await captureDecide();
-  if (d.via !== 'platform') ensureAppPassword();
+  if (d.via !== 'platform' && !d.undecided) ensureAppPassword();
 }
 
 async function cfFetch(url, options = {}) {
@@ -1807,6 +1844,9 @@ document.addEventListener('DOMContentLoaded', () => {
     </div>
     <div id="appPasswordError" class="pw-error" style="display:none"></div>
     <button class="pw-unlock-btn" id="unlockBtn" onclick="tryUnlockApp()">Unlock</button>
+    <!-- a way out: the gate covers the whole app, and Unlock needs both the password and the network -->
+    <button type="button" id="pwGateBack" onclick="hidePasswordGate(); if (typeof setAppMode === 'function') setAppMode('sop');"
+      style="min-height:44px;border-radius:var(--radius-full);font-weight:600;color:var(--text-muted)">Back to Tasks</button>
   </div>
 </div>
 
@@ -1886,7 +1926,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <div id="fb-who" class="fb-who"></div>
       <div id="fb-next"></div>
       <div id="fb-days"></div>
-      <div id="fb-empty" class="config-hint hidden">Nothing planned yet. Pull ⟳ to sync.</div>
+      <div id="fb-empty" class="config-hint hidden">Nothing planned yet. Tap ⟳ to sync.</div>
       <div class="config-hint" id="fb-foot"></div>
     </div>
 
@@ -2120,7 +2160,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   <!-- LOCAL ENTRIES LOG -->
   <div class="entries-section">
-    <div class="section-label">Recent Entries</div>
+    <div class="section-label">Recent entries</div>
     <div class="entries-list" id="entriesList">
       <div class="empty-log" id="emptyLog">No entries yet. Record your first voice note.</div>
     </div>
@@ -2153,7 +2193,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <label for="skinSelect">Skin</label>
         <select id="skinSelect" class="set-select" aria-label="Skin"><option value="naked-farm">Naked Farm</option></select>
       </div>
-      <div class="config-hint">A skin is a small design-token file (skins/*.json) with the colours, corner radius and font — the same values a Figma variables export gives. It never changes the layout.</div>
+      <div class="config-hint">A skin changes the colours, the corners and the font. The layout stays the same.</div>
     </div>
 
     <div class="set-title">Account</div>
@@ -2183,9 +2223,6 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="set-row"><span>User guide</span><a href="guide.html" target="_blank" rel="noopener" class="btn-copy" style="text-decoration:none">Open</a></div>
     </div>
 
-    <div class="set-title">Version log</div>
-    <div class="set-group" id="versionLog"></div>
-
     <div class="set-title">Configuration <span class="lock-badge" id="configLockBadge"><i data-ic="lock"></i> PIN required</span></div>
     <div class="set-group">
       <div id="pinOverlay" style="display:flex;flex-direction:column;align-items:center;gap:var(--space-3);padding:var(--space-2) 0">
@@ -2204,7 +2241,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="config-field">
         <label for="authorName">Author Name</label>
         <input type="text" id="authorName" placeholder="e.g. Marie" autocomplete="off" spellcheck="false">
-        <div class="config-hint">Permanently saved — sent to every entry automatically.</div>
+        <div class="config-hint">The name on every note. On a signed-in phone it is the signed-in person's and is set again at each sync; a name typed here stays only on a phone that is not signed in.</div>
       </div>
 
       <div class="config-field">
@@ -2264,6 +2301,10 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
     </div>
     </div>
+
+    <!-- the version log last: it is long (one entry a release), and Configuration sat under all of it -->
+    <div class="set-title">Version log</div>
+    <div class="set-group" id="versionLog"></div>
   </div>
 </div>
 
@@ -2438,6 +2479,10 @@ document.getElementById('clearConfigBtn').addEventListener('click', clearConfig)
 // Captured when the page loads (or after each submission reset).
 // This is the date sent to Notion — reflects when the note started.
 let noteStartTime = new Date();
+// The page's load was not the note's start: an issue logged at four on a page opened at seven went to Notion as of
+// seven, and on a page that had lived two days, as of two days before. The start is now taken when the empty form
+// first gets something (updateSubmitBtn); a draft that comes back keeps the start it had (restoreDraft).
+let noteStarted = false;
 
 function renderNoteStamp() {
   const d = noteStartTime;
@@ -2711,7 +2756,14 @@ function closeSettings() {
 document.getElementById('settingsBtn').addEventListener('click', openSettings);
 document.getElementById('settingsBack').addEventListener('click', () =>
   history.state?.settings ? history.back() : closeSettings());
-window.addEventListener('popstate', () => { if (!settingsPage.classList.contains('hidden')) closeSettings(); });
+// A Back that closes Settings is Settings' alone: the Tasks part listens to the same event (registered after this one)
+// and used to step its own screen back too — out of an open checklist, its timer paused, or, in a zone of an extra
+// scouting, sending the zone.
+window.addEventListener('popstate', e => {
+  if (settingsPage.classList.contains('hidden')) return;
+  closeSettings();
+  e.stopImmediatePropagation();
+});
 if (location.hash === '#settings') history.replaceState(null, '', location.pathname + location.search);
 
 // ─── TABS ─────────────────────────────────────────────────────
@@ -2773,6 +2825,20 @@ document.querySelectorAll('.tab-btn').forEach(btn =>
 // Opens on Tasks (mode 'sop': the SoP module — procedures and checklists,
 // script at the end of the page); the home-screen "New Voice Note" shortcut
 // (?action=record) opens Capture.
+// The date box of Daily and SU reports is filled when the form is drawn, and the form is drawn again only on a tab
+// tap, a chip tap or a send: on a page that stayed open past midnight it went on showing yesterday while Send wrote
+// today. Coming back to the app, or to Capture, puts today in it — unless the person picked a date, which is kept.
+function freshFormDate() {
+  try {
+    if (!datedOnForm(activeTab) || getTabValue(activeTab, 'Date')) return;
+    const today = localDateISO();
+    document.querySelectorAll('.tab-fields-wrap input[type="date"]').forEach(i => {
+      if (document.activeElement !== i && i.value !== today) i.value = today;
+    });
+  } catch (e) { /* the box keeps what it shows */ }
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') freshFormDate(); });
+
 function setAppMode(mode) {
   document.body.classList.remove('mode-sop', 'mode-capture');
   document.body.classList.add('mode-' + mode);
@@ -2783,9 +2849,17 @@ function setAppMode(mode) {
   });
   window.scrollTo(0, 0);
   if (mode === 'sop') {
-    if (document.body.classList.contains('src-cloud')) { if (window.fbOpen) window.fbOpen(); }
+    if (document.body.classList.contains('src-cloud')) {
+      // A checklist that is open stays open: coming back from Capture (or a tap on Tasks) used to draw the list over
+      // it without the Back's own steps — the timer kept running and the task stayed held. Its back arrow is the way
+      // to the list. A task page or the scouting hub holds nothing: Tasks goes to the list from there, as always.
+      let inside = false;
+      try { inside = ['fb-run'].some(id => { const v = document.getElementById(id); return !!v && !v.classList.contains('hidden'); }); } catch (e) { inside = false; }
+      if (window.fbOpen && !inside) window.fbOpen();
+    }
     else if (window.sopOpen) window.sopOpen();
   }
+  if (mode === 'capture') freshFormDate();
   if (mode === 'capture') captureGate();   // 0.11.118: the team password only where this phone still goes through the Worker
 }
 document.querySelectorAll('.app-tab').forEach(btn =>
@@ -2829,17 +2903,24 @@ function formatTime(s) {
   return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
 }
 
+// One start at a time: a second tap while the phone was still opening the microphone started a second recorder —
+// the first was never stopped (the microphone stayed open until the app was closed) and the timer ran double.
+// The guard is a time (ten seconds), not a switch: a phone whose microphone never answers must not lock the button.
+let recStartAt = 0;
 recordBtn.addEventListener('click', async () => {
+  if (Math.abs(Date.now() - recStartAt) < 10000) return;
   if (mediaRecorder && mediaRecorder.state === 'recording') {
     stopRecording();
   } else {
-    await startRecording();
+    recStartAt = Date.now();
+    try { await startRecording(); } finally { recStartAt = 0; }
   }
 });
 
 async function startRecording() {
+  let stream = null;
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     audioChunks = [];
     // Reset per-recording state, or the fallback in stopRecording() stays armed
     // against the previous take and silently does nothing from take 2 onward.
@@ -2862,12 +2943,20 @@ async function startRecording() {
     recTimer.classList.add('visible');
     recordingSeconds = 0;
     recTimer.textContent = formatTime(0);
+    clearInterval(timerInterval);
     timerInterval = setInterval(() => {
       recordingSeconds++;
       recTimer.textContent = formatTime(recordingSeconds);
     }, 1000);
   } catch(e) {
-    showToast('Microphone access denied', 'error');
+    console.warn('Recording did not start:', e);
+    // the microphone that was opened is closed again when the recorder did not start on it (it stayed open)
+    try {
+      if (stream && !(mediaRecorder && mediaRecorder.stream === stream && mediaRecorder.state === 'recording')) stream.getTracks().forEach(t => t.stop());
+    } catch (_) {}
+    // only a refusal is a refusal: every failure used to read "Microphone access denied"
+    const refused = e && (e.name === 'NotAllowedError' || e.name === 'SecurityError' || e.name === 'PermissionDeniedError');
+    showToast(refused ? 'The microphone is not allowed — allow it in the phone settings' : 'Recording did not start — try again', 'error');
   }
 }
 
@@ -3074,7 +3163,10 @@ async function runVoiceSummary() {
 
 document.getElementById('generateSummaryBtn').addEventListener('click', runVoiceSummary);
 document.getElementById('generateVideoSummaryBtn').addEventListener('click', runVideoSummary);
-const clearBox = id => () => { document.getElementById(id).value = ''; updateSubmitBtn(); };
+// Clear asks first when the box holds text: it sits a few millimetres from Copy, and what it wipes — the box and
+// its kept draft — does not come back
+const sureClear = box => !box.value.trim() || confirm('Clear this text?');
+const clearBox = id => () => { const box = document.getElementById(id); if (!sureClear(box)) return; box.value = ''; updateSubmitBtn(); };
 document.getElementById('clearSummaryBtn').addEventListener('click', clearBox('summaryText'));
 document.getElementById('clearVideoTranscriptBtn').addEventListener('click', clearBox('videoTranscriptText'));
 document.getElementById('clearVideoSummaryBtn').addEventListener('click', clearBox('videoSummaryText'));
@@ -3146,6 +3238,7 @@ document.getElementById('copyVideoSummaryBtn').addEventListener('click', () => {
 // ─── VIDEO CAPTURE CARD ───────────────────────────────────────
 
 document.getElementById('clearTranscriptBtn').addEventListener('click', () => {
+  if (!sureClear(document.getElementById('transcriptText'))) return;
   document.getElementById('transcriptText').value = '';
   updateSubmitBtn();
 });
@@ -4456,7 +4549,12 @@ function renderMediaPreviews() {
     removeBtn.className = 'remove-media';
     removeBtn.innerHTML = '✕';
     removeBtn.setAttribute('aria-label', 'Remove media');
-    removeBtn.addEventListener('click', () => { mediaFiles.splice(i, 1); renderMediaPreviews(); updateSubmitBtn(); });
+    removeBtn.addEventListener('click', () => {
+      // a voice note that could not be transcribed exists nowhere else, and a video took minutes to prepare: ask first
+      if (m.type === 'audio' && !confirm('Remove this voice note? It is not kept anywhere else.')) return;
+      if (m.type === 'video' && !confirm('Remove this video from the note?')) return;
+      mediaFiles.splice(i, 1); renderMediaPreviews(); updateSubmitBtn();
+    });
     thumb.appendChild(removeBtn);
     container.appendChild(thumb);
   });
@@ -4707,7 +4805,7 @@ function restoreDraft() {
     // from that phone carried the day the tab was first opened (five reports of 5-9 Oct 2026 dated 30 Sept).
     const started = d.startedAt ? new Date(d.startedAt) : null;
     nameOnly = titledByAuthor(d.tab) && DRAFT_FIELDS.every(id => id === 'noteTitle' || !(d.fields[id] || '').trim());
-    if (started && !isNaN(started) && !nameOnly) noteStartTime = started;
+    if (started && !isNaN(started) && !nameOnly) { noteStartTime = started; noteStarted = true; }
     if (d.location && typeof d.location.lat === 'number') { captureLocation = d.location; renderGpsStamp(); }
   } finally {
     _restoringDraft = false;
@@ -4745,15 +4843,25 @@ function updateSubmitBtn() {
   const tabHasValues = Object.entries(tabValues[activeTab] || {}).some(([k, v]) =>
     !persistKeys.includes(k) && (Array.isArray(v) ? v.length > 0 : (typeof v === 'object' ? Object.values(v).some(x => x) : !!v))
   );
+  // A title the person typed, a video transcription pasted in or a video summary are content too: Send used to stay
+  // grey on them alone, with no word why. Not the name the app itself writes in the Title box on Daily.
+  const titleBox = document.getElementById('noteTitle');
+  const typedTitle = !!titleBox && !!titleBox.value.trim() && titleBox.dataset.auto !== '1';
   const hasContent = document.getElementById('transcriptText').value.trim() ||
                      document.getElementById('summaryText').value.trim() ||
                      document.getElementById('noteText').value.trim() ||
+                     document.getElementById('videoTranscriptText').value.trim() ||
+                     document.getElementById('videoSummaryText').value.trim() ||
+                     typedTitle ||
                      mediaFiles.length > 0 ||
                      tabHasValues;
+  // the note starts here, when the empty form first gets something (see noteStarted)
+  if (hasContent && !noteStarted) { noteStartTime = new Date(); noteStarted = true; }
+  else if (!hasContent && !submitting) noteStarted = false;
   document.getElementById('submitBtn').disabled = submitting || !hasContent;   // never back on during a send
 }
 
-['transcriptText','summaryText','noteText'].forEach(id =>
+['transcriptText','summaryText','noteText','noteTitle','videoTranscriptText','videoSummaryText'].forEach(id =>
   document.getElementById(id).addEventListener('input', updateSubmitBtn)
 );
 
@@ -4905,6 +5013,7 @@ async function uploadFileMultiPart(file, contentType, onStatus) {
 
 // Cache title property names per DB to avoid repeated lookups
 const _dbPropsCache = {};
+let dbPropsWhy = '';   // why the last read gave nothing: Send says it, instead of one sentence for every cause
 // Fetch (and cache) a database's property schema: { name: {type, ...} }.
 async function getDbProps(dbId) {
   if (_dbPropsCache[dbId]) return _dbPropsCache[dbId];
@@ -4912,10 +5021,12 @@ async function getDbProps(dbId) {
     const res = await cfFetch(PROXY + '/v1/databases/' + dbId, {
       headers: { 'Notion-Version': '2022-06-28' }
     });
-    if (!res.ok) return {};
+    if (!res.ok) { dbPropsWhy = 'Notion answered ' + res.status; return {}; }
     const data = await res.json();
+    dbPropsWhy = '';
     return (_dbPropsCache[dbId] = data.properties || {});
   } catch(e) {
+    try { dbPropsWhy = failureReason(e); } catch (_) { dbPropsWhy = ''; }
     return {};
   }
 }
@@ -5008,7 +5119,16 @@ async function submitToNotion() {
   try {
   delete _dbPropsCache[dbId];   // re-read the columns on every send: they can be renamed in Notion
   const dbProps     = await getDbProps(dbId);
-  const titleProp   = Object.entries(dbProps).find(([, v]) => v.type === 'title')?.[0] || 'Title';
+  // No columns read = Notion did not answer (no signal, a time-out, a busy server): a list always has at least its
+  // title column. Sending on blind made a Daily or SU report with no date, no author and no status under "Sent" —
+  // the date, the author and the status are only written to columns that were found. Nothing is sent; the note stays.
+  if (!Object.keys(dbProps).length) {
+    showToast(navigator.onLine === false
+      ? 'No signal — nothing was sent and your note is still here. Press Send again when you have signal.'
+      : `Not sent — ${dbPropsWhy || 'could not reach Notion'}. Your note is still here: press Send again.`, 'error');
+    return;
+  }
+  const titleProp   =Object.entries(dbProps).find(([, v]) => v.type === 'title')?.[0] || 'Title';
   const voiceTranscript = document.getElementById('transcriptText').value.trim();
   const videoTranscriptVal = document.getElementById('videoTranscriptText').value.trim();
   const transcript  = [videoTranscriptVal, voiceTranscript].filter(Boolean).join('\n\n');
@@ -5057,7 +5177,7 @@ async function submitToNotion() {
       else               children.push({ object:'block', type:'file',  file:{  type:'file_upload', file_upload:{ id: uploadId }, caption:[{ type:'text', text:{ content: m.file.name } }] } });
     } catch(e) {
       failedMedia.push(m);                    // kept on the phone after the send, to be sent again
-      showToast(`${e.message} — note will still be sent`, 'error');
+      showToast(`A file was not uploaded — ${failureReason(e)}`, 'error');   // it said "note will still be sent", also when nothing could be
       children.push({ object:'block', type:'paragraph', paragraph:{ rich_text:[{ type:'text', text:{ content:`[File not uploaded: ${m.file.name} — ${e.message}]` } }] } });
     }
   };
@@ -5066,6 +5186,12 @@ async function submitToNotion() {
   for (const m of sentMedia.filter(m => m.type === 'image' || m.type === 'audio')) await uploadMedia(m);
 
   // ── Text blocks at the bottom ─────────────────────────────────
+  // The Voice summary was only ever the page's title, when the Title box was empty: with a title typed — always on
+  // Daily (the name) and on SU reports (the title is required) — it reached Notion nowhere and was cleared as sent.
+  if (summary && summary !== title) {
+    children.push({ object:'block', type:'heading_3', heading_3:{ rich_text:[{ type:'text', text:{ content:'Summary' } }] } });
+    pushTextBlocks(summary);
+  }
   if (videoSummary) {
     children.push({ object:'block', type:'heading_3', heading_3:{ rich_text:[{ type:'text', text:{ content:'Video Summary' } }] } });
     pushTextBlocks(videoSummary);
@@ -5202,7 +5328,8 @@ async function submitToNotion() {
     saveEntry({ title, transcript, note, tab, fields, status: 'sent' });
   } catch(e) {
     if (!created) {
-      showToast(`Failed: ${e.message}`, 'error');
+      // plain words: it read "Failed: Failed to fetch" ("Load failed" on an iPhone) and did not say the note was kept
+      showToast(`Not sent — ${failureReason(e)}. Your note is still here: press Send again.`, 'error');
       saveEntry({ title, transcript, note, tab, fields: JSON.parse(sentFields), status: 'failed' });
     }
   }
@@ -5244,6 +5371,7 @@ function resetForm(sent = null) {
   if (!left) {
     recordedBlob = null;
     noteStartTime = new Date(); // fresh timestamp for the next note
+    noteStarted = false;        // and taken again when the next note gets its first word (updateSubmitBtn skips this during a send)
     stopGpsWatch();
     captureLocation = null;     // and a fresh position
     renderGpsStamp();
@@ -7141,6 +7269,7 @@ function sopOpen() {
     saveSession(d);
     return d;
   }
+  let authWanted = false;    // the session was refused while something else was on screen: the form shows with the list
   let refreshing = null;
   function refresh() {
     refreshing = refreshing || doRefresh().finally(() => { refreshing = null; });
@@ -7153,7 +7282,16 @@ function sopOpen() {
       body: JSON.stringify({ refresh_token: session.refresh_token })
     });
     // only a refused token ends the session (0.11.55): a 5xx or 429 is the server's trouble, not the worker's
-    if (r.status === 400 || r.status === 401 || r.status === 403) { saveSession(null); return false; }
+    if (r.status === 400 || r.status === 401 || r.status === 403) {
+      saveSession(null);
+      // said, and back to the sign-in form, as Naked Heart does: the list used to stay on screen with nothing sent and
+      // not a word. Never over an open checklist or task page — there the form comes with the list (showWeek).
+      try {
+        showToast('Please sign in again — your work is kept on this phone', 'error');
+        if (fbOnScreen() && !$('week').classList.contains('hidden')) show('auth', 'Sign in', null); else authWanted = true;
+      } catch (e) { /* the app's next start shows the form anyway */ }
+      return false;
+    }
     if (!r.ok) throw new Error(`${r.status} the sign-in server is busy, try again`);
     saveSession(await r.json());
     return true;
@@ -7168,11 +7306,30 @@ function sopOpen() {
   async function api(path, opts = {}, retry = true) {
     if (!session) throw new Error('signed out');
     if (session.expires_at && Date.now() > session.expires_at) await refresh();
-    const r = await fetch(URL_BASE + path, {
-      ...opts,
-      headers: { apikey: ANON, Authorization: 'Bearer ' + session.access_token,
-                 'Content-Type': 'application/json', ...(opts.headers || {}) }
-    });
+    // the refresh was refused and ended the session: said as "signed out", not as a script error on the next line
+    if (!session) throw new Error('signed out');
+    // a time limit: with signal bars and no throughput a request never answered, and the one flush and the one sync
+    // waited on it for minutes — nothing else was sent meanwhile. 45 s; 5 minutes for a photo or a big report, and
+    // longer for a bigger file — the time 4 kB a second needs — so that a slow link still gets a 24 MB video through
+    // instead of starting it again from nothing at every pass. A caller that brings its own signal keeps it. The error carries no status, so it reads as a network failure
+    // everywhere: the outbox row waits and is tried again, never set aside.
+    const own = opts.signal || typeof AbortController === 'undefined' ? null : new AbortController();
+    const isBlob = typeof Blob !== 'undefined' && opts.body instanceof Blob;
+    const bytes = isBlob ? (opts.body.size || 0) : typeof opts.body === 'string' ? opts.body.length : 0;
+    const bigBody = isBlob || bytes > 100000;
+    const limit = own ? setTimeout(() => { try { own.abort(); } catch (e) { /* gone already */ } }, Math.max(bigBody ? 300000 : 45000, Math.round(bytes / 4))) : null;
+    let r;
+    try {
+      r = await fetch(URL_BASE + path, {
+        ...opts,
+        ...(own ? { signal: own.signal } : {}),
+        headers: { apikey: ANON, Authorization: 'Bearer ' + session.access_token,
+                   'Content-Type': 'application/json', ...(opts.headers || {}) }
+      });
+    } catch (e) {
+      if (own && own.signal.aborted) throw new Error('no answer in time');
+      throw e;
+    } finally { clearTimeout(limit); }
     if (r.status === 401 && retry && await refresh()) return api(path, opts, false);
     if (!r.ok) throw new Error(`${r.status} ${(await r.text()).slice(0, 160)}`);
     return r.status === 204 ? null : r.json();
@@ -7198,6 +7355,10 @@ function sopOpen() {
     return farm;
   }
 
+  // what kind of failure it was, for words a worker can use: 'net' = no connection or no answer ("Failed to fetch",
+  // "Load failed" on an iPhone, the time limit of api()), 'busy' = the server's own trouble, 'out' = the session ended
+  const errKind = e => { const m = String((e && e.message) || e || '');
+    return /Failed to fetch|Load failed|NetworkError|network error|no answer in time/i.test(m) ? 'net' : /^5\d\d /.test(m) ? 'busy' : m === 'signed out' ? 'out' : ''; };
   async function sync(full, quiet) {
     if (syncing || !session) return;
     syncing = true; $('sync').classList.add('spin');
@@ -7209,7 +7370,27 @@ function sopOpen() {
         method: 'POST',
         body: JSON.stringify({ p_farm: farm.id, p_since: since || '-infinity' })
       });
-      await putAll('tasks', d.tasks);
+      // a task this phone has closed and not sent yet keeps its own state: a timer start alone touches the task on the
+      // server, so its row came back still open and was written over the finished one — the card read "Paused", and
+      // opening it gave an empty checklist to do again. Only while its report, tick or cancel is still in the outbox,
+      // and never over a task the server cancelled. Anything unexpected here: the server's rows as they came, as before.
+      let fromServer = d.tasks;
+      try {
+        const unsent = new Set((await all('outbox')).filter(r => !r.dead && r.payload && r.payload.task_id
+          && (r.payload.__tick || r.payload.__skip || (!r.payload.__timer && !r.payload.__upload && !r.payload.__clock
+              && !r.payload.__feedback && !r.payload.__ghnote && r.payload.status === 'completed'))).map(r => r.payload.task_id));
+        if (unsent.size && Array.isArray(d.tasks)) {
+          const shut = st => st === 'done' || st === 'skipped';
+          const had = new Map((await all('tasks')).map(t => [t.id, t]));
+          fromServer = d.tasks.map(t => {
+            const l = unsent.has(t.id) ? had.get(t.id) : null;
+            return l && shut(l.status) && !shut(t.status) && t.status !== 'cancelled'
+              ? { ...t, status: l.status, done_at: l.done_at || t.done_at || null,
+                  skip_reason: l.skip_reason ?? t.skip_reason ?? null, skip_note: l.skip_note ?? t.skip_note ?? null } : t;
+          });
+        }
+      } catch (e) { fromServer = d.tasks; }
+      await putAll('tasks', fromServer);
       // who is on each task: a task that came back brings its whole list, so the old one goes first
       if (d.task_workers) {
         // FarmBox 0087 sends the whole window's list every time; an older server only the changed tasks'
@@ -7218,6 +7399,15 @@ function sopOpen() {
         await putAll('task_workers', d.task_workers.map(x => ({ ...x, id: x.task_id + '|' + x.worker_id })));
       }
       await putAll('workers', d.workers);
+      // a person removed from the team (FarmBox 0230) is no row any more, and this phone only ever added people: the
+      // name stayed in "whose tasks". The server sends everybody at every sync (0087), so who is not in a list that
+      // came whole goes; an empty or missing list removes nobody.
+      try {
+        if (Array.isArray(d.workers) && d.workers.length && d.me !== undefined) {
+          const sent = new Set(d.workers.map(w => w.id));
+          for (const w of (await all('workers')).filter(w => !sent.has(w.id))) await del('workers', w.id);
+        }
+      } catch (e) { /* the list stays as it was */ }
       try { await workerPhotos(d.workers); } catch (e) { /* the faces keep the pictures they had */ }
       // who is signed in, from every sync (0.11.103): a phone used by two people kept the first one — an extra
       // scouting of 4 Oct was made under one person's name while its photos were another's
@@ -7282,7 +7472,12 @@ function sopOpen() {
       } else paintFoot();
     } catch (e) {
       console.warn('sync failed:', e);
-      if (!quiet) showToast('Sync failed — ' + String(e.message || e).slice(0, 60), 'error');
+      // this toast also comes by itself (the app opening, the signal coming back): said in plain words; anything else as before
+      if (!quiet) { const k = errKind(e);
+        showToast(k === 'net' ? 'No signal — your work is kept on this phone and goes up later'
+          : k === 'busy' ? 'The server is busy — your work is kept on this phone, it tries again by itself'
+          : k === 'out' ? 'Please sign in again — your work is kept on this phone'
+          : 'Sync failed — ' + String(e.message || e).slice(0, 60), 'error'); }
     } finally { syncing = false; $('sync').classList.remove('spin'); }
   }
 
@@ -7490,11 +7685,21 @@ function sopOpen() {
         else if (row.payload.__upload) {
           // a full photo after its run: to the evidence bucket, then attached to the reading or the observation
           const u = row.payload, blob = unBlob(u.blob);
-          if (blob instanceof Blob) {
-            const path = `${u.farm_id || farm.id}/${u.run_client_id}/${u.kind === 'trap' ? 'trap' : 'scout'}-${String(u.ref).replace(/[^A-Za-z0-9]/g, '')}-${Date.now()}.jpg`;
-            await api('/storage/v1/object/evidence/' + path, { method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: blob });
+          // where it went is noted on the row as it lands, like the photos of the other kinds: when only the attaching
+          // failed (the signal went between the two), the same megabytes went up again under a new name and the first
+          // file was left in no report. A noted path is used again for 15 minutes only — after 20 a file in no report
+          // shows in Naked Heart's unfiled list, where it can be deleted — then the photo goes up afresh, as before.
+          const age = Date.now() - (u.path_at || 0);
+          const landed = typeof u.path === 'string' && !!u.path && age >= 0 && age < 15 * 60000;
+          if (blob instanceof Blob || landed) {
+            if (!landed) {
+              const path = `${u.farm_id || farm.id}/${u.run_client_id}/${u.kind === 'trap' ? 'trap' : 'scout'}-${String(u.ref).replace(/[^A-Za-z0-9]/g, '')}-${Date.now()}.jpg`;
+              await api('/storage/v1/object/evidence/' + path, { method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: blob });
+              u.path = path; u.path_at = Date.now();
+              try { await putAll('outbox', [row]); } catch (e) { /* not noted: it goes up again next time, as before */ }
+            }
             await api('/rest/v1/rpc/attach_photo', { method: 'POST',
-              body: JSON.stringify({ p_kind: u.kind, p_run_client_id: u.run_client_id, p_ref: u.ref, p_path: path }) });
+              body: JSON.stringify({ p_kind: u.kind, p_run_client_id: u.run_client_id, p_ref: u.ref, p_path: u.path }) });
           }
         }
         else {
@@ -7540,6 +7745,9 @@ function sopOpen() {
         const dead = refusedForGood(e);
         if (dead || row.tries === 2) clientNote(dead ? 'refused' : 'retry', `${row.payload.__upload ? 'photo' : row.payload.__timer ? 'timer' : 'report'}: ${String(e.message || e).slice(0, 200)}`);
         await putAll('outbox', [{ ...row, tries: row.tries + 1, error: String(e.message || e).slice(0, 160), dead }]);
+        // set aside, and it closed a task: the sync kept that task closed while the report waited. The next sync reads
+        // everything again, so the card shows what the server holds instead of "done" for ever.
+        if (dead && row.payload && row.payload.task_id) { try { await setKV('cursor', null); } catch (e2) { /* the next full sync does it */ } }
         if (!isUp(row)) held.add(chainOf(row));   // its photos and its later timer events wait for it; everything else goes on
         if (!navigator.onLine) break;             // the connection went: no point in trying the rest
       }
@@ -7556,8 +7764,9 @@ function sopOpen() {
   const backStack = [];
   let unwinding = 0;
 
-  const fbOnScreen = () =>
-    !document.getElementById('viewFarmbox').classList.contains('hidden');
+  // Tasks is what the person is looking at. It used to ask for a class `hidden` on #viewFarmbox, which nothing ever
+  // sets (the view is shown and hidden by the body's mode), so it was always true — in Capture too.
+  const fbOnScreen = () => document.body.classList.contains('mode-sop');
 
   function show(name, title, back) {
     views.forEach(v => $(v).classList.toggle('hidden', v !== name));
@@ -7575,7 +7784,10 @@ function sopOpen() {
   }
 
   window.addEventListener('popstate', async () => {
-    if (!fbOnScreen() || !backStack.length) return;   // not ours: let it through
+    if (!backStack.length) return;   // not ours: let it through
+    // Back pressed while Capture is on screen: the checklist or task page open underneath stays as it is. The entry
+    // the browser just left is put back, so the history and backStack stay in step and the page's own Back still works.
+    if (!fbOnScreen()) { history.pushState({ fb: 'kept', depth: backStack.length }, ''); return; }
     // Back over the camera, a photo or a sheet closes that first and keeps the screen under it (0.11.55):
     // it used to change the screen underneath and leave the overlay — the camera still running — on top
     const over = [...document.querySelectorAll('.fb-cam, .fb-viewer, .fb-sheet')].pop();
@@ -7964,6 +8176,10 @@ function sopOpen() {
   // which folds of the day list are open, for as long as the app is open (0.11.40)
   const foldState = { earlier: false, doneToday: false, days: new Set() };
   async function showWeek() {
+    // a session refused while a checklist was open (doRefresh): the sign-in form now, instead of a list that sends nothing
+    // …and whenever there is no session at all: the same sync that showed the form used to draw the list back over it
+    authWanted = false;
+    if (!session) { show('auth', 'Sign in', null); return; }
     await feedbackOn();
     const groups = (await loadGroups())
       // plain comparison, not localeCompare: ICU collation sorts punctuation
@@ -8030,6 +8246,8 @@ function sopOpen() {
     $('weekSub').textContent = units.length > 1
       ? (unit === 'all' ? units.map(u => u.name).join(' + ') : (units.find(u => u.id === unit) || {}).name || '')
       : farm ? farm.name : 'Your farm work, day by day.';
+    // "Pull ⟳" was no gesture here, and when it is the person or the unit chosen above that empties the list, a sync brings nothing
+    $('empty').textContent = who !== 'all' || unit !== 'all' ? 'No tasks for this choice — change it above to see the others.' : 'Nothing planned yet. Tap ⟳ to sync.';
     $('empty').classList.toggle('hidden', week.length + past.length > 0);
 
     // the task in progress, at the top of the day (0.11.61): a timer left running is hard to miss
@@ -8415,15 +8633,20 @@ function sopOpen() {
 
   // five seconds to change one's mind; the change is kept at once if the app is put away
   let pendingSwipe = null;
+  // the swipe is kept after its five seconds wherever the person is by then; the list is drawn again only when it is
+  // the list that is on screen — a task opened meanwhile was closed under the person's hands by this redraw
+  const redrawWeek = () => { if (!$('week').classList.contains('hidden')) showWeek(); };
   function holdForUndo(label, commit, revert) {
-    if (pendingSwipe) { clearTimeout(pendingSwipe.timer); const p = pendingSwipe; pendingSwipe = null; p.commit().then(() => showWeek()); }
+    if (pendingSwipe) { clearTimeout(pendingSwipe.timer); const p = pendingSwipe; pendingSwipe = null; p.commit().then(() => redrawWeek()); }
     let bar = document.getElementById('fb-undo');
     if (!bar) { bar = el('div', 'fb-undo'); bar.id = 'fb-undo'; document.body.append(bar); }
+    // a notice shown just before left its own timer running: it hid this Undo bar before its five seconds were over
+    clearTimeout(bar._t); bar.classList.remove('info');
     bar.textContent = '';
     const undo = el('button', 'fb-link', 'Undo');
     bar.append(el('span', null, label), undo);
     bar.classList.add('show');
-    const finish = async () => { bar.classList.remove('show'); const p = pendingSwipe; pendingSwipe = null; if (p) { await p.commit(); showWeek(); } };
+    const finish = async () => { bar.classList.remove('show'); const p = pendingSwipe; pendingSwipe = null; if (p) { await p.commit(); redrawWeek(); } };
     pendingSwipe = { commit, revert, timer: setTimeout(finish, 5000) };
     undo.onclick = () => { if (!pendingSwipe) return; clearTimeout(pendingSwipe.timer); const p = pendingSwipe; pendingSwipe = null; bar.classList.remove('show'); p.revert(); };
   }
@@ -8435,7 +8658,7 @@ function sopOpen() {
   function notice(text, onOpen) {
     let bar = document.getElementById('fb-undo');
     if (!bar) { bar = el('div', 'fb-undo'); bar.id = 'fb-undo'; document.body.append(bar); }
-    if (pendingSwipe) { clearTimeout(pendingSwipe.timer); const p = pendingSwipe; pendingSwipe = null; p.commit().then(() => showWeek()); }
+    if (pendingSwipe) { clearTimeout(pendingSwipe.timer); const p = pendingSwipe; pendingSwipe = null; p.commit().then(() => redrawWeek()); }
     bar.textContent = '';
     bar.append(el('span', null, text));
     if (onOpen) { const o = el('button', 'fb-link', 'Open'); o.onclick = () => { bar.classList.remove('show'); onOpen(); }; bar.append(o); }
@@ -9189,6 +9412,12 @@ function sopOpen() {
     // without signal (0.11.93): what this phone sent or last read for the task — to add to it only; it goes up later
     if (!d) {
       if (!kept) { showToast('Without signal a done task opens only on a phone that sent it or opened it before', 'error'); return; }
+      // its report is still in the outbox: saving here goes under the same id and would replace it with what was kept
+      // for adding — without the photos not yet uploaded, a harvest's "Last cut", the traps marked taken down. With
+      // signal the same case is refused a few lines down; the outbox not readable: as before.
+      let stillWaiting = false;
+      try { stillWaiting = !!kept.run?.client_run_id && (await all('outbox')).some(r => r.id === kept.run.client_run_id); } catch (e) { stillWaiting = false; }
+      if (stillWaiting) { showToast('This report is still waiting to be sent — you can add to it once it has gone', 'info'); return; }
       await startRun(t, sop, { ...kept, addOnly: true });
       showToast('No signal: you can add photos and notes — they go up when there is signal', 'info');
       return;
@@ -12871,9 +13100,16 @@ function sopOpen() {
       inp.click();
     });
   }
+  let camOpenAt = 0;         // when the in-app camera was last asked to open (ms); 0 once it is on screen or gave up
   function takeTrapPhoto(code, hintText, purpose = 'trap') {
     if (camMode() === 'phone') { samRelease(); ocrRelease(); return phoneCamera(); }
-    return new Promise(async resolve => {
+    // one camera at a time: the picture comes on screen about a second after the tap, and a second tap in between
+    // opened a second camera under the first — it "came back" after the photo and gave the same trap two cards.
+    // camOpenAt is a time, not a switch: whatever happens below, it stops counting after four seconds by itself.
+    if (Math.abs(Date.now() - camOpenAt) < 4000 || document.querySelector('.fb-cam')) return Promise.resolve('cancel');
+    camOpenAt = Date.now();
+    return new Promise(async resolve0 => {
+      const resolve = v => { camOpenAt = 0; resolve0(v); };
       samRelease();                                                   // the camera and a 4000 px photo need the memory (0.11.82)
       if (!navigator.mediaDevices?.getUserMedia) return resolve(null);
       const pref = camPref(purpose);
@@ -12906,6 +13142,7 @@ function sopOpen() {
       bar.append(cancel, shutter, native);
       ov.append(video, hint, ring, ctl, bar);
       document.body.append(ov);
+      camOpenAt = 0;                                      // on screen: from here the picture itself stops a second camera
       const track = () => stream.getVideoTracks()[0];
       const caps = () => track().getCapabilities?.() || {};
       const remember = () => saveCamPref(purpose, pref);
@@ -14071,6 +14308,9 @@ function sopOpen() {
       dead.length ? `${dead.length} could not be sent — tap to try again` : null
     ].filter(Boolean).join(' · ');
     foot.classList.toggle('fb-foot-bad', !!dead.length);
+    // "could not be sent" sat under a week of cards, where nobody looked: above the list while something is set
+    // aside, back at the bottom once nothing is
+    try { const at = dead.length ? $('next') : $('empty'); if (at && foot.previousElementSibling !== at) at.after(foot); } catch (e) { /* stays where it is */ }
     foot.title = dead.map(r => r.error).filter(Boolean).join('\n');
     // tap: the rows set aside go back in the queue once more (0.11.55)
     foot.onclick = dead.length ? async () => { await putAll('outbox', dead.map(r => ({ ...r, dead: false }))); flush(); } : null;
@@ -14092,10 +14332,14 @@ function sopOpen() {
     try {
       await signIn($('email').value.trim(), $('pass').value);
       $('pass').value = '';
+      // a session that ended by itself never passed through Sign out: the list opens on who signs in now, not on the last choice
+      try { await setKV('who', null); } catch (e) { /* the choice stays */ }
       btn.textContent = 'Reading your tasks…';
       await sync(true);
     } catch (err) {
-      $('authErr').textContent = String(err.message || err);
+      const k = errKind(err);
+      $('authErr').textContent = k === 'net' ? 'No signal — signing in needs a connection. Try again where there is signal.'
+        : k === 'busy' ? 'The server is busy — try again in a minute.' : String(err.message || err);
     } finally { btn.disabled = false; btn.textContent = 'Sign in'; }
   });
   $('sync').addEventListener('click', () => sync(false));
@@ -14113,12 +14357,37 @@ function sopOpen() {
   document.querySelectorAll('[data-source]').forEach(btn => btn.addEventListener('click', () => {
     setSource(btn.dataset.source);
   }));
+  let signingOut = false;
   document.getElementById('fb-signout')?.addEventListener('click', async () => {
-    saveSession(null);
-    await setKV('farm', null); farm = null;
-    await setKV('me', null).catch(() => {}); await setKV('who', null).catch(() => {});   // the next person is not the last one (0.11.103)
-    showToast('Signed out', 'success');
-    if (document.body.classList.contains('src-cloud')) fbOpen();
+    if (signingOut) return;
+    signingOut = true;
+    try {
+      // what this person has not sent would go up later under the next person's name — the server takes who it is
+      // from the sign-in. So it is sent first when there is signal (eight seconds at most, never a wait without end),
+      // and when something still stays the person is asked. Without signal, or the outbox not readable: asked or as before.
+      const outBtn = document.getElementById('fb-signout');
+      if (outBtn) { outBtn.disabled = true; outBtn.textContent = 'Sending what is left…'; }
+      // a checklist left open has its timer running: paused here, as its Back does — forgotten instead, the server
+      // went on counting it for hours
+      try { for (const id of Object.keys(TIMERS)) if (timerRunning(id)) await timerPause(id); } catch (e) { /* as before */ }
+      try {
+        if (session && navigator.onLine) await Promise.race([flush().catch(() => {}), new Promise(res => setTimeout(res, 8000))]);
+        const left = (await all('outbox')).length;
+        if (left && !confirm(`${left} thing${left === 1 ? '' : 's'} you did ${left === 1 ? 'is' : 'are'} not sent yet.\n\nIf you sign out now, ${left === 1 ? 'it goes' : 'they go'} up later under the next person's name.\n\nSign out anyway?`)) return;
+      } catch (e) { /* sign out as before */ }
+      saveSession(null);
+      await setKV('farm', null); farm = null;
+      await setKV('me', null).catch(() => {}); await setKV('who', null).catch(() => {});   // the next person is not the last one (0.11.103)
+      // nor do they get this person's timers (their minutes showed as the next person's own) or open checklist
+      await setKV('timers', null).catch(() => {}); TIMERS = {};
+      await setKV('run_open', null).catch(() => {});
+      showToast('Signed out', 'success');
+      if (document.body.classList.contains('src-cloud')) fbOpen();
+    } finally {
+      signingOut = false;
+      const outBtn = document.getElementById('fb-signout');
+      if (outBtn) { outBtn.disabled = false; outBtn.textContent = 'Sign out'; }
+    }
   });
 
   function setSource(src) {
