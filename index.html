@@ -744,6 +744,8 @@
       font: inherit; color: var(--text); box-shadow: var(--shadow-sm); }
     .fb-card:active { transform: scale(.995); }
     .fb-card.done { opacity:.5; }
+    /* the whole greenhouse (0.11.122): not a zone and not a task — the accent's own colour, a dashed edge */
+    .fb-card.fb-gh { border-left-color: var(--primary); border-style: dashed; border-left-style: solid; box-shadow: none; margin-bottom: var(--space-3); }
     /* swipe (0.11.27): the card slides over a band saying what the swipe does */
     .fb-swipe { position:relative; margin-bottom: 6px; border-radius: var(--radius-md); }
     .fb-swipe > .fb-card { margin-bottom: 0; position:relative; z-index:1; touch-action: pan-y; }
@@ -1249,7 +1251,7 @@
   }
 
   // ─── VERSION CHECK ────────────────────────────────────────
-  const CURRENT_VERSION = '0.11.121';
+  const CURRENT_VERSION = '0.11.122';
   let updateAvailable = false;
 
   let lastSaid = null, notYetAt = 0;
@@ -1413,6 +1415,7 @@
   // Same idea as the console's Settings › Version log (release_note): one line per
   // release, what it changed, in plain words. Add the new release on top with each bump.
   const VERSION_LOG = [
+    ['0.11.122', '2026-10-12', 'A note about the whole greenhouse', 'The scouting has a new card on top of its zones: All, the whole greenhouse. Open it to say or write what you saw across the greenhouse today, in your own words; it goes in the daily report in Naked Heart, above the zones. It is optional, it is in the planned scouting and in an extra scouting, and it works without signal. SU reports now says what it is for: ideas to improve FarmBox.'],
     ['0.11.121', '2026-10-12', 'SU reports: your own title', 'The SU Live tab is now called SU reports. Its Title starts empty and you write it yourself, a few words saying what the report is about; the report is not sent without one. Daily is unchanged.'],
     ['0.11.120', '2026-10-12', 'SU Live, and the right date on Daily', 'Capture has a new tab, SU Live, for the Stellenbosch University team: anything that would improve FarmBox, said or typed. Choose Agronomy, Tech or General at the top (the phone remembers your choice), add a zone if it helps, and send. It takes the place of FB1Log, last used in July. Daily and SU Live now send the date shown on the form: on some phones every Daily report carried the day the tab was first opened.'],
     ['0.11.119', '2026-10-10', 'A scouting photo is uploaded once', 'Tapping Finish a second or two after a photo could send that photo twice: one copy in the report, one left over under Unfiled photos in Naked Heart. Finish now waits a moment for the photo on its way up, so it goes once. Force send no longer uploads again a photo that is already up.'],
@@ -2728,7 +2731,7 @@ const TAB_HERO = {
   sop:     ['Capture a procedure', 'Talk or film the steps — it is saved to the SoP database.'],
   ideas:   ['Capture an idea', 'Say it now, sort it later.'],
   daily:   ['Daily update', 'What got done, and what needs deciding.'],
-  sulive:  ['SU report', 'Anything that would improve FarmBox — what you see, what you would change.'],
+  sulive:  ['SU report', 'Ideas to improve FarmBox — what you would change, and why. What you saw in the crops today goes in the scouting, under All.'],
 };
 // Daily: the Title box shows the author's name automatically (still editable).
 // The box is shared by all Capture tabs, so an untouched automatic name is
@@ -7055,7 +7058,7 @@ function sopOpen() {
   const unBlob = v => (v && typeof v === 'object' && v.__ab instanceof ArrayBuffer ? new Blob([v.__ab], { type: v.type || 'image/jpeg' }) : v);
   const packBlob = async b => (IS_IOS && b instanceof Blob ? { __ab: await b.arrayBuffer(), type: b.type || 'image/jpeg' } : b);
   const freeCanvas = c => { try { if (c && c.width) { c.width = 0; c.height = 0; } } catch (e) { /* gone already */ } };
-  const FB_DRAFT_KEY = /^(rundraft|scout2|trapdraft|harvdraft|fbkdraft):/;
+  const FB_DRAFT_KEY = /^(rundraft|scout2|trapdraft|harvdraft|fbkdraft|ghdraft):/;
   const blobIds = new WeakMap();                         // a Blob → its 'blob:<id>' once stored
   const newBlobId = () => 'blob:' + (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
   function swapOut(v, fresh, refs) {
@@ -7356,7 +7359,7 @@ function sopOpen() {
     const list = Array.isArray(payloads) ? payloads : [payloads];
     if (IS_IOS) for (const u of list) if (u.__upload && u.blob instanceof Blob) u.blob = await packBlob(u.blob);
     await putAll('outbox', list.map((payload, i) => ({ id: payload.client_run_id, payload, tries: 0, at: Date.now() + i })));
-    list.forEach(p => { if (!p.__timer && !p.__upload && !p.__tick && !p.__skip && !p.__clock && !p.__feedback) keepSent(p); });
+    list.forEach(p => { if (!p.__timer && !p.__upload && !p.__tick && !p.__skip && !p.__clock && !p.__feedback && !p.__ghnote) keepSent(p); });
     // done, not done, or a checklist sent: that task's timer stops (the server stops its own with the task)
     list.forEach(p => { if (p.task_id && (p.__tick || p.__skip || (!p.__timer && !p.__upload && p.status === 'completed'))) timerCloseLocal(p.task_id); });
     flush().catch(e => console.warn('flush:', e));
@@ -7455,6 +7458,24 @@ function sopOpen() {
           try { await api('/rest/v1/rpc/skip_task', {
             method: 'POST', body: JSON.stringify({ p_task: row.payload.task_id, p_reason: row.payload.reason, p_note: row.payload.note }) }); }
           catch (e) { if (!(row.payload.quiet && refusedForGood(e))) throw e; }
+        }
+        else if (row.payload.__ghnote) {
+          // a note about the whole greenhouse (0.11.122, FarmBox 0224): its recording goes to the evidence bucket, in the
+          // notes' own folder — noted on the row as it lands, so a failure half-way re-sends none twice — then the note
+          const u = row.payload;
+          for (let i = 0; i < (u.items || []).length; i++) {
+            const x = u.items[i];
+            if (!(x.blob instanceof Blob) || x.path) continue;
+            const type = (x.blob.type || '').split(';')[0] || 'audio/webm';
+            const path = `${u.farm_id || farm.id}/notes/${u.client_run_id}/${i}-${Date.now()}.${fbkExt(type)}`;
+            await api('/storage/v1/object/evidence/' + path, { method: 'POST', headers: { 'Content-Type': type }, body: x.blob });
+            x.path = path; x.bytes = x.blob.size; delete x.blob;
+            await putAll('outbox', [row]);
+          }
+          await api('/rest/v1/rpc/submit_scout_note', { method: 'POST', body: JSON.stringify({ p: {
+            farm_id: u.farm_id || farm.id, client_id: u.client_run_id, day: u.day, text: u.text, task_id: u.scout_task_id || null,
+            extra: !!u.extra, author: u.author, app: u.app, app_version: u.app_version, sent_at: u.sent_at,
+            media: (u.items || []).filter(x => x.path).map(x => ({ kind: 'audio', path: x.path, bytes: x.bytes, seconds: x.seconds })) } }) });
         }
         else if (row.payload.__feedback) {
           // a feedback on a task (0.11.85, FarmBox 0189): its voice notes, photos and video go to the evidence bucket —
@@ -7620,6 +7641,7 @@ function sopOpen() {
   // so it works offline; the server's sums (sync task_times) add everybody else's time on the task.
   // One running task a person; a timer still running at 18:00 stops there (a forgotten one is not all night).
   let TIMERS = {}, TTIMES = new Map(), WNAMES = new Map(), WAITING = new Set();
+  let GH_SENT = {};          // the whole-greenhouse notes this phone sent: '<unit>:<day>' → [{at, text, seconds}] (KV gh_sent)
   let EXTRA_SENT = {};       // an extra scouting's zones sent today: zone key → when (KV extra_sent)
   const firstName = n => String(n || '').trim().split(/\s+/)[0] || '';
   // faces (0.11.114): the people by id, and their pictures kept on this phone (KV wphotos: id → {v, data})
@@ -7666,6 +7688,7 @@ function sopOpen() {
     try { WPHOTOS = (await getKV('wphotos')) || {}; } catch (e) { WPHOTOS = {}; }
     try { TTIMES = new Map(((await getKV('task_times')) || []).map(x => [x.task_id, x])); } catch (e) { TTIMES = new Map(); }
     try { EXTRA_SENT = (await getKV('extra_sent')) || {}; } catch (e) { EXTRA_SENT = {}; }
+    try { GH_SENT = (await getKV('gh_sent')) || {}; } catch (e) { GH_SENT = {}; }
     // the tasks whose report is still on this phone (0.11.91): their card says "waiting to send"
     try { WAITING = new Set((await all('outbox')).filter(r => r.payload && r.payload.task_id && !r.payload.__timer && !r.payload.__upload && !r.payload.__feedback)
                               .map(r => r.payload.task_id)); } catch (e) { WAITING = new Set(); }
@@ -8631,6 +8654,7 @@ function sopOpen() {
       h.style.setProperty('--u', u.colour || 'var(--text-muted)');
       h.append(el('span', 'fb-ubadge', u.badge || u.code || '·'), el('span', null, u.name || 'This unit'));
       sec.append(h);
+      sec.append(greenhouseCard({ farm_id: farmId, day: X.today, extra: true, task_id: mine?.id || null }, () => openExtraPick()));
       [...unit.zones.values()].sort((a, b) => String(a.label || '').localeCompare(String(b.label || ''), undefined, { numeric: true })).forEach(z => {
         const it = items.find(x => x.ref_id === z.ref_id);
         const at = it ? EXTRA_SENT['xz:' + mine.id + ':' + it.id] : null;
@@ -8679,6 +8703,10 @@ function sopOpen() {
     } else
     sec.append(el('h2', null, [fmtDay(h.planned_date), `${done} of ${h.zones.length} done`,
       open.length ? `${open.length} to do, ${fmtMin(open.reduce((a, z) => a + z.openMinutes, 0))} planned` : null].filter(Boolean).join(' · ')));
+    // the whole greenhouse first (0.11.122): a note for the day's report, never required
+    sec.append(greenhouseCard({ farm_id: h.farm_id || farm?.id, day: h.extra || h.planned_date > todayISO() ? todayISO() : h.planned_date,
+                                extra: !!h.extra, task_id: h.extra ? h.id : null },
+      async () => { const again = (await loadGroups()).find(x => x.key === h.key); return again && again.hub ? openHub(again) : showWeek(); }));
     const late = h.planned_date < todayISO();
     h.zones.forEach(z => sec.append(taskCard(z, late && !isClosed(z.status))));
     box.append(sec);
@@ -8695,6 +8723,158 @@ function sopOpen() {
     }
     hubReturn = null;
     return showWeek();
+  }
+
+  // ── the whole greenhouse (0.11.122, FarmBox 0224; owner 12 Oct 2026) ────
+  // "a small section for all greenhouse … the human report will be filled just a voice note or text (not mandatory) …
+  // another section on the daily scouting with zone All … accessible for the planned scouting and extra scouting".
+  // A card "All" on top of a scouting's zones opens this page: say it or write it. It is not a task and not a zone:
+  // nothing here counts in the day's scouting, and nothing is asked. It leaves through the outbox (offline too): the
+  // recording to the evidence bucket, then submit_scout_note; the server writes the voice down with the farm's own
+  // words, and Naked Heart shows it above the zones, where its text can be corrected. What is on the page is kept
+  // (KV ghdraft:<unit>:<day>) until it is sent; what this phone sent is listed under the form (KV gh_sent).
+  const GH_VOICE_S = 180;
+  const ghKey = c => c.farm_id + ':' + c.day;
+  const ghNoteId = () => 'ghn-' + (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2));
+  function greenhouseCard(ctx, back) {
+    const b = el('button', 'fb-card fb-gh');
+    const body = el('div', 'fb-body');
+    body.append(el('div', 'fb-name', 'All · whole greenhouse'));
+    const meta = el('div', 'fb-meta'); meta.append(el('span', 'fb-where', 'a voice note or a few words · optional'));
+    body.append(meta); b.append(body);
+    const n = (GH_SENT[ghKey(ctx)] || []).length;
+    b.append(n ? el('span', 'fb-chip ok', `${n} sent · add more`) : el('span', 'fb-chip todo', 'Add a note'));
+    b.onclick = () => openGreenhouse(ctx, back);
+    return b;
+  }
+  async function openGreenhouse(ctx, back) {
+    const key = 'ghdraft:' + ghKey(ctx);
+    let draft = null; try { draft = await getKV(key); } catch (e) {}
+    const st = { note: draft?.note || '', items: (draft?.items || []).filter(x => x && x.blob instanceof Blob) };
+    const save = () => setKV(key, st.note || st.items.length ? { note: st.note, items: st.items, at: Date.now() } : null).catch(() => {});
+    let rec = null, recTimer = null, recStart = 0, urls = [];
+    const freeUrls = () => { urls.forEach(u => URL.revokeObjectURL(u)); urls = []; };
+    const stopRec = () => { try { if (rec && rec.state !== 'inactive') rec.stop(); } catch (e) {} };
+    const leave = () => { stopRec(); clearInterval(recTimer); freeUrls(); };
+    const unit = ((await getKV('sisters')) || []).find(u => u.id === ctx.farm_id)?.name || farm?.name || null;
+
+    const box = $('task'); box.textContent = '';
+    const hero = el('div', 'hero');
+    hero.append(el('h1', null, 'Whole greenhouse'),
+      el('p', null, [unit, fmtDay(ctx.day), ctx.extra ? 'extra scouting' : null].filter(Boolean).join(' · ')),
+      el('p', null, 'What you saw across the greenhouse today, in your own words — it goes in the daily report, above the zones. Only if you have something to say.'));
+    box.append(hero);
+
+    // the voice note: one big button, the seconds running on it
+    const recBtn = el('button', 'btn btn-lg btn-block fb-fbk-rec');
+    const paintRec = () => {
+      const on = !!rec, s = on ? Math.floor((Date.now() - recStart) / 1000) : 0;
+      nbLabel(recBtn, on ? `{i:stop} Stop · ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}` : '{i:mic} Record a voice note');
+      recBtn.classList.toggle('on', on);
+    };
+    paintRec();
+    recBtn.onclick = async () => {
+      if (rec) return stopRec();
+      if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) { showToast('This phone cannot record here — write the note instead', 'error'); return; }
+      let stream;
+      try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+      catch (e) { showToast('The microphone is not allowed — allow it, or write the note instead', 'error'); return; }
+      const mime = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : '';
+      const chunks = [];
+      let mr;
+      try { mr = mime ? new MediaRecorder(stream, { mimeType: mime, audioBitsPerSecond: 48000 }) : new MediaRecorder(stream); }
+      catch (e) { stream.getTracks().forEach(t => t.stop()); showToast('Recording did not start — write the note instead', 'error'); return; }
+      mr.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+      mr.onstop = () => {
+        clearInterval(recTimer); stream.getTracks().forEach(t => t.stop());
+        const seconds = Math.round((Date.now() - recStart) / 100) / 10;
+        const type = (mr.mimeType || mime || 'audio/webm').split(';')[0];
+        rec = null; paintRec();
+        const blob = new Blob(chunks, { type });
+        if (blob.size < 800 || seconds < 1) { showToast('Too short — nothing was recorded', 'error'); return; }
+        st.items.push({ kind: 'audio', blob, seconds }); save(); paintItems();
+      };
+      rec = mr; recStart = Date.now(); mr.start(); paintRec();
+      recTimer = setInterval(() => { paintRec(); if ((Date.now() - recStart) / 1000 >= GH_VOICE_S) stopRec(); }, 500);
+    };
+    box.append(recBtn);
+
+    const note = el('textarea', 'fb-runnote fb-fbk-note'); note.rows = 4; note.value = st.note;
+    note.placeholder = 'Or write it here';
+    note.oninput = () => { st.note = note.value; save(); paintSend(); };
+    box.append(note);
+
+    // what was recorded: listen, remove
+    const items = el('div', 'fb-fbk-items');
+    function paintItems() {
+      freeUrls(); items.textContent = '';
+      st.items.forEach((x, i) => {
+        const row = el('div', 'fb-fbk-item audio');
+        const url = URL.createObjectURL(x.blob); urls.push(url);
+        const n = el('audio'); n.controls = true; n.preload = 'metadata'; n.src = url;
+        const cap = el('span', 'fb-meta', ['Voice note', x.seconds ? Math.round(x.seconds) + ' s' : null, fmtMB(x.blob.size)].filter(Boolean).join(' · '));
+        const rm = el('button', 'fb-link', 'Remove');
+        rm.onclick = () => { st.items.splice(i, 1); save(); paintItems(); };
+        const foot = el('div', 'fb-fbk-cap'); foot.append(cap, rm);
+        row.append(n, foot);
+        items.append(row);
+      });
+      paintSend();
+    }
+    box.append(items);
+
+    const send = el('button', 'btn btn-primary btn-lg btn-block', 'Send the note');
+    function paintSend() { send.disabled = !(note.value.trim() || st.items.length); }
+    send.onclick = async () => {
+      if (rec) { showToast('Stop the recording first', 'error'); return; }
+      const text = note.value.trim();
+      if (!text && !st.items.length) { showToast('Say or write something first', 'error'); return; }
+      send.disabled = true;
+      try {
+        if (!farm) farm = await getKV('farm');
+        const me = await getKV('me');
+        const id = ghNoteId();
+        await queue({ __ghnote: true, client_run_id: id, farm_id: ctx.farm_id || farm?.id, day: ctx.day, text: text || null,
+          scout_task_id: ctx.task_id || null, extra: !!ctx.extra,
+          author: (await all('workers')).find(w => w.id === me)?.name || session?.user?.email || null,
+          app: 'brain', app_version: typeof CURRENT_VERSION !== 'undefined' ? CURRENT_VERSION : null,
+          sent_at: new Date().toISOString(), items: st.items.map(x => ({ kind: 'audio', blob: x.blob, seconds: x.seconds ?? null })) });
+        await setKV(key, null);
+        const mine = GH_SENT[ghKey(ctx)] || (GH_SENT[ghKey(ctx)] = []);
+        mine.push({ at: Date.now(), text: text ? text.slice(0, 200) : null, seconds: st.items.reduce((a, x) => a + (x.seconds || 0), 0) || null });
+        for (const k of Object.keys(GH_SENT)) if (!(GH_SENT[k] || []).some(x => x.at > Date.now() - 3 * 86400000)) delete GH_SENT[k];
+        setKV('gh_sent', GH_SENT).catch(() => {});
+        showToast(navigator.onLine ? 'Note sent ✓' : 'Note kept — it goes when there is signal', 'success');
+        history.back();
+      } catch (e) {
+        send.disabled = false;
+        showToast('Could not keep the note — ' + String(e.message || e).slice(0, 60), 'error');
+      }
+    };
+    box.append(send);
+    box.append(el('div', 'config-hint', `Voice notes up to ${GH_VOICE_S / 60} minutes. It works offline: it is sent when there is signal. The voice is written down for the report; a word heard wrong can be corrected in Naked Heart. An idea to improve FarmBox goes in Capture › SU reports.`));
+
+    // what this phone already sent about that day
+    const mine = GH_SENT[ghKey(ctx)] || [];
+    const waiting = (await all('outbox')).filter(r => r.payload?.__ghnote && r.payload.farm_id === ctx.farm_id && r.payload.day === ctx.day).length;
+    if (mine.length) {
+      const said = el('div', 'fb-fbk-said');
+      said.append(el('div', 'fb-sec', 'Already sent from this phone'));
+      if (waiting) said.append(el('div', 'config-hint', `${waiting} waiting to be sent.`));
+      mine.slice().reverse().forEach(r => {
+        const c = el('div', 'fb-fbk-row');
+        const head = el('div', 'fb-fbk-head');
+        head.append(el('b', null, new Date(r.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })),
+          el('span', 'fb-meta', r.seconds ? `{i:mic} ${Math.round(r.seconds)} s` : 'written'));
+        c.append(head);
+        if (r.text) c.append(el('div', 'fb-fbk-text', r.text));
+        said.append(c);
+      });
+      box.append(said);
+    }
+
+    paintItems();
+    show('task', 'Whole greenhouse', async () => { leave(); return back(); });
   }
 
   // ── feedback on a task (0.11.85, FarmBox 0189; owner 2 Oct 2026) ────────
@@ -13824,6 +14004,23 @@ function sopOpen() {
           await del('kv', row.id);
           say(`A feedback draft${g?.title ? ' on ' + g.title : ''} sent as written.`);
         } catch (e) { say(`A feedback draft not sent — ${String(e.message || e).slice(0, 110)}`, true); }
+      }
+      for (const row of kv.filter(r => String(r.id).startsWith('ghdraft:'))) {
+        const draft = row.v || {}, [farmId, day] = String(row.id).slice(8).split(':');
+        const items = (draft.items || []).filter(x => x && x.blob instanceof Blob);
+        const text = String(draft.note || '').trim();
+        if (!text && !items.length) { try { await del('kv', row.id); } catch (e) { /* nothing in it */ } continue; }
+        try {
+          const me = await getKV('me');
+          const id = ghNoteId();
+          await putAll('outbox', [{ id, tries: 0, at: Date.now(), payload: { __ghnote: true, client_run_id: id, farm_id: farmId || farm?.id, day: day || todayISO(),
+            text: text || null, scout_task_id: null, extra: false,
+            author: (await all('workers')).find(w => w.id === me)?.name || session?.user?.email || null,
+            app: 'brain', app_version: typeof CURRENT_VERSION !== 'undefined' ? CURRENT_VERSION : null,
+            sent_at: new Date().toISOString(), items: items.map(x => ({ kind: 'audio', blob: x.blob, seconds: x.seconds ?? null })) } }]);
+          await del('kv', row.id);
+          say('A note about the whole greenhouse sent as written.');
+        } catch (e) { say(`A whole-greenhouse note not sent — ${String(e.message || e).slice(0, 110)}`, true); }
       }
       // 2. the outbox: what was set aside goes back in, the photos go on any connection
       const before = await all('outbox');
