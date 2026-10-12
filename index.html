@@ -1249,7 +1249,7 @@
   }
 
   // ─── VERSION CHECK ────────────────────────────────────────
-  const CURRENT_VERSION = '0.11.120';
+  const CURRENT_VERSION = '0.11.121';
   let updateAvailable = false;
 
   let lastSaid = null, notYetAt = 0;
@@ -1413,6 +1413,7 @@
   // Same idea as the console's Settings › Version log (release_note): one line per
   // release, what it changed, in plain words. Add the new release on top with each bump.
   const VERSION_LOG = [
+    ['0.11.121', '2026-10-12', 'SU reports: your own title', 'The SU Live tab is now called SU reports. Its Title starts empty and you write it yourself, a few words saying what the report is about; the report is not sent without one. Daily is unchanged.'],
     ['0.11.120', '2026-10-12', 'SU Live, and the right date on Daily', 'Capture has a new tab, SU Live, for the Stellenbosch University team: anything that would improve FarmBox, said or typed. Choose Agronomy, Tech or General at the top (the phone remembers your choice), add a zone if it helps, and send. It takes the place of FB1Log, last used in July. Daily and SU Live now send the date shown on the form: on some phones every Daily report carried the day the tab was first opened.'],
     ['0.11.119', '2026-10-10', 'A scouting photo is uploaded once', 'Tapping Finish a second or two after a photo could send that photo twice: one copy in the report, one left over under Unfiled photos in Naked Heart. Finish now waits a moment for the photo on its way up, so it goes once. Force send no longer uploads again a photo that is already up.'],
     ['0.11.118', '2026-10-06', 'Capture with the same sign-in', 'Capture no longer asks the team password: notes, photos and voice notes go through the platform on your own FarmBox sign-in. A phone that is not signed in, or a farm whose Notion pages the platform cannot see yet, keeps the team password as before.'],
@@ -1915,7 +1916,7 @@ document.addEventListener('DOMContentLoaded', () => {
   <button class="tab-btn" data-tab="sop" role="tab" aria-selected="false">SoP</button>
   <button class="tab-btn" data-tab="ideas" role="tab" aria-selected="false">Ideas</button>
   <button class="tab-btn" data-tab="daily" role="tab" aria-selected="false">Daily</button>
-  <button class="tab-btn" data-tab="sulive" role="tab" aria-selected="false">SU Live</button>
+  <button class="tab-btn" data-tab="sulive" role="tab" aria-selected="false">SU reports</button>
 </nav>
 
 <!-- MAIN -->
@@ -2220,7 +2221,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="config-hint">From the database URL: notion.so/&lt;workspace&gt;/<strong>DATABASE_ID</strong>?v=…</div>
       </div>
       <div class="config-field">
-        <label for="notionDbId_sulive">SU Live — Database ID</label>
+        <label for="notionDbId_sulive">SU reports — Database ID</label>
         <input type="text" id="notionDbId_sulive" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" autocomplete="off" spellcheck="false">
         <div class="config-hint">From the database URL: notion.so/&lt;workspace&gt;/<strong>DATABASE_ID</strong>?v=…</div>
       </div>
@@ -2294,14 +2295,19 @@ const CONFIG_FIELDS = [
   'notionDbId_sulive',
 ];
 
-// SU Live (0.11.120, owner 12 Oct 2026) took the place of FB1Log, the FarmBox1 build log: its last entry was of
-// 10 July. The FB1Log database stays in Notion; the app no longer writes to it.
-const TAB_LABELS = { ugly200: 'Ugly200', sop: 'SoP', ideas: 'Ideas', daily: 'Daily', sulive: 'SU Live' };
+// SU reports (0.11.120 as "SU Live", renamed in 0.11.121; owner 12 Oct 2026) took the place of FB1Log, the FarmBox1
+// build log: its last entry was of 10 July. The FB1Log database stays in Notion; the app no longer writes to it.
+// The tab's key stays `sulive`: it names the setting and what each phone remembers.
+const TAB_LABELS = { ugly200: 'Ugly200', sop: 'SoP', ideas: 'Ideas', daily: 'Daily', sulive: 'SU reports' };
 const TAB_DB     = { ugly200: 'notionDbId_ugly200', sop: 'notionDbId_sop', ideas: 'notionDbId_ideas', daily: 'notionDbId_daily', sulive: 'notionDbId_sulive' };
 let activeTab = localStorage.getItem('brain_activeTab') || 'ugly200';
 if (!TAB_DB[activeTab]) activeTab = 'ugly200';   // a phone left on a tab that is gone
-// Tabs whose Title box starts as the author's name, and whose date is the one on the form
-const titledByAuthor = tab => tab === 'daily' || tab === 'sulive';
+// Daily's Title box starts as the author's name. SU reports had the same in 0.11.120; since 0.11.121 its Title
+// starts blank and the person writes it (owner: "the title has to be blank and filled by the user").
+const titledByAuthor = tab => tab === 'daily';
+const TITLE_REQUIRED = { sulive: true };
+// Tabs that carry their date on the form (a `date` field): that date is sent, date only
+const datedOnForm = tab => (TAB_SCHEMAS[tab] || []).some(f => f.type === 'date');
 
 // Local calendar date as YYYY-MM-DD. toISOString() gives the UTC date, which
 // is still yesterday in the early morning in South Africa.
@@ -2334,9 +2340,9 @@ const TAB_SCHEMAS = {
     { key: 'Decisions needed', type: 'text', multiline: true },
   ],
   sulive: [
-    // The Stellenbosch University team's live reports: anything that would improve FarmBox. Like Daily without its
-    // three boxes — the report is the voice note and the Note. The kind of report comes first, as a menu that keeps
-    // its last choice on this phone (the same person mostly sends the same kind); the zone is optional.
+    // The Stellenbosch University team's reports: anything that would improve FarmBox. Like Daily without its
+    // three boxes — the report is its title, the voice note and the Note. The kind of report comes first, as a menu
+    // that keeps its last choice on this phone (the same person mostly sends the same kind); the zone is optional.
     { key: 'Category', type: 'select', menu: true, required: true, persist: true, top: true, options: ['Agronomy','Tech','General'] },
     { key: 'Date', type: 'date' },
     { key: 'Zone', type: 'multi_select', options: ['Zone 1','Zone 2','Zone 3','Zone 4','FarmBox1'] },
@@ -2722,11 +2728,11 @@ const TAB_HERO = {
   sop:     ['Capture a procedure', 'Talk or film the steps — it is saved to the SoP database.'],
   ideas:   ['Capture an idea', 'Say it now, sort it later.'],
   daily:   ['Daily update', 'What got done, and what needs deciding.'],
-  sulive:  ['SU live report', 'Anything that would improve FarmBox — what you see, what you would change.'],
+  sulive:  ['SU report', 'Anything that would improve FarmBox — what you see, what you would change.'],
 };
-// Daily and SU Live: the Title box shows the author's name automatically (still editable).
+// Daily: the Title box shows the author's name automatically (still editable).
 // The box is shared by all Capture tabs, so an untouched automatic name is
-// cleared again when you leave those tabs — it never becomes an Ugly200/SoP title.
+// cleared again when you leave Daily — it never becomes an Ugly200/SoP title.
 function syncDailyTitle(tab) {
   const input = document.getElementById('noteTitle');
   if (!input) return;
@@ -4653,7 +4659,7 @@ function writeDraft() {
     DRAFT_FIELDS.forEach(id => {
       const v = document.getElementById(id)?.value || '';
       fields[id] = v;
-      // the author's name put in the Title box by the app (Daily, SU Live) is not text of a note (0.11.120)
+      // the author's name put in the Title box by the app (Daily) is not text of a note (0.11.120)
       if (v.trim() && !(id === 'noteTitle' && document.getElementById(id).dataset.auto === '1')) hasText = true;
     });
     // Nothing worth keeping — drop the draft rather than leaving a stale one.
@@ -4704,7 +4710,7 @@ function restoreDraft() {
       localStorage.setItem('brain_activeTab', d.tab);
     }
     // Keep the original start time: it is what gets sent to Notion as the date.
-    // Not from a draft that holds nothing but the Title on Daily or SU Live (0.11.120): that was the author's
+    // Not from a draft that holds nothing but the Title on Daily (0.11.120): that was the author's
     // name the app writes there, kept as a "draft" for ever — and its start time with it, so every Daily sent
     // from that phone carried the day the tab was first opened (five reports of 5-9 Oct 2026 dated 30 Sept).
     const started = d.startedAt ? new Date(d.startedAt) : null;
@@ -4996,6 +5002,11 @@ async function submitToNotion() {
     showToast(`Choose the ${(unchosen.label || unchosen.key).toLowerCase()} first: ${unchosen.options.join(', ')}`, 'error');
     return;
   }
+  if (TITLE_REQUIRED[tab] && !document.getElementById('noteTitle').value.trim()) {
+    showToast('Give the report a title first', 'error');
+    document.getElementById('noteTitle').focus();
+    return;
+  }
 
   submitting = true;
   const btn = document.getElementById('submitBtn');
@@ -5117,8 +5128,8 @@ async function submitToNotion() {
     }
   }
 
-  if (titledByAuthor(tab)) {
-    // Daily, SU Live: the date chosen in the form, date only (no time); today if unchanged — what the form shows.
+  if (datedOnForm(tab)) {
+    // Daily, SU reports: the date chosen in the form, date only (no time); today if unchanged — what the form shows.
     // Until 0.11.120 an unchanged date was the note's start time, which on these tabs could be weeks old.
     const dateEntry = Object.entries(dbProps).find(([, v]) => v.type === 'date');
     if (dateEntry) {
@@ -5133,7 +5144,7 @@ async function submitToNotion() {
     const pickCol = (names, type) => !knownProps ? names[0]
       : names.find(n => dbProps[n]?.type === type)
         || Object.keys(dbProps).find(n => dbProps[n].type === type && names.some(x => n.toLowerCase().includes(x.toLowerCase())));
-    const dateCol = titledByAuthor(tab) ? null : pickCol(['Date', 'Effective Date'], 'date');
+    const dateCol = datedOnForm(tab) ? null : pickCol(['Date', 'Effective Date'], 'date');
     if (dateCol) properties[dateCol] = { date: { start: dateCol === 'Date' ? noteStartTime.toISOString() : localDateISO(noteStartTime) } };
     const noteCol = pickCol([noteProp, 'Summary'], 'rich_text');
     if (note && noteCol) {
@@ -5166,7 +5177,7 @@ async function submitToNotion() {
     }
   });
 
-  // SU Live: a report arrives as New; the farm team moves it to Seen and Done in Notion
+  // SU reports: a report arrives as New; the farm team moves it to Seen and Done in Notion
   if (tab === 'sulive' && dbProps.Status?.type === 'select') properties.Status = { select: { name: 'New' } };
 
   busyLabel(btn, 'Creating page…');
@@ -5234,8 +5245,8 @@ function resetForm(sent = null) {
     try { localStorage.setItem('brain_tabValues', JSON.stringify(tabValues)); } catch (e) { /* storage full: the form still clears */ }
     if (tab === activeTab) renderTabFields(activeTab);
   }
-  // the author's name back in the Title box (Daily, SU Live) is not something left to send: until 0.11.120 it
-  // kept the old start time and the draft alive after every send on those tabs
+  // the author's name back in the Title box (Daily) is not something left to send: until 0.11.120 it
+  // kept the old start time and the draft alive after every send on that tab
   const left = ['noteTitle', 'transcriptText', 'summaryText', 'noteText', 'videoTranscriptText', 'videoSummaryText']
     .some(id => { const f = document.getElementById(id); return f.value.trim() && !(id === 'noteTitle' && f.dataset.auto === '1'); }) || mediaFiles.length > 0;
   if (!left) {
