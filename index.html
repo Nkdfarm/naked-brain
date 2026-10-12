@@ -1251,7 +1251,7 @@
   }
 
   // ─── VERSION CHECK ────────────────────────────────────────
-  const CURRENT_VERSION = '0.11.122';
+  const CURRENT_VERSION = '0.11.123';
   let updateAvailable = false;
 
   let lastSaid = null, notYetAt = 0;
@@ -1415,6 +1415,7 @@
   // Same idea as the console's Settings › Version log (release_note): one line per
   // release, what it changed, in plain words. Add the new release on top with each bump.
   const VERSION_LOG = [
+    ['0.11.123', '2026-10-12', 'People off the task pages', 'A person can now be in the team without being on the task pages (a tick on the Team page of Naked Heart). They sign in like everybody, see every task and can do any of them, but their name is no longer in the list above the tasks, and the plan gives them no work.'],
     ['0.11.122', '2026-10-12', 'A note about the whole greenhouse', 'The scouting has a new card on top of its zones: All, the whole greenhouse. Open it to say or write what you saw across the greenhouse today, in your own words; it goes in the daily report in Naked Heart, above the zones. It is optional, it is in the planned scouting and in an extra scouting, and it works without signal. SU reports now says what it is for: ideas to improve FarmBox.'],
     ['0.11.121', '2026-10-12', 'SU reports: your own title', 'The SU Live tab is now called SU reports. Its Title starts empty and you write it yourself, a few words saying what the report is about; the report is not sent without one. Daily is unchanged.'],
     ['0.11.120', '2026-10-12', 'SU Live, and the right date on Daily', 'Capture has a new tab, SU Live, for the Stellenbosch University team: anything that would improve FarmBox, said or typed. Choose Agronomy, Tech or General at the top (the phone remembers your choice), add a zone if it helps, and send. It takes the place of FB1Log, last used in July. Daily and SU Live now send the date shown on the form: on some phones every Daily report carried the day the tab was first opened.'],
@@ -7985,7 +7986,8 @@ function sopOpen() {
       });
     const today = todayISO(), horizon = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
     // whose tasks: everyone, nobody yet, or one person — the person signed in by default (FarmBox 0086)
-    const workers = (await all('workers')).filter(w => w.active !== false)
+    // … but for somebody off the task pages (FarmBox 0229, 0.11.123): they see every task and can do any, and are no name in this list
+    const workers = (await all('workers')).filter(w => w.active !== false && !w.off_tasks)
       .sort((a, b) => ((a.board_sort ?? 1e9) - (b.board_sort ?? 1e9))      // the order of the Tasks board in Naked Heart (0.11.114)
         || (a.employment === 'casual') - (b.employment === 'casual') || String(a.name).localeCompare(String(b.name)));
     const me = await getKV('me');
