@@ -1,6 +1,8 @@
-const CACHE_NAME = 'ugly200-v213';
+const CACHE_NAME = 'ugly200-v214';
 // the scouting's text reader (Tesseract.js from jsDelivr, 0.11.40): kept across releases for offline days
 const LIB_CACHE = 'fb-lib-v1';
+// how long the app's start waits for the network before it opens from the kept page (see the fetch handler)
+const HTML_WAIT_MS = 5000;
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -73,20 +75,40 @@ self.addEventListener('fetch', e => {
     // cache:'no-cache' forces revalidation — a plain fetch() may be answered
     // from the HTTP cache (GitHub Pages: max-age=600) and hand out the previous
     // release for up to 10 minutes (also for the SoP iframe page).
-    e.respondWith(
-      fetch(new Request(request.url, { cache: 'no-cache', credentials: 'same-origin' })).then(response => {
-        if (response && response.status === 200 && response.type !== 'opaque') {
-          const clone = response.clone();
-          // one copy per page, whatever its query (0.11.92): the update check's index.html?probe=<time> and the
-          // ?updated=<time> reload each stored a new ~800 KB copy, every two minutes while a deploy was half out
-          const key = url.search ? new Request(url.origin + url.pathname) : request;
-          caches.open(CACHE_NAME).then(cache => cache.put(key, clone));
-        }
-        return response;
-      }).catch(() =>
-        caches.match(request, { ignoreSearch: true }).then(c => c || caches.match('./index.html'))
-      )
-    );
+    let stored = Promise.resolve();   // the copy being written to the cache, so a late answer is not cut short
+    const net = fetch(new Request(request.url, { cache: 'no-cache', credentials: 'same-origin' })).then(response => {
+      if (response && response.status === 200 && response.type !== 'opaque') {
+        const clone = response.clone();
+        // one copy per page, whatever its query (0.11.92): the update check's index.html?probe=<time> and the
+        // ?updated=<time> reload each stored a new ~800 KB copy, every two minutes while a deploy was half out
+        const key = url.search ? new Request(url.origin + url.pathname) : request;
+        stored = caches.open(CACHE_NAME).then(cache => cache.put(key, clone)).catch(() => {});
+      }
+      return response;
+    });
+    // the network failed: the kept page, else the app's own — and always a Response (0.11.55), never nothing
+    const netOrKept = net.catch(() =>
+      caches.match(request, { ignoreSearch: true }).then(c => c || caches.match('./index.html'))
+    ).then(r => r || Response.error(), () => Response.error());
+
+    // Anything but the app being opened waits for the network as before: the update check's index.html?probe=… must
+    // read the page the server has, not the kept one, and so must the reload an update makes (?updated=…).
+    if (request.mode !== 'navigate' || url.searchParams.has('updated')) { e.respondWith(netOrKept); return; }
+
+    // The app being opened: the network still wins when it answers within HTML_WAIT_MS. On a link that neither
+    // answers nor fails (one bar at the greenhouse door) the start used to wait on it with a blank screen, with the
+    // page sitting in the cache: after the limit the kept page is served. The answer, when it does come, is still
+    // put in the cache (waitUntil keeps the worker alive for it); with no kept page the network is awaited as before.
+    e.waitUntil(net.then(() => stored, () => {}));
+    e.respondWith(new Promise(resolve => {
+      let served = false;
+      const serve = r => { if (!served) { served = true; resolve(r); } };
+      netOrKept.then(serve);
+      setTimeout(() => {
+        if (served) return;
+        caches.match(request, { ignoreSearch: true }).then(c => { if (c) serve(c); }).catch(() => {});
+      }, HTML_WAIT_MS);
+    }));
     return;
   }
 

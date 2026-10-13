@@ -136,39 +136,58 @@
   <h1>Naked <span>Brain</span></h1>
   <p>Your day at the FarmBox: tasks, checklists and notes.</p>
   <div class="hero-badges">
-    <span class="badge">v 1.02</span>
-    <span class="badge">PWA — works offline</span>
-    <span class="badge">4 Notion databases</span>
-    <span class="badge">AI powered</span>
-    <span class="badge"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg> Password protected</span>
+    <!-- the version is read from the app on this phone (the script at the end), never typed here -->
+    <span class="badge" data-app-version>Version: see Settings › Version log</span>
+    <span class="badge">Works without signal</span>
+    <span class="badge"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg> One sign-in</span>
   </div>
 </div>
 
 <div class="page">
 
-  <!-- WHAT IS IT -->
-  <div class="section">
-    <div class="section-title">What is Naked Brain</div>
+  <!-- CONTENTS -->
+  <div class="section" id="contents">
+    <div class="section-title">In this guide</div>
     <div class="card">
-      <p style="font-size:0.92rem;color:var(--muted);margin-bottom:16px">
-        Naked Brain is a Progressive Web App (PWA) that lets any team member record a voice note in the field, auto-transcribe it with AI, generate a summary, attach photos or videos, and send everything directly to the right Notion database — no typing required.
-      </p>
-      <div class="features">
-        <div class="feature"><div class="feature-icon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10v1a7 7 0 0 1-14 0v-1M12 18v4"/></svg></div><h3>Voice Recording</h3><p>One tap to record. Auto-transcribed via Groq Whisper.</p></div>
-        <div class="feature"><div class="feature-icon">✦</div><h3>AI Summary</h3><p>Groq LLaMA generates the minimum bullet points needed to capture the key information.</p></div>
-        <div class="feature"><div class="feature-icon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3Z"/><circle cx="12" cy="13" r="3.5"/></svg></div><h3>Photo & Video</h3><p>Attach field photos and videos. Videos are auto-transcribed and compressed on upload.</p></div>
-        <div class="feature"><div class="feature-icon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m16 13 5.2 3.5a.5.5 0 0 0 .8-.4V7.9a.5.5 0 0 0-.8-.4L16 10.5"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg></div><h3>Video Summary</h3><p>Upload a local video or paste a YouTube transcript — AI summarises it instantly.</p></div>
-        <div class="feature"><div class="feature-icon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/></svg></div><h3>Works Offline</h3><p>Installs on your phone. Works without internet (submit when back online).</p></div>
-        <div class="feature"><div class="feature-icon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div><h3>Password Protected</h3><p>Team password required on first launch. Only authorised users can send to Notion.</p></div>
+      <p style="font-size:0.88rem;color:var(--muted);margin-bottom:16px">Tap a line to jump to it.</p>
+      <div class="tab-pills">
+        <a class="tab-pill" href="#what" style="color:inherit;text-decoration:none"><span class="tab-pill-name">What is Naked Brain</span></a>
+        <a class="tab-pill" href="#install" style="color:inherit;text-decoration:none"><span class="tab-pill-name">Install it on your phone</span></a>
+        <a class="tab-pill" href="#signin" style="color:inherit;text-decoration:none"><span class="tab-pill-name">Signing in</span></a>
+        <a class="tab-pill" href="#tasks" style="color:inherit;text-decoration:none"><span class="tab-pill-name">Tasks: your day</span></a>
+        <a class="tab-pill" href="#checklist" style="color:inherit;text-decoration:none"><span class="tab-pill-name">Doing a task: the checklist</span></a>
+        <a class="tab-pill" href="#swipe" style="color:inherit;text-decoration:none"><span class="tab-pill-name">Swipe: done, cancel, Undo</span></a>
+        <a class="tab-pill" href="#scouting" style="color:inherit;text-decoration:none"><span class="tab-pill-name">The daily scouting</span></a>
+        <a class="tab-pill" href="#extra" style="color:inherit;text-decoration:none"><span class="tab-pill-name">Extra scouting and feedback</span></a>
+        <a class="tab-pill" href="#sending" style="color:inherit;text-decoration:none"><span class="tab-pill-name">Sending, sync and no signal</span></a>
+        <a class="tab-pill" href="#capture" style="color:inherit;text-decoration:none"><span class="tab-pill-name">Capture: notes for Notion</span></a>
+        <a class="tab-pill" href="#settings" style="color:inherit;text-decoration:none"><span class="tab-pill-name">Settings</span></a>
+        <a class="tab-pill" href="#updates" style="color:inherit;text-decoration:none"><span class="tab-pill-name">App updates</span></a>
       </div>
     </div>
   </div>
 
-  <!-- INSTALL -->
-  <div class="section">
-    <div class="section-title">Installation — Add to Home Screen</div>
+  <!-- WHAT IS NAKED BRAIN -->
+  <div class="section" id="what">
+    <div class="section-title">What is Naked Brain</div>
     <div class="card">
-      <p style="font-size:0.88rem;color:var(--muted);margin-bottom:16px">Open <a href="https://brain.nkd.farm/" style="color:var(--primary);font-weight:700;text-decoration:underline">https://brain.nkd.farm/</a> in your browser and install it as an app:</p>
+      <p style="font-size:0.88rem;color:var(--muted);margin-bottom:16px">Naked Brain is the phone app of the FarmBox. It has two parts, the two buttons at the top: <strong>Tasks</strong> is your work of the day, with its checklists and the scouting. <strong>Capture</strong> is for notes: say it, photograph it or film it, and send it to the right list in Notion. What you do in Tasks shows in Naked Heart, the console on the computer.</p>
+      <div class="features">
+        <div class="feature"><div class="feature-icon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3.5A1.5 1.5 0 0 1 10.5 2h3A1.5 1.5 0 0 1 15 3.5V4"/><path d="m9 13 2 2 4-4"/></svg></div><h3>Your tasks</h3><p>The work planned for you, day by day. Tap a task to do its checklist.</p></div>
+        <div class="feature"><div class="feature-icon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><h3>A timer on every task</h3><p>It starts when you open the checklist. Nothing to fill in.</p></div>
+        <div class="feature"><div class="feature-icon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21v-9"/><path d="M12 12C12 8 9 5 4 5c0 4 3 7 8 7Z"/><path d="M12 10c0-3.5 2.5-6 7-6 0 3.5-2.5 6-7 6Z"/></svg></div><h3>Scouting</h3><p>Trap cards and plant photos, zone by zone. The phone counts and measures.</p></div>
+        <div class="feature"><div class="feature-icon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10v1a7 7 0 0 1-14 0v-1M12 18v4"/></svg></div><h3>Voice notes</h3><p>Say it. The app writes it down and can sum it up.</p></div>
+        <div class="feature"><div class="feature-icon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3Z"/><circle cx="12" cy="13" r="3.5"/></svg></div><h3>Photos and video</h3><p>In a checklist, in the scouting and in a note.</p></div>
+        <div class="feature"><div class="feature-icon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/></svg></div><h3>Works without signal</h3><p>What you do is kept on the phone and goes up when there is signal.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INSTALL IT ON YOUR PHONE -->
+  <div class="section" id="install">
+    <div class="section-title">Install it on your phone</div>
+    <div class="card">
+      <p style="font-size:0.88rem;color:var(--muted);margin-bottom:16px">Open <a href="https://brain.nkd.farm/" style="color:var(--primary);font-weight:700;text-decoration:underline">https://brain.nkd.farm/</a> in the browser of your phone and add it to the home screen. It then opens like any other app.</p>
       <div class="install-steps">
         <div class="install-step">
           <div class="os"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/></svg> iPhone / iPad (Safari)</div>
@@ -179,60 +198,333 @@
           <p>Tap the <strong>⋮ menu</strong> → <strong>Add to Home Screen</strong> → <strong>Install</strong></p>
         </div>
         <div class="install-step">
-          <div class="os"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg> Desktop (Chrome / Edge)</div>
+          <div class="os"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg> Computer (Chrome / Edge)</div>
           <p>Click the <strong>install icon</strong> (⊕) in the address bar → <strong>Install</strong></p>
         </div>
         <div class="install-step">
-          <div class="os"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg> First launch</div>
-          <p>Enter the <strong>team password</strong> when prompted. It is saved — you won't need to enter it again unless it changes.</p>
+          <div class="os"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></svg> First time</div>
+          <p>The app opens on <strong>Sign in</strong>. See the next section.</p>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- PASSWORD -->
-  <div class="section">
-    <div class="section-title">Team Password</div>
+  <!-- SIGNING IN -->
+  <div class="section" id="signin">
+    <div class="section-title">Signing in</div>
     <div class="card-row">
       <div class="card">
         <div class="pw-mock">
           <div class="pw-mock-card">
-            <div class="pw-mock-icon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
-            <div class="pw-mock-title">Naked Brain</div>
-            <div class="pw-mock-sub">Enter your team password to continue</div>
-            <div class="pw-mock-input">••••••••••••</div>
-            <div class="pw-mock-btn">Unlock</div>
+            <div class="pw-mock-icon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></svg></div>
+            <div class="pw-mock-title">Sign in</div>
+            <div class="pw-mock-sub">Your FarmBox account</div>
+            <div class="pw-mock-input">E-mail</div>
+            <div class="pw-mock-input">Password</div>
+            <div class="pw-mock-btn">Sign in</div>
           </div>
         </div>
-        <p class="screenshot-caption" style="margin-top:12px">Password gate — shown on first launch</p>
+        <p class="screenshot-caption" style="margin-top:12px">The first screen of the app</p>
       </div>
       <div class="card" style="display:flex;flex-direction:column;justify-content:center;gap:14px">
-        <p style="font-size:0.88rem;color:var(--muted)">The app requires a <strong>team password</strong> before any data can be sent to Notion. This prevents unauthorised use even if someone finds the app URL.</p>
+        <p style="font-size:0.88rem;color:var(--muted)">You sign in with <strong>your own FarmBox account</strong>: the same e-mail and password as in Naked Heart. An Admin makes your account on the Team page of Naked Heart and gives you the e-mail and the password.</p>
         <ul style="font-size:0.85rem;color:var(--muted);padding-left:1.2em;display:flex;flex-direction:column;gap:8px">
-          <li>Enter the password once → it is stored on your device</li>
-          <li>No re-entry needed on future launches</li>
-          <li>If the password changes, the gate reappears automatically</li>
-          <li>The password is never visible in the app source code — it lives only in Cloudflare</li>
+          <li>Type your e-mail and your password and tap <strong>Sign in</strong>. The button says Signing in…, then Reading your tasks….</li>
+          <li>Signing in needs signal. After that the app works without it.</li>
+          <li>One sign-in is for the whole app: Tasks and Capture.</li>
+          <li>Your name comes from your account. You do not type it.</li>
+          <li>You stay signed in. If the app says <strong>Please sign in again</strong>, sign in again: your work is kept on the phone.</li>
         </ul>
-        <div class="tip"><strong><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg> Ask your admin</strong> for the team password if you don't have it.</div>
+        <div class="tip"><strong><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg> No team password.</strong> The app no longer asks one. Only if you open Capture on a phone that is not signed in can a screen ask for a "team password": tap <strong>Back to Tasks</strong>, sign in, and open Capture again. If it still asks, tell the Admin.</div>
       </div>
     </div>
   </div>
 
-  <!-- INTERFACE -->
-  <div class="section">
-    <div class="section-title">App Interface</div>
-
+  <!-- TASKS: YOUR DAY -->
+  <div class="section" id="tasks">
+    <div class="section-title">Tasks: your day</div>
     <div class="card-row">
       <div class="card">
         <div class="mock">
-          <div class="mock-header">
-            <div class="mock-logo"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10v1a7 7 0 0 1-14 0v-1M12 18v4"/></svg></div>
-            <div>
-              <div class="mock-title">Naked <span>Brain</span></div>
-            </div>
-            <div style="margin-left:auto;background:#121212;border-radius:99px;padding:4px 10px;font-size:0.7rem;font-weight:700">Enter Author</div>
+          <div class="mock-tabs">
+            <div class="mock-tab active">Tasks</div>
+            <div class="mock-tab">Capture</div>
           </div>
+          <div class="mock-field">
+            <div class="mock-label">Whose tasks</div>
+            <div class="mock-input" style="font-style:normal;color:#ccc">Sam (me)</div>
+          </div>
+          <div class="mock-field">
+            <div class="mock-label">Today · 2 of 6 done · 4 to do</div>
+            <div class="mock-input" style="font-style:normal;color:#ccc;margin-bottom:6px"><strong style="color:#fff">Daily scouting</strong><br>its zones, one by one · photos</div>
+            <div class="mock-input" style="font-style:normal;color:#ccc;margin-bottom:6px"><strong style="color:#fff">Irrigation check</strong><br>All zones · 5 inputs · 20 min · Sam</div>
+            <div class="mock-input" style="font-style:normal;color:#ccc"><strong style="color:#fff">Harvest</strong><br>Zone 2 · 3 inputs · 45 min · nobody yet</div>
+          </div>
+        </div>
+        <p class="screenshot-caption" style="margin-top:12px">The day list (an example): one card a task</p>
+      </div>
+      <div class="card" style="display:flex;flex-direction:column;justify-content:center;gap:14px">
+        <p style="font-size:0.88rem;color:var(--muted)">The app opens on <strong>Tasks</strong>: the work planned in Naked Heart, day by day.</p>
+        <ul style="font-size:0.85rem;color:var(--muted);padding-left:1.2em;display:flex;flex-direction:column;gap:8px">
+          <li><strong>Whose tasks.</strong> The menu above the list opens on your name. Choose Everyone, Nobody yet or another person to see their tasks. With two units a second menu shows both units or one.</li>
+          <li><strong>Today</strong> is open, with Morning and Afternoon. Its heading counts: how many are done, the time worked, what is left.</li>
+          <li><strong>Earlier</strong> holds the last seven days, folded. A red dot means something was left undone: tap to finish it.</li>
+          <li>The <strong>days ahead</strong> are folded too. Tap a day to open it.</li>
+          <li><strong>Closed today</strong> folds the tasks already done or cancelled today.</li>
+          <li>A task with its timer running shows at the top as <strong>In progress</strong>, with Pause and Open.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card">
+      <p style="font-size:0.88rem;color:var(--muted);margin-bottom:16px"><strong>What a card says.</strong></p>
+      <div class="tab-pills">
+        <div class="tab-pill">
+          <div class="tab-pill-icon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3.5A1.5 1.5 0 0 1 10.5 2h3A1.5 1.5 0 0 1 15 3.5V4"/><path d="m9 13 2 2 4-4"/></svg></div>
+          <div class="tab-pill-body">
+            <div class="tab-pill-name">Title and place</div>
+            <div class="tab-pill-desc">The task, then where: the zone, or the zones to visit</div>
+          </div>
+        </div>
+        <div class="tab-pill">
+          <div class="tab-pill-icon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="17" rx="2"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg></div>
+          <div class="tab-pill-body">
+            <div class="tab-pill-name">What it asks</div>
+            <div class="tab-pill-desc">"5 inputs" or "photos", then the planned minutes. A card that asks nothing can be swiped done</div>
+          </div>
+        </div>
+        <div class="tab-pill">
+          <div class="tab-pill-icon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></svg></div>
+          <div class="tab-pill-body">
+            <div class="tab-pill-name">Who</div>
+            <div class="tab-pill-desc">The people responsible, with their faces — or "nobody yet"</div>
+          </div>
+        </div>
+        <div class="tab-pill">
+          <div class="tab-pill-icon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+          <div class="tab-pill-body">
+            <div class="tab-pill-name">Its state, on the right</div>
+            <div class="tab-pill-desc">In progress, Paused, Done with who and how long, Cancelled with why, Not done for a day gone by</div>
+          </div>
+        </div>
+        <div class="tab-pill">
+          <div class="tab-pill-icon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
+          <div class="tab-pill-body">
+            <div class="tab-pill-name">A lock and a name</div>
+            <div class="tab-pill-desc">Somebody else has this task open. It opens for you when they finish or hand it over</div>
+          </div>
+        </div>
+      </div>
+      <div class="tip" style="margin-top:16px"><strong><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5A5.6 5.6 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6M10 22h4"/></svg> Colours.</strong> The colour of a card is its family: green for Agriculture, blue for Maintenance, amber for Office.</div>
+    </div>
+  </div>
+
+  <!-- DOING A TASK: THE CHECKLIST -->
+  <div class="section" id="checklist">
+    <div class="section-title">Doing a task: the checklist</div>
+    <div class="card">
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>Tap the task</h3>
+            <p>Its checklist opens and its <strong>timer starts</strong>. A task with no checklist only asks: mark it done? A task of a later day asks before it starts early.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>Read what it needs</h3>
+            <p>Under the title: where to go, about how long, the protection to wear (PPE) and the tools. <strong>Show all details</strong> opens the full instruction of every step; <strong>Details</strong> opens one step.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>Answer each step</h3>
+            <p>A step is a button, <strong>red until you tap it green</strong> (✓ OK or ✓ Done). A step that asks a number has a box: type the reading, the allowed range is beside it. A step that asks a photo has a <strong>Photo</strong> button. A check over the zones shows one button a zone, and <strong>All OK</strong>.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <h3>Say what is not OK</h3>
+            <p>Under the steps there is one box, <strong>Notes</strong>, and <strong>Add a photo</strong>. If something is not OK, write what: the manager is told. A photo has a small ✕ in its corner to remove it.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">5</div>
+          <div class="step-body">
+            <h3>Press Finish</h3>
+            <p><strong>Finish</strong> sends the report and goes back to the list. If a step has no answer it says how many are left. A step still red is asked about once and sent as not OK, with your note.</p>
+          </div>
+        </div>
+      </div>
+      <div class="tip" style="margin-top:16px"><strong><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg> The timer.</strong> It shows in the top bar. Tap it to pause, tap it again to go on. The back arrow pauses it too and keeps your answers. Left alone, it stops about 20 minutes after your last touch.</div>
+      <div class="tip"><strong><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5A5.6 5.6 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6M10 22h4"/></svg> Good to know.</strong> If the phone closes the app, the checklist comes back as you left it, photos included. Under Finish: <strong>Hand over to somebody else…</strong> sends what you entered so far and frees the task for the next person; <strong>Cancel this task…</strong> is for a task that will not be done. A done task opens again to add photos and notes or to correct it: <strong>Save the changes</strong>. In a harvest task, type the kilograms cut from each position and tick <strong>Last cut</strong> when the position is cleared.</div>
+    </div>
+  </div>
+
+  <!-- SWIPE: DONE, CANCEL, UNDO -->
+  <div class="section" id="swipe">
+    <div class="section-title">Swipe: done, cancel, Undo</div>
+    <div class="card">
+      <p style="font-size:0.88rem;color:var(--muted);margin-bottom:16px">On the day list a card can be swiped, without opening it.</p>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>Swipe right: done</h3>
+            <p>For a task that asks nothing. If the task needs readings or photos the app says what it needs and offers <strong>Open</strong>.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>Swipe left: cancel</h3>
+            <p>Choose why — Not needed, Equipment not available, Weather or access, Other — and write why in the note: the manager reads it. Then <strong>Cancel the task</strong>, or <strong>Keep it</strong>. Only the people on the task, or the Admin, can cancel it.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>Undo</h3>
+            <p>After a swipe a bar shows for five seconds with <strong>Undo</strong>. Tap it to take the swipe back.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- THE DAILY SCOUTING -->
+  <div class="section" id="scouting">
+    <div class="section-title">The daily scouting</div>
+    <div class="card">
+      <p style="font-size:0.88rem;color:var(--muted);margin-bottom:16px">The scouting of the day is one card. Tap it: it lists its <strong>zones</strong>, each a task of its own with its own timer, and one card on top, <strong>All · whole greenhouse</strong>.</p>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>Open a zone</h3>
+            <p>The screen has tabs: <strong>Traps</strong>, <strong>Health</strong>, <strong>Growth</strong> and <strong>Review</strong>. A red dot on a tab means it is required today and not complete yet; green means it is, or that it is not asked today. A tab that says "not today" still opens: more is always welcome.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>Traps</h3>
+            <p>Photograph each sticky card square-on, the whole card in the picture: one side, then the other. The phone reads the position written on the card (1B6 = zone 1, row B, 6 m) and counts the insects. Confirm the position and correct the count if it is wrong. A trap taken down or out of reach is marked in its row. <strong>No traps today</strong> skips the traps of the zone.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>Health</h3>
+            <p>A photo of anything that looks wrong on a plant, close and in focus. Add where it is if you want (row and metres, B6) and a comment. <strong>✦ AI note</strong> asks the AI about one photo, only when you press it; it needs signal.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <h3>Growth</h3>
+            <p>A photo of a fruit, a leaf or a head with the printed <strong>scale card</strong> flat beside it, all of the card in the picture. The phone measures against the card. A growth photo without the card is not kept: take it again.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">5</div>
+          <div class="step-body">
+            <h3>Say if a section is not OK</h3>
+            <p>Each tab ends with a green line: the section is OK. Something wrong? Tap it, it turns red, and write the problem under it. The manager is told.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">6</div>
+          <div class="step-body">
+            <h3>Review, then Finish</h3>
+            <p><strong>Review</strong> shows everything you captured. <strong>Finish</strong> sends the zone and goes back to the list of zones. If a section is under its minimum the app asks once before it sends.</p>
+          </div>
+        </div>
+      </div>
+      <div class="tip" style="margin-top:16px"><strong><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5A5.6 5.6 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6M10 22h4"/></svg> All · whole greenhouse.</strong> Not a task and never required. Open it to say or write what you saw across the greenhouse today: <strong>Record a voice note</strong> (up to 3 minutes) or write it, then <strong>Send the note</strong>. It goes in the daily report in Naked Heart, above the zones.</div>
+      <div class="tip"><strong><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3.5A1.5 1.5 0 0 1 10.5 2h3A1.5 1.5 0 0 1 15 3.5V4"/><path d="m9 13 2 2 4-4"/></svg> The full rules</strong> are in the app: in a zone, open <strong>How the scouting works</strong> under the title. It says which section is due on which day, the minimum of each, how to write the position on a card and how the sizes are measured.</div>
+    </div>
+  </div>
+
+  <!-- EXTRA SCOUTING AND FEEDBACK -->
+  <div class="section" id="extra">
+    <div class="section-title">Extra scouting and feedback</div>
+    <div class="card-row">
+      <div class="card">
+        <p style="font-size:0.92rem;font-weight:700;margin-bottom:8px"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21v-9"/><path d="M12 12C12 8 9 5 4 5c0 4 3 7 8 7Z"/><path d="M12 10c0-3.5 2.5-6 7-6 0 3.5-2.5 6-7 6Z"/></svg> Extra scouting</p>
+        <ul style="font-size:0.85rem;color:var(--muted);padding-left:1.2em;display:flex;flex-direction:column;gap:8px">
+          <li>The button <strong>＋ Extra scouting</strong> is above the day list. Anybody can use it, at any time.</li>
+          <li>Pick a zone and add photos and counts. They go into today's report, marked as extra.</li>
+          <li>There is no minimum. Send a zone as often as you like, all day.</li>
+          <li>Going back from a zone sends what you captured there.</li>
+          <li>The planned scouting of each zone stays its own task.</li>
+          <li>When you are done for the day, swipe the Extra scouting card: right for done, left for cancelled. The person who started it does this, or the Admin.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <p style="font-size:0.92rem;font-weight:700;margin-bottom:8px"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg> Feedback on a task</p>
+        <ul style="font-size:0.85rem;color:var(--muted);padding-left:1.2em;display:flex;flex-direction:column;gap:8px">
+          <li>When the farm has switched it on, every task card has a small speech-bubble button, and the checklist has <strong>Feedback</strong> beside its title.</li>
+          <li>Use it to say what should change in the task, its checklist or the app.</li>
+          <li>Choose the step it is about, or the whole task.</li>
+          <li><strong>Record a voice note</strong> (up to 3 minutes), write, add photos or a video under a minute.</li>
+          <li><strong>Send the feedback</strong>. Without signal it is kept and goes later.</li>
+          <li>Under the form you see what was already said on the task, and the answer.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- SENDING, SYNC AND NO SIGNAL -->
+  <div class="section" id="sending">
+    <div class="section-title">Sending, sync and no signal</div>
+    <div class="card">
+      <p style="font-size:0.88rem;color:var(--muted);margin-bottom:16px">You never lose work for lack of signal. <strong>Everything you do is kept on the phone first</strong> and goes up by itself when there is signal.</p>
+      <div class="tab-pills">
+        <div class="tab-pill">
+          <div class="tab-pill-icon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/></svg></div>
+          <div class="tab-pill-body">
+            <div class="tab-pill-name">Offline</div>
+            <div class="tab-pill-desc">A small sign in the Tasks bar when the phone has no connection. Carry on working</div>
+          </div>
+        </div>
+        <div class="tab-pill">
+          <div class="tab-pill-icon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+          <div class="tab-pill-body">
+            <div class="tab-pill-name">waiting to send</div>
+            <div class="tab-pill-desc">On a done card: the report is on the phone and has not reached the server yet</div>
+          </div>
+        </div>
+        <div class="tab-pill">
+          <div class="tab-pill-icon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5M12 3v12"/></svg></div>
+          <div class="tab-pill-body">
+            <div class="tab-pill-name">The line under the list</div>
+            <div class="tab-pill-desc">When it last synced, how many reports wait, how many photos are still uploading. "Could not be sent — tap to try again": tap it</div>
+          </div>
+        </div>
+        <div class="tab-pill">
+          <div class="tab-pill-icon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h6v6M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg></div>
+          <div class="tab-pill-body">
+            <div class="tab-pill-name">⟳ Sync now</div>
+            <div class="tab-pill-desc">Top right of Tasks. It sends what waits and reads the plan again. The app also does it by itself, about every minute while it is open</div>
+          </div>
+        </div>
+      </div>
+      <div class="tip" style="margin-top:16px"><strong><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5M12 3v12"/></svg> Force send</strong> is the button beside ⟳. The normal way to send is <strong>Finish</strong> inside a task. Force send is for clearing the phone: it sends everything the phone still holds, as it stands, even if it is not complete. It explains itself and asks before it runs, then lists what went and what could not go; what cannot be sent at all can be removed from the phone there. It needs signal. Close an open checklist first. Harvest weights are never forced: finish them in their task.</div>
+      <div class="tip"><strong><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3Z"/><circle cx="12" cy="13" r="3.5"/></svg> Photos.</strong> The report goes first; the full photos follow. In Settings you choose whether they upload on Wi-Fi only or also on mobile data.</div>
+      <div class="tip"><strong><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg> Before you give the phone to somebody else,</strong> sign out (Settings › Account). Sign out first sends what is left. If something still could not go, it tells you and asks: signed out, it would go up later under the next person's name.</div>
+    </div>
+  </div>
+
+  <!-- CAPTURE: NOTES FOR NOTION -->
+  <div class="section" id="capture">
+    <div class="section-title">Capture: notes for Notion</div>
+    <div class="card-row">
+      <div class="card">
+        <div class="mock">
           <div class="mock-tabs">
             <div class="mock-tab active">Ugly200</div>
             <div class="mock-tab">SoP</div>
@@ -243,21 +535,21 @@
             <div class="mock-label">Title</div>
             <div class="mock-input">Give this note a title…</div>
           </div>
-          <div class="mock-btn-wrap"><div class="mock-mic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10v1a7 7 0 0 1-14 0v-1M12 18v4"/></svg></div></div>
-          <div class="mock-status">Tap to record voice note</div>
+          <div class="mock-btn-wrap" style="gap:14px"><div class="mock-mic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10v1a7 7 0 0 1-14 0v-1M12 18v4"/></svg></div><div class="mock-mic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3Z"/><circle cx="12" cy="13" r="3.5"/></svg></div><div class="mock-mic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m16 13 5.2 3.5a.5.5 0 0 0 .8-.4V7.9a.5.5 0 0 0-.8-.4L16 10.5"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg></div></div>
+          <div class="mock-status">Voice · Photo · Video</div>
         </div>
-        <p class="screenshot-caption" style="margin-top:12px">Header with Author button, 4 tabs, Title field and mic button</p>
+        <p class="screenshot-caption" style="margin-top:12px">Capture: four tabs, the Title, and the three round buttons</p>
       </div>
-
       <div class="card">
         <div class="mock">
           <div class="mock-field">
-            <div class="mock-label">AI Summary</div>
+            <div class="mock-label">Voice summary</div>
             <div style="display:flex;gap:6px;margin-bottom:8px">
-              <div style="background:#788c5d;color:#ffffff;border-radius:6px;padding:4px 10px;font-size:0.72rem;font-weight:600">Generate</div>
+              <div style="background:#788c5d;color:#ffffff;border-radius:6px;padding:4px 10px;font-size:0.72rem;font-weight:600">AI</div>
               <div style="background:#252220;border:1px solid #333;border-radius:6px;padding:4px 10px;font-size:0.72rem;color:#aaa">Copy</div>
+              <div style="background:#252220;border:1px solid #333;border-radius:6px;padding:4px 10px;font-size:0.72rem;color:#aaa">Clear</div>
             </div>
-            <div class="mock-input" style="font-style:normal;color:#ccc;font-size:0.75rem">• Main issue identified on pump valve<br>• Needs replacement before Friday</div>
+            <div class="mock-input" style="font-style:normal;color:#ccc;font-size:0.75rem">• Pump valve leaking in zone 2<br>• To replace before Friday</div>
           </div>
           <div class="mock-field" style="margin-top:14px">
             <div class="mock-label">Tags</div>
@@ -268,198 +560,202 @@
               <div class="mock-chip" style="border-style:dashed;color:#4e6a36;border-color:#4e6a36">+ Add</div>
             </div>
           </div>
-          <div class="mock-send"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5M12 3v12"/></svg> Send to Ugly200</div>
+          <div class="mock-send">Send to Ugly200</div>
         </div>
-        <p class="screenshot-caption" style="margin-top:12px">AI Summary always in bullet points · Generate + Copy · Tags with + Add</p>
+        <p class="screenshot-caption" style="margin-top:12px">The AI button writes the summary · the tab's own fields · Send</p>
       </div>
     </div>
-  </div>
-
-  <!-- HOW TO USE -->
-  <div class="section">
-    <div class="section-title">How to Use — Step by Step</div>
     <div class="card">
-      <div class="steps">
-        <div class="step">
-          <div class="step-num">1</div>
-          <div class="step-body">
-            <h3>Enter the team password (first time only)</h3>
-            <p>On first launch you'll see the password screen. Enter the team password and tap <strong>Unlock</strong>. The app stores it — you won't need to enter it again.</p>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-num">2</div>
-          <div class="step-body">
-            <h3>Select your tab</h3>
-            <p>Tap the right database tab at the top: <strong>Ugly200</strong> (general notes), <strong>SoP</strong> (procedures), <strong>Daily</strong> (standup), or <strong>SU reports</strong> (the Stellenbosch University team's reports: anything that would improve FarmBox).</p>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-num">3</div>
-          <div class="step-body">
-            <h3>Set your author name (first time only)</h3>
-            <p>Tap the teal <strong>Enter Author</strong> button in the header → type your name → tap OK. It's saved permanently until you change it.</p>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-num">4</div>
-          <div class="step-body">
-            <h3>Give your note a title (optional — not shown on Daily)</h3>
-            <p>Type a short title in the <strong>Title</strong> field. If left empty, the AI summary or transcript is used automatically. On the <strong>Daily</strong> tab, the Title field is hidden — entries are titled with your Author name automatically.</p>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-num">5</div>
-          <div class="step-body">
-            <h3>Record your voice note</h3>
-            <p>Tap the big teal <strong>microphone button</strong> to start recording. Tap again to stop. The audio is automatically transcribed using Groq Whisper AI — you'll see the text appear in the <strong>Voice Transcription</strong> box.</p>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-num">6</div>
-          <div class="step-body">
-            <h3>Generate an AI summary (optional)</h3>
-            <p>In the <strong>AI Summary</strong> section, tap <strong>Generate</strong>. The AI automatically returns the minimum number of bullet points needed to capture the key information — 1 bullet for a quick note, more for longer recordings.</p>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-num">7</div>
-          <div class="step-body">
-            <h3>Attach media (optional)</h3>
-            <p>Use the <strong>Photo</strong> or <strong>Video</strong> round buttons in the Media card. Photos attach as-is. Videos are automatically <strong>audio-extracted and transcribed</strong> — the transcript appears in the Video AI Summary box ready to summarise.</p>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-num">8</div>
-          <div class="step-body">
-            <h3>Fill in tab-specific fields</h3>
-            <p>Each tab has its own fields — select tags, status, phase etc. Tap <strong>+ Add</strong> to create a new custom tag on the fly.</p>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-num">9</div>
-          <div class="step-body">
-            <h3>Send to Notion</h3>
-            <p>Tap the big <strong>Send to [Tab]</strong> button. A new page is created in the corresponding Notion database with all your content, media, tags and metadata.</p>
-          </div>
-        </div>
-      </div>
-      <div class="tip"><strong><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5A5.6 5.6 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6M10 22h4"/></svg> Tip:</strong> You can also type or paste text manually in any box — you don't have to record audio. All fields are fully editable before sending.</div>
-    </div>
-  </div>
-
-  <!-- TABS -->
-  <div class="section">
-    <div class="section-title">The 4 Notion Databases</div>
-    <div class="card">
+      <p style="font-size:0.88rem;color:var(--muted);margin-bottom:16px"><strong>The four tabs.</strong> Each sends to its own list in Notion. The big title on the screen says what the tab is for.</p>
       <div class="tab-pills">
         <div class="tab-pill">
-          <div class="tab-pill-icon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21v-9"/><path d="M12 12C12 8 9 5 4 5c0 4 3 7 8 7Z"/><path d="M12 10c0-3.5 2.5-6 7-6 0 3.5-2.5 6-7 6Z"/></svg></div>
+          <div class="tab-pill-icon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg></div>
           <div class="tab-pill-body">
-            <div class="tab-pill-name">Ugly200</div>
-            <div class="tab-pill-desc">General field notes — Tags, Status, Location</div>
+            <div class="tab-pill-name">Ugly200 — Log an issue</div>
+            <div class="tab-pill-desc">Something wrong or worth noting. Fields: Tags, Status (Open, In Progress, Done), Location</div>
           </div>
         </div>
         <div class="tab-pill">
           <div class="tab-pill-icon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3.5A1.5 1.5 0 0 1 10.5 2h3A1.5 1.5 0 0 1 15 3.5V4"/><path d="m9 13 2 2 4-4"/></svg></div>
           <div class="tab-pill-body">
-            <div class="tab-pill-name">SoP</div>
-            <div class="tab-pill-desc">Standard Operating Procedures — Category, Status</div>
+            <div class="tab-pill-name">SoP — Capture a procedure</div>
+            <div class="tab-pill-desc">Talk or film the steps of a way of working. Fields: Category, Status</div>
           </div>
         </div>
         <div class="tab-pill">
-          <div class="tab-pill-icon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="17" rx="2"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/><path d="M7.5 14h.01M12 14h.01M16.5 14h.01M7.5 17.5h.01M12 17.5h.01"/></svg></div>
+          <div class="tab-pill-icon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="17" rx="2"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg></div>
           <div class="tab-pill-body">
-            <div class="tab-pill-name">Daily</div>
-            <div class="tab-pill-desc">Daily standup — Decisions needed, Today (Done), Today's priority, FarmLab Update, Key milestone</div>
+            <div class="tab-pill-name">Daily — Daily update</div>
+            <div class="tab-pill-desc">What got done, and what needs deciding. The Title is your name. Fields: Date, FarmBox1, FarmLab, Tech Plan, Decisions needed. No Note box</div>
           </div>
         </div>
         <div class="tab-pill">
           <div class="tab-pill-icon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76Z"/></svg></div>
           <div class="tab-pill-body">
-            <div class="tab-pill-name">SU reports</div>
-            <div class="tab-pill-desc">Ideas to improve FarmBox, from the Stellenbosch University team — Category menu (Agronomy, Tech, General), your own title, Date, Zone</div>
+            <div class="tab-pill-name">SU reports — SU report</div>
+            <div class="tab-pill-desc">Ideas to improve FarmBox, from the Stellenbosch University team. Choose the Category (Agronomy, Tech, General) and write your own Title: both are required. Then Date and, if it helps, Zone</div>
           </div>
         </div>
       </div>
-      <div class="tip" style="margin-top:16px"><strong><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="17" rx="2"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/><path d="M7.5 14h.01M12 14h.01M16.5 14h.01M7.5 17.5h.01M12 17.5h.01"/></svg> Daily tab note:</strong> The Title and Note fields are hidden on the Daily tab — they are not needed. The Notion entry is titled automatically with your <strong>Author name</strong>. Each Daily entry also records the date automatically.</div>
+      <div class="tip" style="margin-top:16px"><strong><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5A5.6 5.6 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6M10 22h4"/></svg> Which one?</strong> What you saw in the crops today goes in the scouting, under All — not in SU reports.</div>
     </div>
-  </div>
-
-  <!-- VIDEO SUMMARY -->
-  <div class="section">
-    <div class="section-title">Video AI Summary</div>
     <div class="card">
-      <p style="font-size:0.88rem;color:var(--muted);margin-bottom:16px">Summarise any video — local file, field recording or YouTube.</p>
       <div class="steps">
         <div class="step">
-          <div class="step-num">A</div>
+          <div class="step-num">1</div>
           <div class="step-body">
-            <h3>Local video file (auto)</h3>
-            <p>Tap the <strong>Video</strong> button in the Media card and pick a file from your device. The app automatically extracts the audio, compresses it, and transcribes it via Groq Whisper. The transcript appears in the box instantly.</p>
+            <h3>Choose the tab</h3>
+            <p>Tap <strong>Capture</strong> at the top, then the tab. The Send button says where the note goes.</p>
           </div>
         </div>
         <div class="step">
-          <div class="step-num">B</div>
+          <div class="step-num">2</div>
           <div class="step-body">
-            <h3>YouTube or external video (manual)</h3>
-            <p>Open the video on YouTube → tap <strong>…</strong> → <strong>Show transcript</strong> → copy it → paste into the transcript box.</p>
+            <h3>Give it a title</h3>
+            <p>A few words. On Ugly200 and SoP you may leave it empty: the summary or the first words are used. On SU reports it is required.</p>
           </div>
         </div>
         <div class="step">
-          <div class="step-num">C</div>
+          <div class="step-num">3</div>
           <div class="step-body">
-            <h3>Generate summary</h3>
-            <p>Tap <strong>Generate</strong> in the Video AI Summary section. The AI returns the minimum essential bullet points. The summary is included in the Notion page when you send.</p>
+            <h3>Say it</h3>
+            <p>Tap <strong>Voice</strong> to record, tap again to stop. The words appear by themselves in <strong>Voice transcription</strong>. Record again and the new words are added. You can also type in any box.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <h3>Add photos or a video</h3>
+            <p><strong>Photo</strong> adds pictures. <strong>Video</strong> adds a video of 8 minutes at most: the app makes it smaller and writes what is said in <strong>Video transcription</strong>. Tap the ✕ on a picture to remove it. <strong>Add location</strong> adds your GPS position: wait for the precision you want, then <strong>Save location</strong>.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">5</div>
+          <div class="step-body">
+            <h3>Sum it up, if you want</h3>
+            <p>Tap <strong>AI</strong> beside Voice summary or Video summary: the app writes a few short points. <strong>Copy</strong> copies a box; <strong>Clear</strong> empties it and asks first.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">6</div>
+          <div class="step-body">
+            <h3>Fill the tab's fields</h3>
+            <p>Tap the chips to choose them; <strong>+ Add</strong> makes a new one. On Daily and SU reports the date is today unless you change it.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">7</div>
+          <div class="step-body">
+            <h3>Send</h3>
+            <p><strong>Send to …</strong> at the bottom makes the page in Notion with everything on the form. It needs signal. Without it the app says nothing was sent and your note stays: press Send again later.</p>
           </div>
         </div>
       </div>
-      <div class="tip"><strong><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5A5.6 5.6 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6M10 22h4"/></svg> Tip:</strong> If the Video transcript box is empty, Generate uses the voice transcript automatically.</div>
+      <div class="tip" style="margin-top:16px"><strong><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/></svg> Drafts.</strong> What you type or dictate is kept on the phone as you go. If the app is closed it comes back and says <strong>Draft restored</strong>. Photos and videos are not kept: attach them again.</div>
+      <div class="tip"><strong><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10v1a7 7 0 0 1-14 0v-1M12 18v4"/></svg> No signal while recording?</strong> The recording stays on the note as <strong>Voice note — tap to transcribe</strong>. Tap it when there is signal, or send the note as it is.</div>
+      <div class="tip"><strong><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3.5A1.5 1.5 0 0 1 10.5 2h3A1.5 1.5 0 0 1 15 3.5V4"/><path d="m9 13 2 2 4-4"/></svg> Recent entries,</strong> at the bottom of Capture, lists the last notes sent from this phone, each with ✓ Sent to Notion or ✗ Failed.</div>
     </div>
   </div>
 
-  <!-- CONFIG -->
-  <div class="section">
-    <div class="section-title">Configuration (Admin only)</div>
+  <!-- SETTINGS -->
+  <div class="section" id="settings">
+    <div class="section-title">Settings</div>
     <div class="card">
-      <p style="font-size:0.88rem;color:var(--muted);margin-bottom:16px">Tap the <strong><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg> gear</strong> at the top right to open <strong>Settings</strong>. Light / Dark / Auto mode is open to everyone; the <strong>Configuration</strong> section needs a PIN:</p>
-      <div class="pin-box">
-        <p><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg> Enter PIN to access Configuration</p>
-        <div class="pin-input">
-          <div class="pin-dot"></div>
-          <div class="pin-dot"></div>
-          <div class="pin-dot"></div>
-          <div class="pin-dot"></div>
+      <p style="font-size:0.88rem;color:var(--muted);margin-bottom:16px">Tap the <strong>gear</strong> at the top right. The back arrow, or the Back of the phone, closes it and leaves your task as it was.</p>
+      <div class="tab-pills">
+        <div class="tab-pill">
+          <div class="tab-pill-icon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5A5.6 5.6 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6M10 22h4"/></svg></div>
+          <div class="tab-pill-body">
+            <div class="tab-pill-name">Appearance</div>
+            <div class="tab-pill-desc">Light, Dark or Auto (Auto follows the phone). Skin changes the colours, the corners and the font</div>
+          </div>
+        </div>
+        <div class="tab-pill">
+          <div class="tab-pill-icon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></svg></div>
+          <div class="tab-pill-body">
+            <div class="tab-pill-name">Account</div>
+            <div class="tab-pill-desc">The e-mail you are signed in with, and Sign out. Upload photos: Wi-Fi and mobile data, or Wi-Fi only</div>
+          </div>
+        </div>
+        <div class="tab-pill">
+          <div class="tab-pill-icon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/></svg></div>
+          <div class="tab-pill-body">
+            <div class="tab-pill-name">App</div>
+            <div class="tab-pill-desc">The version on this phone, and this guide</div>
+          </div>
+        </div>
+        <div class="tab-pill">
+          <div class="tab-pill-icon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
+          <div class="tab-pill-body">
+            <div class="tab-pill-name">Configuration</div>
+            <div class="tab-pill-desc">The Notion lists Capture writes to. It needs a PIN and is for the Admin only</div>
+          </div>
+        </div>
+        <div class="tab-pill">
+          <div class="tab-pill-icon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3.5A1.5 1.5 0 0 1 10.5 2h3A1.5 1.5 0 0 1 15 3.5V4"/><path d="m9 13 2 2 4-4"/></svg></div>
+          <div class="tab-pill-body">
+            <div class="tab-pill-name">Version log</div>
+            <div class="tab-pill-desc">Every release of the app and what it changed, newest first</div>
+          </div>
         </div>
       </div>
-      <div class="tip" style="margin-top:16px"><strong><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg> Note:</strong> The app comes pre-configured with all 4 Notion database IDs. API keys and tokens are secured in the Cloudflare backend — they are never stored in the app or visible to users. Regular team members do not need to access the configuration.</div>
+      <div class="tip" style="margin-top:16px"><strong><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg> Upload photos.</strong> Only an Android phone can tell Wi-Fi from mobile data. An iPhone uploads on any connection.</div>
     </div>
   </div>
 
-  <!-- UPDATES -->
-  <div class="section">
-    <div class="section-title">App Updates</div>
+  <!-- APP UPDATES -->
+  <div class="section" id="updates">
+    <div class="section-title">App updates</div>
     <div class="card">
-      <p style="font-size:0.88rem;color:var(--muted);margin-bottom:16px">Naked Brain checks for updates automatically every 5 minutes. When a new version is deployed you'll see a notification at the bottom of the screen:</p>
-      <div style="background:#1c1b19;border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;margin-bottom:12px">
-        <span style="font-size:1.3rem"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></svg></span>
+      <p style="font-size:0.88rem;color:var(--muted);margin-bottom:16px">The app looks for a new version every 2 minutes, and each time you come back to it.</p>
+      <div class="tab-pills">
+        <div class="tab-pill">
+          <div class="tab-pill-icon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></svg></div>
+          <div class="tab-pill-body">
+            <div class="tab-pill-name">By itself</div>
+            <div class="tab-pill-desc">When nothing is open — no checklist, no camera, no typing, no recording, nothing attached to a note — it updates alone: "Updating to …", then "Updated to v …"</div>
+          </div>
+        </div>
+        <div class="tab-pill">
+          <div class="tab-pill-icon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3.5A1.5 1.5 0 0 1 10.5 2h3A1.5 1.5 0 0 1 15 3.5V4"/><path d="m9 13 2 2 4-4"/></svg></div>
+          <div class="tab-pill-body">
+            <div class="tab-pill-name">While you work</div>
+            <div class="tab-pill-desc">It waits. A card shows at the top instead, and nothing waiting to be sent is lost</div>
+          </div>
+        </div>
+      </div>
+      <div style="background:#1c1b19;border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;margin:16px 0 12px">
+        <span style="font-size:1.3rem;color:#fff"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></svg></span>
         <div style="flex:1">
-          <div style="font-weight:700;color:#fff;font-size:0.88rem">v 1.02 available</div>
+          <div style="font-weight:700;color:#fff;font-size:0.88rem">A new version is available</div>
           <div style="font-size:0.75rem;color:#888">A new version of Naked Brain is ready</div>
         </div>
-        <div style="background:#121212;border-radius:8px;padding:6px 12px;font-size:0.75rem;font-weight:700;color:#fff;white-space:nowrap">Update now</div>
-        <div style="color:#666;font-size:1rem;cursor:pointer">✕</div>
+        <div style="background:#788c5d;border-radius:99px;padding:6px 12px;font-size:0.75rem;font-weight:700;color:#121212;white-space:nowrap">Update now</div>
+        <div style="color:#666;font-size:1rem">✕</div>
       </div>
-      <p style="font-size:0.82rem;color:var(--muted)">Tap <strong>Update now</strong> to get the latest version instantly. Tap <strong>✕</strong> to dismiss and update later.</p>
+      <p style="font-size:0.82rem;color:var(--muted)">Tap <strong>Update now</strong> to update at once. Tap <strong>✕</strong> to put the card away: the app then updates by itself when nothing is open. If the button says <strong>Not here yet</strong>, the new version has not reached your connection: it is offered again in a few minutes. If the card says it could not finish updating, close Naked Brain completely and open it again.</p>
+      <div class="tip" style="margin-top:16px"><strong><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3.5A1.5 1.5 0 0 1 10.5 2h3A1.5 1.5 0 0 1 15 3.5V4"/><path d="m9 13 2 2 4-4"/></svg> Which version do I have?</strong> Settings › App shows it, and Settings › Version log says what each version changed. <span data-app-version></span></div>
     </div>
   </div>
 
 </div>
 
 <footer>
-  <strong>Naked Brain</strong> · v 1.02 · Built for the FarmBox team<br>
+  <strong>Naked Brain</strong> · <span data-app-version>see Settings › Version log for the version</span> · Built for the FarmBox team<br>
   <span style="margin-top:4px;display:block"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h6v6M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg> <a href="https://brain.nkd.farm/" style="color:var(--primary)">brain.nkd.farm</a></span>
 </footer>
+
+<script>
+  // The version this phone runs, as the app wrote it down the last time it opened (the same address, so the same
+  // storage): never a number typed in the guide. Not found = the words already on the page stay.
+  (function () {
+    var v = null;
+    try { v = localStorage.getItem('nb_last_version'); } catch (e) {}
+    if (!v || !/^[0-9]+(\.[0-9]+)*$/.test(v)) return;
+    var els = document.querySelectorAll('[data-app-version]');
+    for (var i = 0; i < els.length; i++) els[i].textContent = 'v ' + v + ' on this phone';
+  })();
+</script>
 
 </body>
 </html>
