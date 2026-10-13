@@ -7309,15 +7309,16 @@ function sopOpen() {
     // the refresh was refused and ended the session: said as "signed out", not as a script error on the next line
     if (!session) throw new Error('signed out');
     // a time limit: with signal bars and no throughput a request never answered, and the one flush and the one sync
-    // waited on it for minutes — nothing else was sent meanwhile. 45 s; 5 minutes for a photo or a big report, and
-    // longer for a bigger file — the time 4 kB a second needs — so that a slow link still gets a 24 MB video through
-    // instead of starting it again from nothing at every pass. A caller that brings its own signal keeps it. The error carries no status, so it reads as a network failure
+    // waited on it for minutes — nothing else was sent meanwhile. 45 s for a small request (under 20 kB); 5 minutes
+    // for a photo or a report that carries pictures, and longer for a bigger file — the time 2 kB a second needs — so
+    // that a slow link still gets it through (a cut request starts again from nothing: with 45 s up to 100 kB and 4 kB a
+    // second above, a scouting report on a weak greenhouse link was cut at every pass and never arrived). A caller that brings its own signal keeps it. The error carries no status, so it reads as a network failure
     // everywhere: the outbox row waits and is tried again, never set aside.
     const own = opts.signal || typeof AbortController === 'undefined' ? null : new AbortController();
     const isBlob = typeof Blob !== 'undefined' && opts.body instanceof Blob;
     const bytes = isBlob ? (opts.body.size || 0) : typeof opts.body === 'string' ? opts.body.length : 0;
-    const bigBody = isBlob || bytes > 100000;
-    const limit = own ? setTimeout(() => { try { own.abort(); } catch (e) { /* gone already */ } }, Math.max(bigBody ? 300000 : 45000, Math.round(bytes / 4))) : null;
+    const bigBody = isBlob || bytes > 20000;
+    const limit = own ? setTimeout(() => { try { own.abort(); } catch (e) { /* gone already */ } }, Math.max(bigBody ? 300000 : 45000, Math.round(bytes / 2))) : null;
     let r;
     try {
       r = await fetch(URL_BASE + path, {
