@@ -1264,7 +1264,7 @@
   }
 
   // ─── VERSION CHECK ────────────────────────────────────────
-  const CURRENT_VERSION = '0.11.127';
+  const CURRENT_VERSION = '0.11.128';
   let updateAvailable = false;
 
   let lastSaid = null, notYetAt = 0;
@@ -1456,6 +1456,7 @@
   // Same idea as the console's Settings › Version log (release_note): one line per
   // release, what it changed, in plain words. Add the new release on top with each bump.
   const VERSION_LOG = [
+    ['0.11.128', '2026-10-15', 'Harvest by batch code or label', 'A harvest task now takes a batch by its code: type the code on its label (26-0002) or tap Scan and point the camera at the label, then type the total kg you cut from it. Only a batch that is planted or growing in this unit is added; a batch already cleared, cancelled or not planted yet is said and left out. One person weighs each batch for the whole task. Last cut needs its kg before the task can be finished. The cucumbers have a harvest task every Tuesday and Friday while they are picking.'],
     ['0.11.127', '2026-10-14', 'Scan a batch label', 'Tasks has a new button at the top, the square QR sign: point the camera at the QR of a batch label and the batch opens. You can also type its lot code, such as 26-0412 or just 412. You see where the batch is, when it was sown or came in and transplanted, when it will be harvested, what was harvested so far, the open cases on its zone, the sprays done and still to apply, and the next tasks with who is on them. When a spray means it may not be cut yet, a red line says until when. It needs signal: the batch is read from the farm.'],
     ['0.11.126', '2026-10-13', 'Reports before photos; opens without waiting', 'A report no longer waits behind photos: when you finish a checklist while photos are still going up, the report goes first and the photos after it. The app opens from the copy kept on the phone when the network gives no answer within five seconds (one bar at the greenhouse door used to leave a blank screen), and takes the new page as soon as it comes. Who is on each task is written in one step, so a card no longer says nobody yet for a moment during a sync. Renewing the sign-in and reading an answer now have a time limit too, so neither can hold the sending. The User guide in Settings is written again for the app as it is: signing in, Tasks, checklists, the daily scouting, sending and no signal, Capture, Settings and updates.'],
     ['0.11.125', '2026-10-13', 'A review of the whole app', 'The app was read through from end to end and its faults fixed. Tasks: a checklist you finished with a bad signal stays done while its report waits to be sent, instead of going back to open; a request that gets no answer is given up after a while, so one stuck photo no longer holds everything else; the Undo bar no longer throws you out of the task you opened meanwhile; a second tap no longer opens a second camera; a photo already uploaded is not uploaded again; a person removed from the team leaves the list of names. Sign out first sends what you have not sent, and asks when something is still left, so that your work does not go up under the name of the next person. When the sign-in has ended the app says so and shows the sign-in form. No signal is said in plain words. Capture: the app no longer updates itself in the middle of a recording or with photos attached; the Voice summary now reaches Notion; a note is not sent without its date and author when Notion did not answer; Send lights up for a title or a pasted transcript; Clear and removing a voice note ask first; closing Settings with Back no longer leaves the checklist underneath; the buttons are bigger to tap.'],
@@ -9633,7 +9634,8 @@ function sopOpen() {
     // the IPM trap round on one zone (the old round): one card per sticky trap, before the steps
     if (isTrapRound(sop) && !isScouting(sop) && !run.perItem) box.append(await trapRound(task, sop));
     // a harvest task: the weight per batch, before the steps
-    if (isHarvestTask(sop) && task.positions.some(p => p.plan_id)) box.append(await harvestBlock(task, detail));
+    // (0.11.128) on every harvest task, not only one that lists its batches: a batch is also added by its code there
+    if (isHarvestTask(sop)) box.append(await harvestBlock(task, detail));
     if (isScouting(sop)) {
       // the daily scouting (FarmBox 0141): Traps · Plant health · Growth · Finish, in any order
       box.append(await scoutSections(task, sop, detail));
@@ -12836,6 +12838,10 @@ function sopOpen() {
     return box;
   }
 
+  // the batches added by their code (0.11.128): their names kept on this phone, for a task opened again — what the
+  // server sends back of a run is only { plan_id, kg }
+  const HARV_LOTS = 'harv_lots';
+  const lotLine = f => [f.lot_code, f.crop, [f.zone, f.position].filter(Boolean).join(' ')].filter(Boolean).join(' · ');
   async function harvestBlock(task, detail) {
     let draft = null;
     try { draft = await getKV(harvDraftKey(task)); } catch (e) { /* none */ }
@@ -12844,31 +12850,172 @@ function sopOpen() {
     run.harvests = new Map();
     const box = el('div', 'fb-traps');
     box.append(el('div', 'fb-sec', 'Harvest weight'));
-    box.append(el('div', 'config-hint', 'Weigh what you cut from each position, in kg. Tick "Last cut" when the position is cleared — it is freed for the next batch.'));
+    // owner 15 Oct 2026: "you enter the batch code (manually or qrcode) and the harvest total kg". One total per task and
+    // batch: the server keeps the first one it gets (record_task_harvests), so two people adding up one batch lose one
+    box.append(el('div', 'config-hint', 'One person weighs each batch for the whole task: type its total kg. Tick "Last cut" when the batch is cleared — its place is freed for the next one. A batch that is not listed: add it by the code on its label.'));
     const total = el('div', 'fb-harv-total');
     const totalVal = el('span', null, '0 kg');
-    total.append(el('span', null, 'Total'), totalVal);
+    total.append(el('span', null, 'All batches'), totalVal);
     const paintTotal = () => {
       const kg = [...run.harvests.values()].reduce((a, x) => a + (num(x.kg) || 0), 0);
       totalVal.textContent = (Math.round(kg * 100) / 100) + ' kg';
     };
-    task.positions.filter(p => p.plan_id && (!p.done || detail)).forEach(p => {
-      const st = { plan_id: p.plan_id, position_code: p.label || p.position_code || '', kg: null, final: false,
-                   ...(prior.get(p.plan_id) || {}) };
-      run.harvests.set(p.plan_id, st);
-      const row = el('div', 'fb-harv-row');
-      row.append(el('span', 'fb-pos-name', [st.position_code, p.crop_name || task.crop_name].filter(Boolean).join(' · ')));
-      const kg = el('input', 'fb-num'); kg.type = 'number'; kg.min = '0'; kg.step = '0.1'; kg.placeholder = 'kg';
-      kg.setAttribute('aria-label', 'Kilograms from ' + st.position_code);
+    // one line: the batch's name, its total kg, Last cut — the same for a batch of the task and one added by its code
+    const lines = el('div');
+    box.append(lines);
+    const line = (st, name) => {
+      run.harvests.set(st.plan_id, st);
+      const row = el('div', 'fb-harv-row'); row.dataset.plan = st.plan_id;
+      const nameEl = el('span', 'fb-pos-name', name);
+      row.append(nameEl);
+      const kg = el('input', 'fb-num'); kg.type = 'number'; kg.min = '0'; kg.step = '0.1'; kg.placeholder = 'Total kg';
+      kg.setAttribute('aria-label', 'Total kilograms from ' + (st.position_code || name));
       if (st.kg != null) kg.value = String(st.kg);
       kg.oninput = () => { const v = parseFloat(kg.value); st.kg = isNaN(v) ? null : v; paintTotal(); saveHarvDraft(); };
       const last = el('button', 'fb-btn', 'Last cut');
       last.setAttribute('aria-pressed', String(!!st.final));
       last.onclick = () => { st.final = !st.final; last.setAttribute('aria-pressed', String(st.final)); saveHarvDraft(); };
       row.append(kg, el('span', 'fb-chip', 'kg'), last);
-      box.append(row);
+      lines.append(row);
+      return { kg, nameEl };
+    };
+    task.positions.filter(p => p.plan_id && (!p.done || detail)).forEach(p => {
+      const st = { plan_id: p.plan_id, position_code: p.label || p.position_code || '', kg: null, final: false,
+                   ...(prior.get(p.plan_id) || {}) };
+      line(st, [st.position_code, p.crop_name || task.crop_name].filter(Boolean).join(' · '));
     });
-    box.append(total);
+    // the batches added by their code before: in the draft (the task closed and opened again), or in what was sent (a
+    // done task opened to change it or to add to it). Only a batch the task does not list — a listed one keeps its own
+    // line, or none once it is done, exactly as before.
+    const listed = new Set(task.positions.map(p => p.plan_id).filter(Boolean));
+    let names = {};
+    try { names = (await getKV(HARV_LOTS)) || {}; } catch (e) { names = {}; }
+    for (const [id, x] of prior) {
+      if (!id || run.harvests.has(id) || listed.has(id)) continue;
+      const known = names[id] || {};
+      const lab = x.label || known.label || '';
+      const made = line({ plan_id: id, position_code: x.position_code || known.position_code || '', kg: null, final: false,
+                          ...x, added: true, label: lab }, lab || 'A batch added by its code');
+      // added on another phone: its name is asked of the farm when there is signal; without, the line works all the same
+      if (!lab && navigator.onLine && session) {
+        rpcLot('lot_card', { p_plan: id }).then(c => {
+          const f = { lot_code: c?.lot_code, crop: c?.crop?.name, zone: c?.place?.zone, position: c?.place?.position };
+          const st = run?.harvests?.get(id);
+          if (st && lotLine(f)) { st.label = lotLine(f); if (!st.position_code) st.position_code = f.position || f.lot_code || ''; made.nameEl.textContent = st.label; }
+        }).catch(() => { /* the line keeps its plain name */ });
+      }
+    }
+
+    // ── add a batch by its code (0.11.128): typed, or read off its label with the Tasks scanner's reader ──
+    // The code is looked up on the server (lot_find, or lot_card for a label's link), so it needs signal; the lines
+    // above work offline as always. Only a batch of this task's own unit is added: the server takes the weight of a
+    // batch of its farm only, and another unit's would be dropped without a word.
+    const NO_SIGNAL = 'No signal: the code cannot be looked up — use a line above, or add it once you have signal';
+    const add = el('form', 'fb-harv-row fb-harv-add');
+    const code = el('input', 'fb-num'); code.type = 'text'; code.placeholder = '26-0002';
+    code.autocomplete = 'off'; code.setAttribute('autocapitalize', 'characters'); code.spellcheck = false;
+    code.setAttribute('aria-label', 'The lot code on the batch label');
+    const addBtn = el('button', 'fb-btn', 'Add'); addBtn.type = 'submit';
+    const scanBtn = el('button', 'fb-btn', '{i:qr} Scan'); scanBtn.type = 'button';
+    add.append(el('span', 'fb-pos-name', 'Add a batch by its code'), code, addBtn, scanBtn);
+    const unitName = async id => {
+      try { const u = ((await getKV('sisters')) || []).find(x => x.id === id); if (u) return u.name || null; } catch (e) { /* below */ }
+      try { const f = farm || await getKV('farm'); return f && f.id === id ? f.name || null : null; } catch (e) { return null; }
+    };
+    const LOT_WORD = { proposed: 'proposed', validated: 'planned', active: 'growing', harvested: 'harvested', cancelled: 'cancelled' };
+    const pickLot = list => new Promise(res => {
+      const sheet = el('div', 'fb-sheet'), card = el('div', 'fb-sheet-card');
+      let over = false;
+      const done = v => { if (over) return; over = true; sheet.remove(); res(v); };
+      card.append(el('h3', null, 'Which batch?'), el('div', 'fb-meta', `${list.length} batches answer to this code`));
+      list.forEach(f => {
+        const b = el('button', 'fb-btn', lotLine(f) + (LOT_WORD[f.status] ? ' · ' + LOT_WORD[f.status] : ''));
+        b.type = 'button'; b.style.cssText = 'display:block;width:100%;text-align:left;margin:6px 0';
+        b.onclick = () => done(f);
+        card.append(b);
+      });
+      const no = el('button', 'fb-btn', 'Cancel'); no.type = 'button'; no.onclick = () => done(null);
+      const acts = el('div', 'fb-actions'); acts.append(no); card.append(acts);
+      sheet.append(card);
+      sheet._close = () => done(null);              // the phone's Back closes it (the popstate handler)
+      sheet.onclick = e => { if (e.target === sheet) done(null); };
+      document.body.append(sheet);
+    });
+    const take = f => {
+      if (run.harvests.has(f.id)) {
+        // already here, listed or added before: its kg field, not a second line
+        const inp = lines.querySelector(`[data-plan="${f.id}"] input`);
+        if (inp) { inp.scrollIntoView({ behavior: 'smooth', block: 'center' }); inp.focus(); }
+        showToast(`${f.lot_code || 'This batch'} is already in this task — type its total kg there`, 'info');
+        return;
+      }
+      // a batch this task lists whose line is not shown (a done part of an older grouped task): it was weighed there, and
+      // a second line would record it once more on another part of the task
+      if (listed.has(f.id)) { showToast('This batch is already weighed in this task', 'info'); return; }
+      const lab = lotLine(f);
+      const made = line({ plan_id: f.id, position_code: f.position || f.lot_code || '', kg: null, final: false, added: true, label: lab }, lab);
+      code.value = '';
+      paintTotal(); saveHarvDraft();
+      // its name kept on this phone for a later opening of the task (a month, then it goes)
+      getKV(HARV_LOTS).then(m => { m = m || {}; m[f.id] = { label: lab, position_code: f.position || f.lot_code || '', at: Date.now() };
+        for (const k of Object.keys(m)) if (!(m[k] && m[k].at > Date.now() - 31 * 864e5)) delete m[k];
+        return setKV(HARV_LOTS, m); }).catch(() => { /* the draft has the name anyway */ });
+      made.kg.scrollIntoView({ behavior: 'smooth', block: 'center' }); made.kg.focus();
+    };
+    let busy = false;
+    const addByCode = async raw => {
+      const s = String(raw || '').trim();
+      if (!s || busy) return;
+      if (!navigator.onLine) { showToast(NO_SIGNAL, 'error'); return; }
+      const R = run;                                 // the checklist this box belongs to: nothing is added to another one
+      busy = true; addBtn.disabled = scanBtn.disabled = true;
+      try {
+        let found = [];
+        const m = LOT_RE.exec(s);
+        if (m) {
+          // a label's link names the batch itself
+          const c = await rpcLot('lot_card', { p_plan: m[1] });
+          found = [{ id: m[1], lot_code: c?.lot_code, farm_id: c?.farm_id, farm: c?.farm, crop: c?.crop?.name, zone: c?.place?.zone, position: c?.place?.position, status: c?.status }];
+        } else if (/^https?:\/\//i.test(s)) { showToast('Not a FarmBox batch label — nothing added', 'error'); return; }
+        else found = (await rpcLot('lot_find', { p_code: s })) || [];
+        if (!found.length) { showToast(`No batch of your farm has the lot code ${s} — nothing added`, 'error'); return; }
+        // this task's unit: by the farm's id (lot_find carries it since FarmBox 0237, lot_card always did); a row without
+        // it (an older server) by the unit's name, as before
+        const unit = await unitName(task.farm_id);
+        if (found.some(f => !f.farm_id) && !unit) { showToast('This phone does not know the task\'s unit yet — sync, then add the batch', 'error'); return; }
+        const here = found.filter(f => f.farm_id ? f.farm_id === task.farm_id : f.farm === unit);
+        if (!here.length) {
+          const where = [...new Set(found.map(f => f.farm).filter(n => n && n !== unit))].join(' and ');
+          showToast(`${s} is a batch of ${where || 'another unit'}, not of ${unit || 'this task\'s unit'} — nothing added. Weigh it in a harvest task of its own unit.`, 'error');
+          return;
+        }
+        // only a batch that is planned or growing: a cleared or cancelled one would take the weight without a word
+        const open = here.filter(f => f.status === 'validated' || f.status === 'active');
+        if (!open.length) {
+          const x = here[0];
+          const word = { harvested: 'is a batch already cleared (harvested)', cancelled: 'is a cancelled batch', proposed: 'is a batch not planted yet' }[x.status]
+            || `is not a growing batch (${x.status || 'no state'})`;
+          showToast(`${x.lot_code || s} ${word} — nothing added`, 'error');
+          return;
+        }
+        const f = open.length === 1 ? open[0] : await pickLot(open);
+        if (f && run === R && R && R.harvests) take(f);
+      } catch (e) {
+        const why = String(e.message || e);
+        showToast(errKind(e) === 'net' ? NO_SIGNAL
+          : /42501|not a member/.test(why) ? 'This batch belongs to a farm you are not part of — nothing added'
+          : /P0002|no such batch/.test(why) ? 'No such batch: it may have been removed — nothing added'
+          : 'Could not look it up — ' + why.replace(/^\d+ /, '').slice(0, 80), 'error');
+      } finally { busy = false; addBtn.disabled = scanBtn.disabled = false; }
+    };
+    add.onsubmit = e => { e.preventDefault(); addByCode(code.value); };
+    scanBtn.onclick = async () => {
+      if (busy) return;
+      if (!navigator.onLine) { showToast(NO_SIGNAL, 'error'); return; }
+      const v = await readLotLabel({ go: 'Add', prompt: 'Lot code of the batch (for example 26-0002)' });
+      if (v) addByCode(v);
+    };
+    box.append(add, total);
     paintTotal();
     return box;
   }
@@ -13981,6 +14128,17 @@ function sopOpen() {
     }
     // a harvest task: the weights typed above answer the weigh / record steps
     if (run.harvests) {
+      // "Last cut" with no weight: the server records no harvest without kg, so the batch stayed open while the phone said
+      // the checklist was complete — stopped here, before anything is queued, for a listed line and an added one alike
+      const noKg = [...run.harvests.values()].find(x => x.final && !(num(x.kg) > 0));
+      if (noKg) {
+        const nm = noKg.label || noKg.position_code || 'this batch';
+        $('runHint').textContent = `Type the kg of ${nm}, or untick Last cut`;
+        showToast($('runHint').textContent, 'error');
+        const inp = document.querySelector(`#fb-steps [data-plan="${noKg.plan_id}"] input`);
+        if (inp) { inp.scrollIntoView({ behavior: 'smooth', block: 'center' }); inp.focus(); }
+        return;
+      }
       const rows = [...run.harvests.values()].filter(x => num(x.kg) > 0);
       const big = rows.find(x => num(x.kg) > 200);
       if (big && !confirm(`${big.position_code}: ${big.kg} kg — is that right?`)) return;
@@ -14289,7 +14447,7 @@ function sopOpen() {
       for (const row of kv.filter(r => /^(harvdraft|trapdraft):/.test(String(r.id)))) {
         const isHarv = String(row.id).startsWith('harvdraft:'), key = String(row.id).replace(/^(harvdraft|trapdraft):/, '');
         const draft = row.v || {};
-        const n = isHarv ? (draft.rows || []).filter(x => Number(x.kg) > 0 || x.final).length
+        const n = isHarv ? (draft.rows || []).filter(x => Number(x.kg) > 0 || x.final || x.added).length   // an added batch still to weigh too
                          : (draft.traps || []).filter(x => x.photo_data != null).length;
         if (!n) { try { await del('kv', row.id); } catch (e) { /* nothing in it */ } continue; }
         const g = groups.find(x => String(x.key || x.id) === key);
@@ -14557,11 +14715,19 @@ function sopOpen() {
 
   function scanLot() {
     if (document.querySelector('.fb-cam')) return;
-    if (!navigator.mediaDevices?.getUserMedia) { typeLot(); return; }
-    (async () => {
+    readLotLabel().then(v => { if (v) openLotText(v); });
+  }
+  // The label's reader (0.11.128, out of scanLot): the camera with the phone's own QR reader or jsQR, and a field to
+  // type the code. Gives back what was read or typed, or null when the person cancels; without a camera it asks for
+  // the code. Used by the Tasks scanner (which opens the batch's card) and by a harvest task (which adds the batch).
+  function readLotLabel({ go: goWord = 'Open', prompt: ask = 'Lot code (for example 26-0412, or just 412)' } = {}) {
+    if (document.querySelector('.fb-cam')) return Promise.resolve(null);
+    const typed = () => prompt(ask) || null;
+    if (!navigator.mediaDevices?.getUserMedia) return Promise.resolve(typed());
+    return new Promise(resolve => { (async () => {
       let stream;
       try { stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } } }); }
-      catch (e) { console.warn('camera refused', e); typeLot(); return; }
+      catch (e) { console.warn('camera refused', e); resolve(typed()); return; }
       const ov = el('div', 'fb-cam');
       const video = document.createElement('video');
       video.autoplay = true; video.playsInline = true; video.muted = true; video.srcObject = stream;
@@ -14570,7 +14736,7 @@ function sopOpen() {
       const type = el('form', 'fb-scan-type');
       const code = document.createElement('input');
       code.placeholder = 'or type the lot code'; code.autocomplete = 'off'; code.setAttribute('autocapitalize', 'characters');
-      const go = el('button', 'fb-btn', 'Open'); go.type = 'submit';
+      const go = el('button', 'fb-btn', goWord); go.type = 'submit';
       type.append(code, go);
       const bar = el('div', 'fb-cam-bar');
       const cancel = el('button', 'fb-btn', 'Cancel');
@@ -14582,7 +14748,7 @@ function sopOpen() {
         if (done) return; done = true;
         try { stream.getTracks().forEach(x => x.stop()); } catch (e) { /* stopped */ }
         ov.remove();
-        if (v) openLotText(v);
+        resolve(v || null);
       };
       ov._close = () => finish(null);            // the phone's Back closes the camera
       cancel.onclick = () => finish(null);
@@ -14617,11 +14783,7 @@ function sopOpen() {
         setTimeout(tick, 200);
       };
       tick();
-    })();
-  }
-  function typeLot() {
-    const v = prompt('Lot code (for example 26-0412, or just 412)');
-    if (v) openLotText(v);
+    })().catch(e => { console.warn('label reader', e); resolve(null); }); });
   }
 
   const lotDay = iso => iso ? new Date(iso + 'T00:00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : '—';
