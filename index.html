@@ -1264,7 +1264,7 @@
   }
 
   // ─── VERSION CHECK ────────────────────────────────────────
-  const CURRENT_VERSION = '0.11.126';
+  const CURRENT_VERSION = '0.11.127';
   let updateAvailable = false;
 
   let lastSaid = null, notYetAt = 0;
@@ -1456,6 +1456,7 @@
   // Same idea as the console's Settings › Version log (release_note): one line per
   // release, what it changed, in plain words. Add the new release on top with each bump.
   const VERSION_LOG = [
+    ['0.11.127', '2026-10-14', 'Scan a batch label', 'Tasks has a new button at the top, the square QR sign: point the camera at the QR of a batch label and the batch opens. You can also type its lot code, such as 26-0412 or just 412. You see where the batch is, when it was sown or came in and transplanted, when it will be harvested, what was harvested so far, the open cases on its zone, the sprays done and still to apply, and the next tasks with who is on them. When a spray means it may not be cut yet, a red line says until when. It needs signal: the batch is read from the farm.'],
     ['0.11.126', '2026-10-13', 'Reports before photos; opens without waiting', 'A report no longer waits behind photos: when you finish a checklist while photos are still going up, the report goes first and the photos after it. The app opens from the copy kept on the phone when the network gives no answer within five seconds (one bar at the greenhouse door used to leave a blank screen), and takes the new page as soon as it comes. Who is on each task is written in one step, so a card no longer says nobody yet for a moment during a sync. Renewing the sign-in and reading an answer now have a time limit too, so neither can hold the sending. The User guide in Settings is written again for the app as it is: signing in, Tasks, checklists, the daily scouting, sending and no signal, Capture, Settings and updates.'],
     ['0.11.125', '2026-10-13', 'A review of the whole app', 'The app was read through from end to end and its faults fixed. Tasks: a checklist you finished with a bad signal stays done while its report waits to be sent, instead of going back to open; a request that gets no answer is given up after a while, so one stuck photo no longer holds everything else; the Undo bar no longer throws you out of the task you opened meanwhile; a second tap no longer opens a second camera; a photo already uploaded is not uploaded again; a person removed from the team leaves the list of names. Sign out first sends what you have not sent, and asks when something is still left, so that your work does not go up under the name of the next person. When the sign-in has ended the app says so and shows the sign-in form. No signal is said in plain words. Capture: the app no longer updates itself in the middle of a recording or with photos attached; the Voice summary now reaches Notion; a note is not sent without its date and author when Notion did not answer; Send lights up for a title or a pasted transcript; Clear and removing a voice note ask first; closing Settings with Back no longer leaves the checklist underneath; the buttons are bigger to tap.'],
     ['0.11.124', '2026-10-12', 'No Ideas tab', 'Capture no longer has the Ideas tab: it was never used. The four tabs left are Ugly200, SoP, Daily and SU reports. An idea to improve FarmBox goes in SU reports.'],
