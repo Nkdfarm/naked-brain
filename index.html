@@ -895,6 +895,17 @@
       border-radius: var(--radius-md); background: var(--surface-offset); color: var(--text); }
     .fb-note { width:100%; font:inherit; font-size: var(--text-sm); padding:8px 10px; margin-top: var(--space-2);
       border:1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-offset); color: var(--text); }
+    /* the risk of a plant photo's comment (0.11.130): the AI's three colours, beside the comment */
+    .fb-note-row { display:flex; flex-wrap:wrap; gap: var(--space-2); align-items:flex-end; }
+    .fb-note-row .fb-note { flex: 1 1 180px; min-width:0; }
+    .fb-note-risk { font:inherit; font-size: var(--text-sm); padding:8px 10px; margin-top: var(--space-2); color: var(--text);
+      border:1px solid var(--border); border-left-width:6px; border-radius: var(--radius-md); background: var(--surface-offset); }
+    .fb-note-risk:disabled { opacity:.45; }
+    .fb-note-risk[data-level="green"] { border-color: var(--success); background: var(--success-bg); }
+    .fb-note-risk[data-level="yellow"] { border-color: var(--warning); background: var(--warning-bg); }
+    .fb-note-risk[data-level="red"] { border-color: var(--error); background: var(--error-bg); }
+    .fb-risk-dot { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+    .fb-risk-dot.green { background: var(--success); } .fb-risk-dot.yellow { background: var(--warning); } .fb-risk-dot.red { background: var(--error); }
     .fb-plan { margin-top: var(--space-3); padding: var(--space-3); border-left:3px solid var(--coral);
       background: var(--surface-offset); border-radius: 0 var(--radius-md) var(--radius-md) 0; font-size: var(--text-sm); }
     /* positions a grouped task covers: name · quantity · minutes */
@@ -1264,7 +1275,7 @@
   }
 
   // ─── VERSION CHECK ────────────────────────────────────────
-  const CURRENT_VERSION = '0.11.129';
+  const CURRENT_VERSION = '0.11.130';
   let updateAvailable = false;
 
   let lastSaid = null, notYetAt = 0;
@@ -1456,6 +1467,7 @@
   // Same idea as the console's Settings › Version log (release_note): one line per
   // release, what it changed, in plain words. Add the new release on top with each bump.
   const VERSION_LOG = [
+    ['0.11.130', '2026-10-15', 'A risk colour on the photo comment', 'In a scouting, the comment on a plant photo has a Risk menu beside it: Green, no risk; Yellow, low risk; Red, high risk. It starts on yellow when you begin to type; choose what the note says. The colour goes with the report: in Naked Heart the note shows under the picture in that colour, with your face, beside the AI\'s own reading. The review before Finish shows a dot of the colour before each comment.'],
     ['0.11.129', '2026-10-15', 'A trap photo with no insect kept as a reference', 'In a scouting, a trap side that reads 0 insects on a card that already had some is no longer asked about: it is kept as a reference picture, in the report and not counted, and the card goes on from its last count. A green box says so, with New card (the card was changed: both sides start again), Retake and Undo; when you correct a sent scouting, Keep 0 in place of Undo. Before, the question left unanswered made the card start again from 0. It works the same when a scouting is handed over or photos are added to a done one, and on a photo taken again in place of a reference.'],
     ['0.11.128', '2026-10-15', 'Harvest by batch code or label', 'A harvest task now takes a batch by its code: type the code on its label (26-0002) or tap Scan and point the camera at the label, then type the total kg you cut from it. Only a batch that is planted or growing in this unit is added; a batch already cleared, cancelled or not planted yet is said and left out. One person weighs each batch for the whole task. Last cut needs its kg before the task can be finished. The cucumbers have a harvest task every Tuesday and Friday while they are picking.'],
     ['0.11.127', '2026-10-14', 'Scan a batch label', 'Tasks has a new button at the top, the square QR sign: point the camera at the QR of a batch label and the batch opens. You can also type its lot code, such as 26-0412 or just 412. You see where the batch is, when it was sown or came in and transplanted, when it will be harvested, what was harvested so far, the open cases on its zone, the sprays done and still to apply, and the next tasks with who is on them. When a spray means it may not be cut yet, a red line says until when. It needs signal: the batch is read from the farm.'],
@@ -9974,6 +9986,12 @@ function sopOpen() {
   // crops measured as a head seen from above (0.11.79): salads, leafy greens, herbs
   const HEAD_RE = /lettuce|butterhead|romaine|iceberg|\bcos\b|salad|spinach|rocket|arugula|kale|chard|basil|parsley|coriander|cilantro|mint|herb|pak ?choi|bok ?choy|mizuna|endive|radicchio|watercress|m[aâ]che|chive|dill|oregano|thyme/i;
   const MEASURE_WHAT = [['diameter', 'Diameter'], ['length', 'Length'], ['width', 'Width'], ['height', 'Height']];
+  // the risk of a plant photo's comment (0.11.130, owner 15 Oct 2026: a colour code by gravity and urgency, on the AI's
+  // scale — green no risk, yellow low risk, red high risk; no blue, no grey). Only with a comment; a comment whose risk
+  // was never chosen is yellow. FarmBox 0239 keeps it on the observation (note_level) and gives it back in run_detail.
+  const NOTE_LEVELS = [['green', 'Green · no risk'], ['yellow', 'Yellow · low risk'], ['red', 'Red · high risk']];
+  const noteLevelOf = o => String(o?.note || '').trim()
+    ? (NOTE_LEVELS.some(([v]) => v === o.note_level) ? o.note_level : 'yellow') : null;
   const SC_TABS = [['trap', 'Traps'], ['health', 'Health'], ['growth', 'Growth']];
   const SIDES = [['yellow', 'Yellow side'], ['blue', 'Blue side']];              // the two faces of every trap card (0149)   // OK / Not OK sit above Finish (0.11.43)
   // a picture with its ✕ in the top right corner (0.11.86, owner 2 Oct 2026: "the possibility to remove the taken picture
@@ -10508,7 +10526,8 @@ function sopOpen() {
       });
       (detail.observations || []).forEach(o => sc.photos.set(o.client_ref, { ref: o.client_ref, section: o.section || 'health', taken_at: o.taken_at,
         thumb: o.photo_data, photo_path: o.photo_path, part: o.part, crop_id: o.crop_id, note: o.note || '', pos_code: o.pos_code || '',
-        gps: o.gps, measures: o.measures || [], px_per_mm: o.px_per_mm, ai: o.ai, zone_id: o.zone_id, item_id: o.item_id }));
+        gps: o.gps, measures: o.measures || [], px_per_mm: o.px_per_mm, ai: o.ai, zone_id: o.zone_id, item_id: o.item_id,
+        note_level: o.note_level || null }));
       sc.outcome = detail.run?.outcome || null; sc.outcomeNote = detail.run?.outcome_note || '';
       // each section's verdict as sent (FarmBox 0169); a scouting sent before that was OK or not OK as a whole
       const so = detail.run?.section_outcomes;
@@ -10700,7 +10719,13 @@ function sopOpen() {
             if (p.ai) lines.push('✦ ' + aiText(p));
           }
           lines.filter(Boolean).forEach(l => txt.append(el('div', l.startsWith('✦') ? 'fb-rv-ai' : 'fb-meta', l)));
-          if (p.note) txt.append(el('div', 'fb-rv-comment', '“' + p.note + '”'));
+          if (p.note) {
+            const c = el('div', 'fb-rv-comment');
+            const lv = k === 'trap' ? null : noteLevelOf(p);
+            if (lv) { const dot = el('span', 'fb-risk-dot ' + lv); dot.title = (NOTE_LEVELS.find(([v]) => v === lv) || [])[1] || ''; c.append(dot); }
+            c.append(document.createTextNode('“' + p.note + '”'));
+            txt.append(c);
+          }
           row.onclick = () => { sc.goTab(k); if (k === 'trap') sc.reveal?.(p.ref);
             setTimeout(() => document.querySelector(`.fb-sc-card[data-ref="${p.ref}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 60); };
           row.append(pics, txt);
@@ -11353,7 +11378,17 @@ function sopOpen() {
       card.append(top);
       const aiBox = el('div', 'fb-sc-ai' + (p.ai ? '' : ' hidden'), aiText(p));
       const note = el('input', 'fb-note'); note.type = 'text'; note.value = p.note || '';
-      note.oninput = () => { p.note = note.value; saveScDraft(); };
+      // the risk of what the comment says (0.11.130): dimmed until there is a comment; the first letters typed choose
+      // yellow, which the person changes if needed; the select takes the colour chosen
+      const risk = el('select', 'fb-note-risk'); risk.setAttribute('aria-label', 'Risk of what the comment says');
+      // "Risk" only stands in the dimmed menu while there is no comment: it cannot be picked
+      const r0 = el('option', null, 'Risk'); r0.value = ''; r0.disabled = true; r0.hidden = true; risk.append(r0);
+      NOTE_LEVELS.forEach(([v, l]) => { const o = el('option', null, l); o.value = v; risk.append(o); });
+      const paintRisk = () => { const lv = noteLevelOf(p); risk.disabled = !lv; risk.value = lv || ''; risk.dataset.level = lv || ''; };
+      risk.onchange = () => { p.note_level = risk.value || null; paintRisk(); saveScDraft(); };
+      // a comment cleared takes its risk with it: the next one starts on yellow again, not on the earlier colour
+      note.oninput = () => { p.note = note.value; if (!String(p.note).trim()) p.note_level = null; else if (!p.note_level) p.note_level = 'yellow'; paintRisk(); saveScDraft(); };
+      paintRisk();
       const acts = el('div', 'fb-actions');
       card.append(el('div', 'fb-sc-when', new Date(p.taken_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })));
 
@@ -11443,7 +11478,8 @@ function sopOpen() {
         note.placeholder = p.section === 'growth' ? 'Comment (optional)' : 'Comment: what you see (optional)';
         const aiBtn = aiButton(p, card, aiBox);       // Remove is the ✕ on the photo now (0.11.86), no ⋯ menu
         acts.append(aiBtn);
-        card._more.append(note);
+        const noteRow = el('div', 'fb-note-row'); noteRow.append(note, risk);
+        card._more.append(noteRow);
         card.append(card._more, acts, aiBox);
       }
       return card;
@@ -12813,7 +12849,7 @@ function sopOpen() {
         // an extra's photo names its zone line (0.11.100): without it the server filed the photo with no zone, and the
         // report, which reads by zone, never showed it (20 photos on 4 Oct)
         zone_id: p.zone_id || (X ? R.task.zone_id || null : null), item_id: p.item_id || (X ? R.task.positions?.[0]?.id || null : null),
-        note: p.note || null, photo_data: p.thumb || null, photo_path: p.photo_path || null, taken_at: p.taken_at,
+        note: p.note || null, note_level: noteLevelOf(p), photo_data: p.thumb || null, photo_path: p.photo_path || null, taken_at: p.taken_at,
         pos_code: posOf(p.pos_code), gps: null, measures: (p.measures || []).filter(m => m.by !== 'auto' || m.confirmed), px_per_mm: p.px_per_mm ?? null, ai: p.ai || null })),
     };
     const uploads = [
@@ -14319,7 +14355,7 @@ function sopOpen() {
       // the scouting photos, on the first run only (0096)
       ...(run.scout && !i ? { observations: [...run.scout.values()].filter(x => x.photo_data).map(x => ({
         client_ref: x.client_ref, item_id: x.item_id, zone_id: x.zone_id, crop_id: x.crop_id, part: x.part,
-        note: x.note || null, photo_data: x.photo_data, taken_at: x.taken_at })) } : {})
+        note: x.note || null, note_level: noteLevelOf(x), photo_data: x.photo_data, taken_at: x.taken_at })) } : {})
     }));
     open.forEach(t => { t.status = 'done'; t.done_at = finished; });
     await putAll('tasks', open);
@@ -14443,7 +14479,7 @@ function sopOpen() {
                 notes: q.note || null, read_at: S.taken_at || q.taken_at, code_read: q.code_read || null,
                 code_source: q.code_source || null, code_confirmed: !!q.code_ok, gps: null, ai: S.ai || null })) } : {}),
               observations: go.map(q => ({ client_ref: q.ref, section: q.section, part: q.part || 'other', crop_id: q.crop_id || null,
-                zone_id: q.zone_id || t.zone_id || (g?.extraZone ? g.zone_id || null : null), item_id: q.item_id || (g?.extraZone ? g.positions?.[0]?.id || null : null), note: q.note || null, photo_data: q.thumb || null, photo_path: q.photo_path || null, taken_at: q.taken_at,
+                zone_id: q.zone_id || t.zone_id || (g?.extraZone ? g.zone_id || null : null), item_id: q.item_id || (g?.extraZone ? g.positions?.[0]?.id || null : null), note: q.note || null, note_level: noteLevelOf(q), photo_data: q.thumb || null, photo_path: q.photo_path || null, taken_at: q.taken_at,
                 pos_code: parsePos(String(q.pos_code || '').toUpperCase().replace(/\s/g, '')) ? String(q.pos_code).toUpperCase().replace(/\s/g, '') : null,
                 gps: null, measures: (q.measures || []).filter(m => m.by !== 'auto' || m.confirmed), px_per_mm: q.px_per_mm ?? null, ai: q.ai || null })),
             };

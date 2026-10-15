@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ugly200-v217';
+const CACHE_NAME = 'ugly200-v218';
 // the scouting's text reader (Tesseract.js from jsDelivr, 0.11.40): kept across releases for offline days
 const LIB_CACHE = 'fb-lib-v1';
 // how long the app's start waits for the network before it opens from the kept page (see the fetch handler)
