@@ -1264,7 +1264,7 @@
   }
 
   // ─── VERSION CHECK ────────────────────────────────────────
-  const CURRENT_VERSION = '0.11.128';
+  const CURRENT_VERSION = '0.11.129';
   let updateAvailable = false;
 
   let lastSaid = null, notYetAt = 0;
@@ -1456,6 +1456,7 @@
   // Same idea as the console's Settings › Version log (release_note): one line per
   // release, what it changed, in plain words. Add the new release on top with each bump.
   const VERSION_LOG = [
+    ['0.11.129', '2026-10-15', 'A trap photo with no insect kept as a reference', 'In a scouting, a trap side that reads 0 insects on a card that already had some is no longer asked about: it is kept as a reference picture, in the report and not counted, and the card goes on from its last count. A green box says so, with New card (the card was changed: both sides start again), Retake and Undo; when you correct a sent scouting, Keep 0 in place of Undo. Before, the question left unanswered made the card start again from 0. It works the same when a scouting is handed over or photos are added to a done one, and on a photo taken again in place of a reference.'],
     ['0.11.128', '2026-10-15', 'Harvest by batch code or label', 'A harvest task now takes a batch by its code: type the code on its label (26-0002) or tap Scan and point the camera at the label, then type the total kg you cut from it. Only a batch that is planted or growing in this unit is added; a batch already cleared, cancelled or not planted yet is said and left out. One person weighs each batch for the whole task. Last cut needs its kg before the task can be finished. The cucumbers have a harvest task every Tuesday and Friday while they are picking.'],
     ['0.11.127', '2026-10-14', 'Scan a batch label', 'Tasks has a new button at the top, the square QR sign: point the camera at the QR of a batch label and the batch opens. You can also type its lot code, such as 26-0412 or just 412. You see where the batch is, when it was sown or came in and transplanted, when it will be harvested, what was harvested so far, the open cases on its zone, the sprays done and still to apply, and the next tasks with who is on them. When a spray means it may not be cut yet, a red line says until when. It needs signal: the batch is read from the farm.'],
     ['0.11.126', '2026-10-13', 'Reports before photos; opens without waiting', 'A report no longer waits behind photos: when you finish a checklist while photos are still going up, the report goes first and the photos after it. The app opens from the copy kept on the phone when the network gives no answer within five seconds (one bar at the greenhouse door used to leave a blank screen), and takes the new page as soon as it comes. Who is on each task is written in one step, so a card no longer says nobody yet for a moment during a sync. Renewing the sign-in and reading an answer now have a time limit too, so neither can hold the sending. The User guide in Settings is written again for the app as it is: signing in, Tasks, checklists, the daily scouting, sending and no signal, Capture, Settings and updates.'],
@@ -10500,7 +10501,9 @@ function sopOpen() {
         p.replaced = p.replaced || !!r.replaced; p.new_card = p.new_card || !!r.new_card; p.note = p.note || r.notes || '';
         p.sides[r.side === 'blue' ? 'blue' : 'yellow'] = { thumb: r.photo_data, photo_path: r.photo_path, total: r.total, algo_total: r.algo_total,
           counts: r.counts, corrected: r.corrected, algorithm: r.algorithm, confidence: r.confidence, ai: r.ai, taken_at: r.read_at,
-          week_rate: r.week_rate, orig_total: r.total, lower_ok: !!r.lower_ok };
+          week_rate: r.week_rate, orig_total: r.total, lower_ok: !!r.lower_ok,
+          // a reference picture (0.11.129): run_detail says it (FarmBox 0238), and so does the copy kept on this phone
+          reference: r.reference === true };
         sc.photos.set(ref, p);
       });
       (detail.observations || []).forEach(o => sc.photos.set(o.client_ref, { ref: o.client_ref, section: o.section || 'health', taken_at: o.taken_at,
@@ -10682,7 +10685,7 @@ function sopOpen() {
           if (k === 'trap') {
             SIDES.forEach(([sk, sl]) => { const S = p.sides?.[sk]; if (S?.thumb) pics.append(zoomImg(S.thumb, S.full, `Trap ${p.code || ''} · ${sl.toLowerCase()}`)); });
             txt.append(el('b', null, `Trap ${p.code || '?'}${p.code && !p.code_ok ? ' — not confirmed' : ''}`));
-            lines.push(SIDES.map(([sk, sl]) => { const S = p.sides?.[sk]; return `${sl.split(' ')[0]} ${S ? (S.total ?? '?') + (S.corrected ? ' (corrected)' : '') : '— missing'}`; }).join(' · '));
+            lines.push(SIDES.map(([sk, sl]) => { const S = p.sides?.[sk]; return `${sl.split(' ')[0]} ${S ? (S.reference ? 'reference photo' : (S.total ?? '?') + (S.corrected ? ' (corrected)' : '')) : '— missing'}`; }).join(' · '));
             lines.push(trapLevel(p).text);
             if (p.replaced) lines.push('Card replaced');
             SIDES.forEach(([sk, sl]) => { const t = p.sides?.[sk]?.ai ? aiText({ section: 'trap', ai: p.sides[sk].ai }) : ''; if (t) lines.push(`✦ ${sl.split(' ')[0]}: ${t}`); });
@@ -10960,6 +10963,11 @@ function sopOpen() {
       if (!f) return;
       const got = await sideFrom(f, side);
       if (!got) return;
+      // in place of a reference picture (Retake, or the ✕ then a new photo): a new 0 is a reference again, never a
+      // counted 0 — in an edit fewerOf says nothing, so without this it went up as the hard fall of a new card
+      const was = p.sides[side];
+      if ((was && (was.reference || was.refWas)) || p.refWas?.[side]) got.S.refWas = true;
+      if (p.refWas) delete p.refWas[side];
       p.sides[side] = got.S;
       card._paintTrap?.(); paintCoverage(); saveScDraft();
     }
@@ -10972,6 +10980,7 @@ function sopOpen() {
     function sideRate(p, k) {
       const S = p.sides?.[k];
       if (!S || S.total == null) return null;
+      if (S.reference) return null;                  // a reference picture is not counted: no rate, no colour (0.11.129)
       if (run.edit && S.orig_total != null) return S.total === S.orig_total && S.week_rate != null ? { rate: Math.round(S.week_rate / 7 * 10) / 10 } : null;
       const t = trapById.get(p.trap_id);
       const last = t?.last_sides?.[k];
@@ -10986,23 +10995,61 @@ function sopOpen() {
     }
     // A card keeps its insects: a count clearly lower than the card's high (3 or more and 5 % fewer) means this
     // photo missed some, the one before counted too many, or the card is new (0.11.72, owner 30 Sept 2026)
+    // A true edit of a done task: what was sent is changed, and nothing is asked. A hand-over (resume) or adding to a done
+    // round (addOnly) also come with run.edit set, but their new photos are a round like any other: there the question and
+    // the reference happen, on the new photos only — a side that came from the server (orig_total) stays as it came.
+    const trueEdit = () => !!run.edit && !run.resume && !run.edit.addOnly;
+    // the card's last reading in the sync may be this very run's (the part already sent, then synced): it is no baseline —
+    // the reading before it is not on this phone — so nothing is said, as before
+    const ownReading = (p, k, last) => !!run.edit && (run.edit.traps || []).some(r => r.trap_id === p.trap_id
+      && (r.side === 'blue' ? 'blue' : 'yellow') === k && r.read_at && new Date(r.read_at).getTime() === new Date(last.at).getTime());
     function fewerOf(p, k) {
       const S = p.sides?.[k];
-      if (!S || S.total == null || run.edit) return null;
+      if (!S || S.total == null || trueEdit() || S.orig_total != null) return null;
       const last = trapById.get(p.trap_id)?.last_sides?.[k];
       if (!last || last.total == null || !last.at || last.replaced || Date.now() - new Date(last.at) > 21 * 864e5) return null;
+      if (ownReading(p, k, last)) return null;
       const high = last.high ?? last.total;
       if (!(high - S.total >= 3 && S.total < high * 0.95)) return null;
       return { high, at: new Date(last.at), hard: S.total < high * 0.6 };
+    }
+    // (owner 15 Oct 2026: "in case of 0 insect, the app asks if new trap and the pic could be kept just as reference")
+    // A photo that reads 0 on a card that already had insects is most likely a photo the reader could not count — a
+    // card does not lose its insects. It is kept as a reference picture, by itself and without the question: it is not
+    // counted, gives no rate, and the card goes on from its last count. Not in an edit (fewerOf says nothing there),
+    // not on a card marked Replaced or New card, not once the person undid it for this photo (S.refUndone).
+    // Checked again at every paint of the card: a count changed from 0, Replaced, New card, Keep 0, or a code corrected
+    // to a trap with no earlier count each take the reference away.
+    // An edit never makes a reference (fewerOf says nothing there). One the server gave goes while the count, the card or
+    // the person's choice says otherwise — a count corrected to 5 sent as "reference, 5" would be counted — and comes back
+    // when that is undone (S.refWas): a 0 never turns into a counted 0, the hard fall of a new card, without a word.
+    function autoReference(p, k) {
+      const S = p.sides?.[k];
+      if (!S) return false;
+      const off = S.total !== 0 || p.new_card || p.replaced || S.lower_ok;
+      if (trueEdit() || S.orig_total != null) {
+        if (S.reference && off) { S.reference = false; S.refWas = true; return true; }
+        if (!S.reference && S.refWas && !off) { S.reference = true; return true; }
+        return false;
+      }
+      // a new photo: by the card's history, or because the photo it replaces was a reference (S.refWas, Retake / ✕)
+      const want = !off && (!!fewerOf(p, k) || !!S.refWas);
+      if (S.reference && !want) { S.reference = false; return true; }
+      if (!S.reference && want && !S.refUndone) { S.reference = true; return true; }
+      return false;
     }
     const toneOf = rate => rate >= th.over ? 'red' : rate >= th.watch ? 'orange' : 'green';
     function trapLevel(p) {
       const rs = SIDES.map(([k]) => sideRate(p, k)).filter(Boolean);
       const sum = rs.reduce((a, x) => a + x.rate, 0);
-      const cards = SIDES.map(([k]) => p.sides?.[k]?.total).filter(x => x != null);
-      if (!rs.length) return { tone: '', text: cards.length ? `${cards.reduce((a, x) => a + x, 0)} on the card · first photo: the count starts, the colour comes with the next one` : 'photograph both sides' };
+      // a reference picture is no count: left out of what the card shows
+      const refs = SIDES.filter(([k]) => p.sides?.[k]?.reference).length;
+      const cards = SIDES.map(([k]) => p.sides?.[k]).filter(S => S && !S.reference && S.total != null).map(S => S.total);
+      const refWord = refs ? (cards.length || rs.length ? ' · the other side is a reference photo, not counted' : '') : '';
+      if (!rs.length) return { tone: '', text: cards.length ? `${cards.reduce((a, x) => a + x, 0)} on the card · first photo: the count starts, the colour comes with the next one${refWord}`
+                                             : refs && SIDES.every(([k]) => p.sides?.[k]) ? 'Reference photo: not counted — the card goes on from its last count' : 'photograph both sides' };
       const r = Math.round(sum * 10) / 10, tone = toneOf(r);
-      return { tone, text: `Trap: ${r} a day · ${{ red: 'high', orange: 'watch', green: 'low' }[tone]}${rs.length < 2 && cards.length > 1 ? ' (one side starts its count)' : ''}` };
+      return { tone, text: `Trap: ${r} a day · ${{ red: 'high', orange: 'watch', green: 'low' }[tone]}${rs.length < 2 && cards.length > 1 ? ' (one side starts its count)' : ''}${refWord}` };
     }
     function trapCard(p) {
       const card = el('div', 'fb-step fb-photo fb-sc-card fb-trapcard'); card.dataset.ref = p.ref;
@@ -11043,7 +11090,8 @@ function sopOpen() {
       const rep = el('button', 'fb-btn', 'Replaced'); rep.type = 'button';
       rep.title = 'The card was changed after these photos: the next count starts from nothing';
       rep.setAttribute('aria-pressed', String(!!p.replaced));
-      rep.onclick = () => { p.replaced = !p.replaced; rep.setAttribute('aria-pressed', String(p.replaced)); saveScDraft(); };
+      // the sides are painted again: a reference picture on a card that is replaced is no reference any more (0.11.129)
+      rep.onclick = () => { p.replaced = !p.replaced; rep.setAttribute('aria-pressed', String(p.replaced)); saveScDraft(); card._paintTrap?.(); paintCoverage(); };
       const drop = el('button', 'fb-link', 'Remove'); drop.type = 'button';
       drop.onclick = () => { if (!confirm('Remove this trap and its photos?')) return; sc.photos.delete(p.ref); card.remove(); paintTabs(); paintCoverage(); saveScDraft(); };
       const acts = el('div', 'fb-actions'); acts.append(rep, drop);
@@ -11088,7 +11136,7 @@ function sopOpen() {
       num.setAttribute('aria-label', 'Insects on the ' + label.toLowerCase());
       const said = el('span', 'fb-chip', S.algo_total != null ? (S.total !== S.algo_total ? `phone said ${S.algo_total}` : 'counted') : '');
       const lv = el('div', 'fb-meta');
-      const paintSide = () => { const r = sideRate(p, k); lv.textContent = r ? `${r.rate} a day${r.fresh != null ? ` · +${r.fresh}` : ''}` : 'count starts'; };
+      const paintSide = () => { const r = sideRate(p, k); lv.textContent = S.reference ? 'reference photo — not counted' : r ? `${r.rate} a day${r.fresh != null ? ` · +${r.fresh}` : ''}` : 'count starts'; };
       num.oninput = () => { const n = parseInt(num.value, 10); S.total = isNaN(n) ? null : n; S.corrected = S.algo_total != null && S.total !== S.algo_total;
                             said.textContent = S.algo_total != null ? (S.corrected ? `phone said ${S.algo_total}` : 'counted') : ''; paintSide(); paintFew(); paintTotal(); saveScDraft(); };
       // 0.11.101: nobody corrected a count in 58 readings — the number is a line to read, and opens on a tap
@@ -11124,6 +11172,7 @@ function sopOpen() {
       const acts = el('div', 'fb-actions'); acts.append(ai, again);
       // the ✕ takes this side's photo away; the last side takes the trap with it
       b.append(picX(img, () => {
+        if (S.reference || S.refWas) p.refWas = { ...(p.refWas || {}), [k]: true };   // a new photo of this side stays a reference on a 0 (addSide)
         delete p.sides[k];
         if (!SIDES.some(([s2]) => p.sides[s2])) { sc.photos.delete(p.ref); card.remove(); paintTabs(); }
         else card._paintTrap();
@@ -11137,6 +11186,27 @@ function sopOpen() {
         few.textContent = ''; few.className = 'fb-sc-few';
         const btn = (t, fn, primary) => { const x = el('button', 'fb-btn' + (primary ? ' fb-btn-primary' : ''), t); x.type = 'button'; x.onclick = fn; return x; };
         const redraw = () => { saveScDraft(); card._paintTrap?.(); paintCoverage(); };
+        if (autoReference(p, k)) { saveScDraft(); paintSide(); paintTotal(); }
+        if (S.reference) {
+          few.classList.add('done');
+          few.append(el('span', '', 'No insect read on this photo: kept as a reference picture, not counted — the card goes on from its last count. '));
+          const acts = el('div', 'fb-actions');
+          // the card is new on both sides: neither side stays a reference, or the other would go up as reference + new card
+          // (each side remembers it was one, so undoing New card brings the reference back — see autoReference)
+          const keep0 = btn('Keep 0', () => { S.lower_ok = true; redraw(); });
+          keep0.title = 'This 0 is right: the card goes on from 0 (its earlier count is set aside)';
+          acts.append(btn('New card', () => { p.new_card = true;
+                        SIDES.forEach(([k2]) => { const S2 = p.sides?.[k2]; if (S2 && S2.reference) { S2.reference = false; S2.refWas = true; } }); redraw(); }),
+                      btn('Retake', () => addSide(p, k, card)),
+                      fewerOf(p, k)
+                        // back to the question; not set again by itself for this photo
+                        ? btn('Undo', () => { S.reference = false; S.refUndone = true; redraw(); })
+                        // no question to go back to (an edit, or the card's last count is this round's own): Undo would
+                        // quietly count the 0, a hard fall — the choice is said instead
+                        : keep0);
+          few.append(acts);
+          return;
+        }
         if (p.new_card) {
           few.classList.add('done');
           few.append(el('span', '', 'New card: every insect on it counts as new. '), btn('Undo', () => { p.new_card = false; redraw(); }));
@@ -11529,7 +11599,9 @@ function sopOpen() {
     const shortLevel = p => {
       const rs = SIDES.map(([k]) => sideRate(p, k)).filter(Boolean);
       if (rs.length) { const r = Math.round(rs.reduce((a, x) => a + x.rate, 0) * 10) / 10, tone = toneOf(r); return `${r} a day · ${{ red: 'high', orange: 'watch', green: 'low' }[tone]}`; }
-      const n = SIDES.map(([k]) => p.sides?.[k]?.total).filter(x => x != null).reduce((a, x) => a + x, 0);
+      const counted = SIDES.map(([k]) => p.sides?.[k]).filter(S => S && !S.reference && S.total != null);   // a reference picture is no count
+      if (!counted.length && SIDES.some(([k]) => p.sides?.[k]?.reference)) return 'reference photo · not counted';
+      const n = counted.reduce((a, S) => a + S.total, 0);
       return `${n} on the card · the count starts`;
     };
     function trapMenu(t) {
@@ -12734,7 +12806,7 @@ function sopOpen() {
       traps: trapsP.flatMap(p => SIDES.map(([k]) => [k, p.sides[k]]).map(([k, S]) => ({ trap_id: p.trap_id, code: p.code, side: k, colour: k,
         photo_data: S.thumb || null, photo_path: S.photo_path || null,
         counts: S.counts || {}, total: S.total ?? 0, algo_total: S.algo_total ?? null, algorithm: S.algorithm || null, confidence: S.confidence ?? null,
-        corrected: !!S.corrected, replaced: !!p.replaced, new_card: !!p.new_card, lower_ok: !!S.lower_ok,
+        corrected: !!S.corrected, replaced: !!p.replaced, new_card: !!p.new_card, lower_ok: !!S.lower_ok, reference: !!S.reference,
         notes: p.note || null, read_at: S.taken_at || p.taken_at, code_read: p.code_read || null,
         code_source: p.code_source || null, code_confirmed: !!p.code_ok, gps: null, ai: S.ai || null }))),
       observations: plants.map(p => ({ client_ref: p.ref, section: p.section, part: p.part || 'other', crop_id: p.crop_id || null,
@@ -14367,7 +14439,7 @@ function sopOpen() {
               ...(sides.length ? { traps: sides.map(([q, k, S]) => ({ trap_id: q.trap_id || null, code: q.code, side: k, colour: k,
                 photo_data: S.thumb || null, photo_path: S.photo_path || null,
                 counts: S.counts || {}, total: S.total ?? 0, algo_total: S.algo_total ?? null, algorithm: S.algorithm || null, confidence: S.confidence ?? null,
-                corrected: !!S.corrected, replaced: !!q.replaced, new_card: !!q.new_card, lower_ok: !!S.lower_ok,
+                corrected: !!S.corrected, replaced: !!q.replaced, new_card: !!q.new_card, lower_ok: !!S.lower_ok, reference: !!S.reference,
                 notes: q.note || null, read_at: S.taken_at || q.taken_at, code_read: q.code_read || null,
                 code_source: q.code_source || null, code_confirmed: !!q.code_ok, gps: null, ai: S.ai || null })) } : {}),
               observations: go.map(q => ({ client_ref: q.ref, section: q.section, part: q.part || 'other', crop_id: q.crop_id || null,
