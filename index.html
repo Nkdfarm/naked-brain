@@ -916,6 +916,31 @@
     .dg-tagline { font-size: var(--text-xs); color: var(--accent); font-weight: 650; }
     .dg-write { margin-top: var(--space-3); }
     .dg-write-hint { text-align: center; }
+    /* Digital scouting, the feed (0.11.134): Zones | Feed, the sorts, a post's risk on its left edge, the verified diagnosis */
+    .dg-switch { display:flex; margin: 0 0 var(--space-3); padding: 3px; border: 1px solid var(--border); border-radius: var(--radius-full); background: var(--surface-offset); }
+    .dg-switch-b { flex: 1; min-height: 38px; font: inherit; font-size: var(--text-sm); font-weight: 650; border: 0; border-radius: var(--radius-full);
+      background: transparent; color: var(--text-muted); cursor: pointer; }
+    .dg-switch-b.on { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+    .dg-period { align-items: center; padding-top: 0; }
+    .dg-period .fb-meta { margin: 0 0 0 auto; flex: none; }
+    .fb-step.dg-feed-item { border-left-width: 4px; }
+    .fb-step.dg-feed-item.risk-red { border-left-color: var(--error); }
+    .fb-step.dg-feed-item.risk-orange { border-left-color: var(--warning); }
+    .fb-step.dg-feed-item.risk-green { border-left-color: var(--success); }
+    .dg-verified { display:flex; align-items: baseline; gap: 6px; min-width: 0; font-size: var(--text-xs); padding: 3px 8px; border-radius: 6px;
+      background: var(--success-bg); border-left: 3px solid var(--success); }
+    .dg-verified-k { flex: none; font-weight: 750; color: var(--success); }
+    .dg-verified-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+    .dg-post-verified { display:flex; flex-direction: column; gap: 4px; padding: 8px 10px; border-left: 3px solid var(--success); background: var(--success-bg); border-radius: 6px; }
+    .dg-post-verified.r-yellow { border-left-color: var(--warning); } .dg-post-verified.r-red { border-left-color: var(--error); }
+    .dg-post-verified .fb-sec { color: var(--success); }
+    .dg-msg.verified .dg-bubble { box-shadow: inset 0 0 0 1.5px var(--success); }
+    .dg-vtag { color: var(--success); }
+    .dg-select { width: 100%; margin-bottom: var(--space-2); }
+    .dg-cases { display:flex; flex-direction: column; gap: 6px; margin: var(--space-2) 0; }
+    .dg-cases .fb-btn { text-align: left; }
+    .dg-cases .fb-btn[aria-pressed="true"] { background: var(--ink, #111); color: #fff; }
+    .dg-more { margin-top: var(--space-2); }
     .fb-chip.paused { background: color-mix(in srgb, var(--warning, #b7791f) 16%, var(--surface)); color: var(--text); }
     .fb-chip.todo { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
     .fb-going { display:flex; align-items:center; gap: var(--space-2); margin: var(--space-2) 0 var(--space-3); padding: 10px 12px;
@@ -1368,7 +1393,7 @@
   }
 
   // ─── VERSION CHECK ────────────────────────────────────────
-  const CURRENT_VERSION = '0.11.133';
+  const CURRENT_VERSION = '0.11.134';
   let updateAvailable = false;
 
   let lastSaid = null, notYetAt = 0;
@@ -1560,6 +1585,7 @@
   // Same idea as the console's Settings › Version log (release_note): one line per
   // release, what it changed, in plain words. Add the new release on top with each bump.
   const VERSION_LOG = [
+    ['0.11.134', '2026-10-22', 'The photo feed and the verified diagnosis', 'Digital scouting has a Feed: switch Zones | Feed to see the farm\'s photos and trap photos of the last 7 or 30 days, as posts, in four orders: Needs attention (the highest risk first), Newest, Disagreements (someone disagreed with the AI, or the team\'s colour is not the AI\'s) and Mine. Each card has a coloured edge for its risk; More shows the next 20. Without signal the feed shows what was last read. A farm manager or the agronomist can mark one comment as the verified diagnosis: it shows under the AI\'s reading and on the cards, and gives the photo its colour. From a photo, everyone except workers can Open a case or Add to a case.'],
     ['0.11.133', '2026-10-22', 'A photo as a post', 'Digital scouting, more compact: a zone\'s traps are one row of chips (green once photographed, a tap takes the photo), with the trap photos folded. Under each photo only the small colour blocks of the AI and the team, and a line with the comments and how many agree or disagree with the AI. A tap opens the photo as a post: the AI\'s reading in full, Agree or Disagree (the same again takes it back, Disagree asks why), and the conversation. Write a comment; under your own comment choose Ask the AI (a short answer, kept under your comment) or Ask someone. Nothing goes to the AI unless you ask.'],
     ['0.11.132', '2026-10-21', 'Digital scouting', 'Extra scouting becomes Digital scouting: the day\'s scouting page, live, for everybody. Choose the day (today by default); each zone shows what is done against its target (Health 5/2 · Growth 0/2 · Traps 4/6). In a zone: tap a trap id (red until photographed, green after) to read that trap; Add a photo — with the scale card it is measured and goes in Growth, without it in Plant health; notes on every photo, typed or by holding to record; Ask someone for their opinion. Everything is saved at once in the report, nothing waits for a Finish, so no photo is left unfiled. You change or delete your own items until the end of the day; a manager always. Leaving a zone with something missing says what. The daily scouting task of each zone shows what is missing and is ticked done in the responsible person\'s own app once the zone\'s minimums are reached. A round left unsent on this phone shows Send it.'],
     ['0.11.131', '2026-10-15', 'A risk colour on the trap comment', 'The comment on a trap now has the same Risk menu as a plant photo\'s: Green, no risk; Yellow, low risk; Red, high risk. It starts on yellow when you begin to type. In Naked Heart the trap\'s note shows on its card in that colour, with your face. The review before Finish shows the colour dot before a trap\'s comment too.'],
@@ -9307,6 +9333,7 @@ function sopOpen() {
   function dgSocialWith(s, vote, notes = 0) {
     if (!s && vote === undefined && !notes) return s || null;
     const x = { comments: Number(s?.comments) || 0, agree: Number(s?.agree) || 0, disagree: Number(s?.disagree) || 0, mine: s?.mine ?? null };
+    if (s && s.verified) x.verified = s.verified;           // the verified diagnosis rides along (0.11.134)
     x.comments += notes;
     if (vote !== undefined) {
       if (x.mine === 1) x.agree = Math.max(0, x.agree - 1);
@@ -9341,6 +9368,34 @@ function sopOpen() {
     });
     return out;
   }
+
+  // ── the feed and the verified diagnosis (0.11.134, FarmBox 0250; owner 22 Oct 2026: "Feed and ranking: Needs
+  // attention / Newest / Disagreements / Mine; the verified diagnosis; Open a case") ──
+  const DG_SORTS = [['attention', 'Needs attention'], ['newest', 'Newest'], ['disagree', 'Disagreements'], ['mine', 'Mine']];
+  const DG_PERIODS = [[7, '7 days'], [30, '30 days']];
+  const DG_FEED_PAGE = 20;
+  // a comment's first words, for a card: "Downy mildew, not powdery; the underside…"
+  const dgFirstWords = (s, max = 70) => { const t = String(s || '').replace(/\s+/g, ' ').trim(); return t.length > max ? t.slice(0, max - 1).trimEnd() + '…' : t; };
+  // a page added under the ones read: the server's order kept, a post already there (the order moved meanwhile) once
+  function dgFeedMerge(old, add) {
+    const seen = new Set((old || []).map(x => x.kind + ':' + x.id));
+    return [...(old || []), ...(add || []).filter(x => x && x.id && !seen.has(x.kind + ':' + x.id) && seen.add(x.kind + ':' + x.id))];
+  }
+  // the pictures of a page to ask for (dg_thumbs): the posts with a phone copy, not on this phone, not asked already
+  const dgThumbAsk = (items, have, asked) => (items || []).filter(x => x && x.id && x.has_thumb && !have.has(x.id) && !(asked && asked.has(x.id)))
+    .map(x => ({ kind: x.kind === 'trap' ? 'trap' : 'observation', id: x.id }));
+  // what a sort says when it has nothing
+  const dgFeedEmpty = sort => ({ disagree: 'No disagreement in these days.', mine: 'Nothing of yours in these days: no photo, comment or vote.' }[sort] || 'No photo in these days.');
+  // what a case opened from a post starts from: the AI's most severe finding (a trap reading: the pest it named), its
+  // severity, else slight
+  function dgCaseGuess(kind, p) {
+    const sev = v => Math.max(0, Math.min(3, Math.round(Number(v ?? 1)) || 0));
+    if (kind === 'trap') return { code: (p && p.ai_pest) || null, severity: 1 };
+    const fs = (p && p.ai && Array.isArray(p.ai.findings) ? p.ai.findings : []).filter(x => x && x.kind !== 'beneficial');
+    if (!fs.length) return { code: null, severity: 1 };
+    const top = fs.map((x, i) => [x, i]).sort((a, b) => (Number(b[0].severity ?? 1) - Number(a[0].severity ?? 1)) || a[1] - b[1])[0][0];
+    return { code: top.code || null, severity: sev(top.severity) };
+  }
   // a trap's chip: green once every side is photographed, grey when not read today with why, red until then
   const dgTrapState = t => t.skipped ? 'skip' : dgTrapDots(t).every(d => d.state === 'ok') ? 'ok' : 'todo';
   // under the chips: "4 of 6 read · 1 not read today"
@@ -9354,7 +9409,9 @@ function sopOpen() {
   // ── reading the day ──
   const DG = { day: null, farms: [], data: new Map(), thumbs: new Map(), asked: new Set(), page: null, unitKey: null, timer: null,
                reqs: [], people: new Map(), reading: false, again: false, token: 0, lastSig: '', unsent: [],
-               post: null, threads: new Map(), trapsOpen: false, zoneY: 0 };
+               post: null, threads: new Map(), trapsOpen: false, zoneY: 0, catalog: null,
+               // the feed (0.11.134): the answers read, one per farm, sort and period (dgFeedKey); the scroll it was left at
+               view: 'zones', feed: { farmId: null, sort: 'attention', days: 7, answers: new Map(), tok: 0, loading: false, failed: null, y: 0, dirty: false } };
   const dgRpc = (name, args) => api('/rest/v1/rpc/' + name, { method: 'POST', body: JSON.stringify(args) });
   const dgOpen = () => !!DG.page && !$('task').classList.contains('hidden') && !!$('task').querySelector(':scope > .dg-page');
   // a page is built aside, with its own marker (another page that paints the view takes it away), then put in place at
@@ -9444,7 +9501,8 @@ function sopOpen() {
     const pend = (await dgPending()).map(r => [r.id, !!r.dead, (r.payload.uploads || []).map(x => !!x.done)]);
     return JSON.stringify([DG.page, DG.unitKey, DG.day, [...DG.data].map(([k, v]) => [k, v.sig, v.repSig, !!v.stale]),
                            pend, DG.reqs.map(q => q.id), DG.unsent.map(x => x.key + ':' + x.n),
-                           DG.post ? [DG.post.kind, DG.post.id, DG.post.sig, !!DG.post.stale, [...DG.post.asking]] : null]);
+                           DG.post ? [DG.post.kind, DG.post.id, DG.post.sig, !!DG.post.stale, [...DG.post.asking]] : null,
+                           DG.page === 'feed' || DG.post?.from === 'feed' ? dgFeedSig() : null]);
   }
   // a voice note of mine not written down a minute after it was made (the call to write it down was lost, or failed on
   // the network): asked again, once each time the report is read; without signal the call waits in the outbox
@@ -9479,13 +9537,18 @@ function sopOpen() {
     if (DG.reading) { DG.again = DG.again || withReport; return; }
     const tok = DG.token;
     DG.reading = true;
-    try { await dgRead(withReport); if (DG.page === 'post') await dgReadThread(); } finally { DG.reading = false; }
+    try {
+      await dgRead(withReport);
+      if (DG.page === 'post') await dgReadThread();
+      // the feed: read again when something was sent or the live signal said "moved" — not at every 20 s tick
+      if (withReport && (DG.page === 'feed' || DG.post?.from === 'feed')) await dgReadFeed();
+    } finally { DG.reading = false; }
     if (!dgOpen() || tok !== DG.token) return;
     if (document.querySelector('.fb-sheet, .fb-cam, .fb-viewer')) return;   // never redrawn under a sheet, the camera or a photo
     const sig = await dgPageSig();
     if (sig !== DG.lastSig) {
       if (DG.page === 'zone') await dgPaintZone(); else if (DG.page === 'post') await dgPaintPost();
-      else if (DG.page === 'requests') await dgPaintRequests(); else await dgPaintDay();
+      else if (DG.page === 'requests') await dgPaintRequests(); else if (DG.page === 'feed') await dgPaintFeed(); else await dgPaintDay();
       DG.lastSig = sig;
     }
     if (DG.again) { DG.again = false; dgSoon(300); }
@@ -9530,6 +9593,7 @@ function sopOpen() {
         if (u) { await dgPaintDay(); return dgZone(f.id, u.unit_id); }
       }
     }
+    if (DG.view === 'feed') return dgShowFeed();      // the way it was left last time, while the app stays open
     await dgPaintDay();
   }
   function dgClose() {
@@ -9576,18 +9640,34 @@ function sopOpen() {
     if (tok !== DG.token || !dgOpen()) return;       // another day was chosen meanwhile: that one paints
     await dgPaintDay();
   }
+  // the two ways of the page (0.11.134): the zones of a day, or the farm's photos as a feed
+  function dgViewSwitch() {
+    const row = el('div', 'dg-switch');
+    [['zones', 'Zones'], ['feed', 'Feed']].forEach(([v, word]) => {
+      const b = el('button', 'dg-switch-b' + (DG.view === v ? ' on' : ''), word); b.type = 'button';
+      b.setAttribute('aria-pressed', String(DG.view === v));
+      b.onclick = async () => {
+        if (DG.view === v) return;
+        if (v === 'feed') return dgShowFeed();
+        await dgPaintDay(); window.scrollTo(0, 0);
+      };
+      row.append(b);
+    });
+    return row;
+  }
+  function dgReqsButton() {
+    const rq = el('button', 'btn btn-block dg-reqs', `{i:message} ${DG.reqs.length} photo${DG.reqs.length === 1 ? '' : 's'} waiting for your opinion`);
+    rq.onclick = () => dgRequests();
+    return rq;
+  }
   async function dgPaintDay() {
-    DG.page = 'day';
+    DG.page = 'day'; DG.view = 'zones';
     const box = dgBox();
     const hero = el('div', 'hero');
     hero.append(el('h1', null, 'Digital scouting'), el('p', null, fmtDay(DG.day) + (DG.farms.length > 1 ? ' · ' + DG.farms.map(f => f.name).join(' + ') : '')));
-    box.append(hero, dgDayPicker());
+    box.append(hero, dgViewSwitch(), dgDayPicker());
     if (DG.unsent.length) box.append(dgUnsentBox(DG.unsent));
-    if (DG.reqs.length) {
-      const rq = el('button', 'btn btn-block dg-reqs', `{i:message} ${DG.reqs.length} photo${DG.reqs.length === 1 ? '' : 's'} waiting for your opinion`);
-      rq.onclick = () => dgRequests();
-      box.append(rq);
-    }
+    if (DG.reqs.length) box.append(dgReqsButton());
     const pend = await dgPending();
     let any = false;
     for (const f of DG.farms) {
@@ -9612,6 +9692,171 @@ function sopOpen() {
     }
     if (!any && DG.farms.some(f => dgFarmData(f.id).dg)) box.append(el('div', 'config-hint', 'No zone to scout on this day.'));
     box.append(el('div', 'config-hint', 'Everybody sees the same page, live. You may change or delete your own photos and notes until the end of the day; a manager may change everything.'));
+    dgSwap(box);
+  }
+
+  // ── the feed (0.11.134): the farm's photos and trap readings of the last 7 or 30 days as posts, in the server's order
+  // (dg_feed), 20 a page; a tap opens the post, Back comes here at the same place ──
+  const dgFeedFarm = () => (DG.feed.farmId && DG.farms.some(f => f.id === DG.feed.farmId) ? DG.feed.farmId : (DG.farms[0] || {}).id || null);
+  const dgFeedKey = () => `${dgFeedFarm()}:${DG.feed.sort}:${DG.feed.days}`;
+  const dgFeedNow = () => DG.feed.answers.get(dgFeedKey()) || null;
+  function dgFeedSig() { const A = dgFeedNow(); return [DG.view, dgFeedKey(), A ? A.sig : null, !!(A && A.stale), DG.feed.failed === dgFeedKey()]; }
+  // the feed read again: as many pages as are on screen. Kept per farm, sort and period (KV dg_feed:<key>), so that
+  // without signal the last answer shows, said as such
+  async function dgReadFeed() {
+    const F = DG.feed, farmId = dgFeedFarm(), key = dgFeedKey(), tok = F.tok;
+    if (!farmId) return;
+    const cur = F.answers.get(key) || null;
+    const kept = async () => { const k = cur || await getKV('dg_feed:' + key).catch(() => null); if (k && tok === F.tok) F.answers.set(key, { ...k, stale: true }); return !!k; };
+    if (!navigator.onLine || !session) { await kept(); return; }
+    const pages = Math.max(1, Math.ceil(((cur && cur.items) || []).length / DG_FEED_PAGE));
+    let items = [], res = null;
+    try {
+      for (let i = 0; i < pages; i++) {
+        res = await dgRpc('dg_feed', { p: { farm_id: farmId, sort: F.sort, days: F.days, offset: i * DG_FEED_PAGE, limit: DG_FEED_PAGE } });
+        if (tok !== F.tok) return;
+        items = dgFeedMerge(items, (res && res.items) || []);
+        if (!res || !res.more) break;
+      }
+    } catch (e) {
+      if (tok !== F.tok) return;
+      if (!(await kept())) F.failed = key;
+      return;
+    }
+    const A = { farm_id: farmId, items, more: !!(res && res.more), total: Number(res && res.total) || items.length, may_verify: !!(res && res.may_verify),
+                may_case: !!(res && res.may_case), at: Date.now(), stale: false, sig: JSON.stringify(items) };
+    F.answers.set(key, A); F.failed = null; F.dirty = false;
+    setKV('dg_feed:' + key, A).catch(() => {});
+    dgFeedThumbs(items);                          // not awaited: the cards are painted first, the pictures fill in
+  }
+  // the pictures of the posts not on this phone (dg_thumbs, 40 at most a call); a failed ask is asked again next time
+  function dgFeedThumbs(items) {
+    const want = dgThumbAsk(items, DG.thumbs, DG.asked);
+    if (!want.length || !navigator.onLine || !session) return;
+    const tok = DG.token;
+    want.forEach(x => DG.asked.add(x.id));
+    for (let i = 0; i < want.length; i += 40) {
+      const part = want.slice(i, i + 40);
+      dgRpc('dg_thumbs', { p: { items: part } }).then(th => {
+        if (tok !== DG.token) return;
+        Object.entries(th || {}).forEach(([id, data]) => { if (data) DG.thumbs.set(id, data); });
+        dgFillThumbs();
+      }).catch(() => { if (tok === DG.token) part.forEach(x => DG.asked.delete(x.id)); });
+    }
+  }
+  // the next 20 under the ones on screen
+  async function dgMoreFeed() {
+    if (!navigator.onLine || !session) { showToast('Needs signal', 'error'); return; }
+    const F = DG.feed, key = dgFeedKey(), tok = F.tok, cur = F.answers.get(key);
+    if (!cur || F.loading) return;
+    F.loading = true;
+    try {
+      const res = await dgRpc('dg_feed', { p: { farm_id: dgFeedFarm(), sort: F.sort, days: F.days, offset: cur.items.length, limit: DG_FEED_PAGE } });
+      if (tok !== F.tok) return;
+      const items = dgFeedMerge(cur.items, (res && res.items) || []);
+      const A = { ...cur, items, more: !!(res && res.more), total: Number(res && res.total) || items.length, at: Date.now(), stale: false, sig: JSON.stringify(items) };
+      F.answers.set(key, A);
+      setKV('dg_feed:' + key, A).catch(() => {});
+      dgFeedThumbs((res && res.items) || []);
+    } catch (e) { showToast('More could not be read — try again', 'error'); }
+    finally { F.loading = false; }
+    if (tok === F.tok && DG.page === 'feed' && dgOpen()) { await dgPaintFeed(); DG.lastSig = await dgPageSig(); }
+  }
+  // the feed on screen: what is kept at once, then read again
+  async function dgShowFeed() {
+    DG.view = 'feed'; DG.page = 'feed'; DG.post = null;
+    await dgPaintFeed(); window.scrollTo(0, 0);
+    await dgFeedAgain();
+  }
+  async function dgFeedAgain() {
+    const tok = DG.feed.tok;
+    await dgReadFeed();
+    if (tok === DG.feed.tok && DG.page === 'feed' && dgOpen() && !document.querySelector('.fb-sheet, .fb-cam, .fb-viewer')) { await dgPaintFeed(); DG.lastSig = await dgPageSig(); }
+  }
+  // another sort, period or farm: the answer kept for it shows at once, from the top
+  async function dgFeedGo(change) {
+    Object.assign(DG.feed, change); DG.feed.tok++; DG.feed.loading = false; DG.feed.y = 0;
+    await dgPaintFeed(); window.scrollTo(0, 0);
+    await dgFeedAgain();
+  }
+  const dgFeedWhen = iso => !iso ? '' : (dgDayOf(iso) === todayISO() ? '' : new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) + ' ') + dgHm(iso);
+  function dgFeedTitle(kind, it) {
+    if (kind === 'trap') return [it.zone, `Trap ${shortCode(it.code)}`, it.side].filter(Boolean).join(' · ');
+    return [it.zone, dgPartWord(it.part)].filter(Boolean).join(' · ') || 'Plant photo';
+  }
+  // the verified diagnosis under a picture, in short: "Verified  Downy mildew, not powdery…"
+  function dgVerifiedTag(v) {
+    if (!v || typeof v !== 'object') return null;
+    const b = el('div', 'dg-verified');
+    b.append(el('span', 'dg-verified-k', 'Verified'));
+    const t = el('span', 'dg-verified-text'); t.textContent = dgFirstWords(v.body); b.append(t);
+    b.title = 'Verified diagnosis' + (v.by ? ' by ' + firstName(v.by) : '') + (v.verified_by ? ', verified by ' + firstName(v.verified_by) : '') + ': ' + String(v.body || '');
+    return b;
+  }
+  // a post of the feed: the zone page's compact card, with the post's risk on its left edge
+  function dgFeedCard(p, pend) {
+    const kind = p.kind === 'trap' ? 'trap' : 'observation';
+    const mine = pend.filter(r => r.payload.view.ref_id === p.id);
+    const { it, removing } = dgEdited(p, mine);
+    const c = el('div', 'fb-step dg-item dg-feed-item' + (['red', 'orange', 'green'].includes(p.risk) ? ' risk-' + p.risk : '') + (removing ? ' gone' : ''));
+    c.dataset.ref = p.id;
+    const img = el('img', 'dg-img'); img.alt = ''; img.dataset.thumb = p.id;
+    { const t0 = dgThumb(p.id); if (t0) img.src = t0; }
+    const txt = el('div', 'dg-text');
+    const t = el('b'); t.textContent = dgFeedTitle(kind, it); txt.append(t);
+    txt.append(el('div', 'fb-meta', [dgFeedWhen(p.taken_at), p.by ? firstName(p.by) : null, removing ? 'deleting — sending' : null].filter(Boolean).join(' · ')));
+    const chips = dgChipRow(kind, p, it);
+    if (chips) txt.append(chips);
+    const s = dgSocialWith(p.social, dgPendVote(mine), dgPendNotes(mine));
+    const ver = dgVerifiedTag(s && s.verified);
+    if (ver) txt.append(ver);
+    const sl = dgSocialText(s);
+    if (sl) txt.append(el('div', 'dg-social', sl));
+    c.append(img, txt);
+    if (!removing) {
+      c.classList.add('tap'); c.setAttribute('role', 'button'); c.tabIndex = 0;
+      c.onclick = () => dgOpenPost(p.id, 'feed');
+      c.onkeydown = e => { if (e.key === 'Enter') dgOpenPost(p.id, 'feed'); };
+    }
+    return c;
+  }
+  async function dgPaintFeed() {
+    DG.page = 'feed'; DG.view = 'feed';
+    const F = DG.feed, key = dgFeedKey(), A = dgFeedNow();
+    const box = dgBox();
+    const hero = el('div', 'hero');
+    hero.append(el('h1', null, 'Digital scouting'), el('p', null, `The farm's photos · the last ${F.days} days`));
+    box.append(hero, dgViewSwitch());
+    if (DG.reqs.length) box.append(dgReqsButton());
+    const chipRow = (list, on, go, cls) => {
+      const row = el('div', 'dg-days ' + cls);
+      list.forEach(([v, word]) => {
+        const b = el('button', 'fb-btn' + (v === on ? ' on' : ''), word); b.type = 'button'; b.setAttribute('aria-pressed', String(v === on));
+        b.onclick = () => (v !== on ? go(v) : null);
+        row.append(b);
+      });
+      return row;
+    };
+    if (DG.farms.length > 1) box.append(chipRow(DG.farms.map(f => [f.id, f.name]), dgFeedFarm(), v => dgFeedGo({ farmId: v }), 'dg-farms'));
+    box.append(chipRow(DG_SORTS, F.sort, v => dgFeedGo({ sort: v }), 'dg-sorts'));
+    const per = chipRow(DG_PERIODS, F.days, v => dgFeedGo({ days: v }), 'dg-period');
+    if (A && A.items.length) per.append(el('span', 'fb-meta', `${A.total} post${A.total === 1 ? '' : 's'}`));
+    box.append(per);
+    if (!A) {
+      box.append(el('div', 'config-hint', !navigator.onLine || !session ? 'The feed needs signal.'
+                                          : F.failed === key ? 'Could not read the feed — try again in a moment.' : 'Reading the feed…'));
+      dgSwap(box); return;
+    }
+    if (A.stale) box.append(el('div', 'config-hint', (navigator.onLine ? 'Could not be read again' : 'No signal') + `: the feed as read at ${dgHm(new Date(A.at).toISOString())}.`));
+    const pend = (await dgPending()).filter(r => r.payload.view.farm_id === A.farm_id);
+    A.items.forEach(p => box.append(dgFeedCard(p, pend)));
+    if (!A.items.length) box.append(el('div', 'config-hint', dgFeedEmpty(F.sort)));
+    if (A.more) {
+      const more = el('button', 'btn btn-block dg-more', 'More'); more.type = 'button';
+      more.disabled = F.loading;
+      more.onclick = () => { more.disabled = true; dgMoreFeed(); };
+      box.append(more);
+    }
     dgSwap(box);
   }
 
@@ -9797,7 +10042,10 @@ function sopOpen() {
     txt.append(el('div', 'fb-meta', [dgHm(p.taken_at), p.by ? firstName(p.by) : null, removing ? 'deleting — sending' : Object.keys(edit).length ? 'change sending' : null].filter(Boolean).join(' · ')));
     const chips = dgChipRow(kind, p, it);
     if (chips) txt.append(chips);
-    const sl = dgSocialText(dgSocialWith(p.social, dgPendVote(mine), dgPendNotes(mine)));
+    const s = dgSocialWith(p.social, dgPendVote(mine), dgPendNotes(mine));
+    const ver = dgVerifiedTag(s && s.verified);              // (0.11.134) the verified diagnosis, in short
+    if (ver) txt.append(ver);
+    const sl = dgSocialText(s);
     if (sl) txt.append(el('div', 'dg-social', sl));
     c.append(img, txt);
     if (!removing) {
@@ -9817,23 +10065,53 @@ function sopOpen() {
         if (ph || tr) return { p: ph || tr, kind: ph ? 'observation' : 'trap', farmId, unitId: u.unit_id || u.zone_id };
       }
     }
+    // (0.11.134) a post of the feed, of any of its last days: the answer on screen first
+    for (const k of [dgFeedKey(), ...DG.feed.answers.keys()]) {
+      const A = DG.feed.answers.get(k), p = ((A && A.items) || []).find(x => x.id === id);
+      if (p) return { p, kind: p.kind === 'trap' ? 'trap' : 'observation', farmId: A.farm_id || k.split(':')[0], unitId: p.zone_id || null, feed: true };
+    }
+    // the post on screen, as it was when opened: a re-read feed may have moved it off its pages (verified green, a vote
+    // taken back, past the period) — it stays open
+    if (DG.post && DG.post.id === id && DG.post.found) return DG.post.found;
     return null;
+  }
+  // every copy of an item that was read (the day's report, the feed's answers): a new count goes on all of them
+  function dgCopies(id) {
+    const out = [];
+    for (const fd of DG.data.values()) for (const u of ((fd && fd.rep) || {}).units || []) [...(u.photos || []), ...(u.traps || [])].forEach(x => { if (x.id === id) out.push(x); });
+    for (const A of DG.feed.answers.values()) ((A && A.items) || []).forEach(x => { if (x.id === id) out.push(x); });
+    const kept = DG.post && DG.post.id === id && DG.post.found && DG.post.found.p;   // the open post's own copy
+    if (kept && !out.includes(kept)) out.push(kept);
+    return out;
+  }
+  function dgPatchSocial(id, s) {
+    dgCopies(id).forEach(x => { x.social = s; });
+    if (DG.post && DG.post.id === id && DG.post.thread) DG.post.thread.social = s;
   }
   async function dgOpenPost(id, from = 'zone') {
     const f = dgFindItem(id);
     if (!f) { showToast('This photo is not in the report any more', 'error'); return; }
     if (DG.page === 'zone') DG.zoneY = window.scrollY;
-    DG.page = 'post'; DG.unitKey = { farmId: f.farmId, unitId: f.unitId };
-    const P = DG.post = { kind: f.kind, id, from, thread: DG.threads.get(id) || null, sig: '', stale: false, asking: new Set() };
+    if (DG.page === 'feed') DG.feed.y = window.scrollY;
+    DG.page = 'post';
+    if (from !== 'feed') DG.unitKey = { farmId: f.farmId, unitId: f.unitId };
+    const P = DG.post = { kind: f.kind, id, from, thread: DG.threads.get(id) || null, sig: '', stale: false, asking: new Set(), found: f };
     await dgPaintPost();
     show('task', f.kind === 'trap' ? `Trap ${shortCode(f.p.code)}` : 'Photo', () => dgLeavePost());
     await dgReadThread();
     if (DG.post === P && dgOpen() && !document.querySelector('.fb-sheet, .fb-cam, .fb-viewer')) { await dgPaintPost(); DG.lastSig = await dgPageSig(); }
   }
-  // back from the post: to the zone where it was left, or to the photos waiting for my opinion
+  // back from the post: to the zone where it was left, to the feed at its place and sort, or to the photos waiting for
+  // my opinion
   async function dgLeavePost() {
     const P = DG.post; DG.post = null;
     if (P && P.from === 'requests') { DG.page = 'requests'; await dgPaintRequests(); $('title').textContent = 'Your opinion'; window.scrollTo(0, 0); return; }
+    if (P && P.from === 'feed') {
+      await dgPaintFeed(); $('title').textContent = 'Digital scouting'; window.scrollTo(0, DG.feed.y || 0);
+      // a vote, a comment, a verification or a case made from the post: the feed read again (its place kept, dgSwap)
+      if (DG.feed.dirty) await dgFeedAgain();
+      return;
+    }
     DG.page = 'zone';
     await dgPaintZone();
     const u = DG.unitKey ? dgUnit(DG.unitKey.farmId, DG.unitKey.unitId) : null;
@@ -9883,7 +10161,9 @@ function sopOpen() {
     const f = P ? dgFindItem(P.id) : null;
     if (!f) { box.append(el('div', 'config-hint', 'This photo is not in the report any more.')); dgSwap(box); return; }
     const { p, kind, farmId } = f;
-    const D = dgFarmData(farmId).dg;
+    const D0 = dgFarmData(farmId).dg;
+    // a post of another day, from the feed: the day's rule of who may change it is that day's, not the page's
+    const D = f.feed && D0 ? { ...D0, is_today: (p.day || dgDayOf(p.taken_at)) === todayISO() } : D0;
     const pend = (await dgPending()).filter(r => r.payload.view.farm_id === farmId);
     const mine = pend.filter(r => r.payload.view.ref_id === p.id);
     const { it, removing, edit } = dgEdited(p, mine);
@@ -9896,9 +10176,11 @@ function sopOpen() {
     img.onclick = () => dgFullPhoto(p, img, title);
     post.append(img);
     // who · zone · part (or trap and side) · time
-    const zone = dgUnit(farmId, f.unitId)?.name || null;
+    const zone = dgUnit(farmId, f.unitId)?.name || p.zone || null;
+    // a feed post says no section (dg_post_json): its part only
+    const noSection = !!f.feed && !it.section;
     const what = kind === 'trap' ? [`Trap ${shortCode(it.code)}`, it.side].filter(Boolean).join(' · ')
-                                 : [it.section === 'growth' ? 'Growth' : 'Plant health', dgPartWord(it.part)].filter(Boolean).join(' · ');
+                                 : [noSection ? null : it.section === 'growth' ? 'Growth' : 'Plant health', dgPartWord(it.part)].filter(Boolean).join(' · ');
     const head = el('div', 'dg-post-head');
     head.append(el('b', null, [p.by ? firstName(p.by) : null, zone, what, dgWhen(p.taken_at)].filter(Boolean).join(' · ')));
     const more = kind === 'trap' ? [`${it.total ?? '?'} insect${it.total === 1 ? '' : 's'}`, p.reference ? 'reference photo' : null]
@@ -9912,7 +10194,7 @@ function sopOpen() {
       const ab = el('button', 'fb-btn', '{i:user} Ask someone'); ab.type = 'button'; ab.onclick = () => dgAskSheet(kind, p, farmId);
       acts.append(ab);
       if (dgMayChange(p, D)) {
-        if (kind === 'observation') {
+        if (kind === 'observation' && !noSection) {
           const to = it.section === 'growth' ? 'health' : 'growth';
           const sw = el('button', 'fb-btn', it.section === 'growth' ? 'Is plant health' : 'Is growth'); sw.type = 'button';
           sw.title = 'Move it to ' + (to === 'growth' ? 'Growth' : 'Plant health');
@@ -9980,15 +10262,39 @@ function sopOpen() {
       });
     }
     post.append(sec);
-    // the conversation, in time order: the comments, the AI's answers under the comment they answer
     const thread = T ? (T.thread || []) : (Array.isArray(p.notes) ? p.notes : []).map(n => ({ type: 'note', ...n }));
+    // (0.11.134) the verified diagnosis: the comment a manager or the agronomist marked, pinned under the AI's reading,
+    // in full when the conversation has it
+    const V = social.verified && typeof social.verified === 'object' ? social.verified : null;
+    if (V) {
+      const full = thread.find(x => x.type === 'note' && x.id === V.id);
+      const vb = el('div', 'dg-post-verified' + (NOTE_LEVELS.some(([v]) => v === V.level) ? ' r-' + V.level : ''));
+      vb.append(el('div', 'fb-sec', 'Verified diagnosis'));
+      const w = el('div', 'dg-ai-text'); w.textContent = (full && (full.body || full.transcript)) || V.body || ''; vb.append(w);
+      vb.append(el('div', 'fb-meta', [V.by ? firstName(V.by) : null, V.verified_by ? 'verified by ' + firstName(V.verified_by) : 'verified'].filter(Boolean).join(' · ')));
+      post.append(vb);
+    }
+    // who may verify (a manager or the agronomist) and who may open a case (everybody but workers and trainees): the
+    // post's own answer when read, else the feed's
+    const feedSays = flag => [...DG.feed.answers.values()].some(A => A && A.farm_id === farmId && A[flag]);
+    const mayVerify = T && 'may_verify' in T ? !!T.may_verify : feedSays('may_verify');
+    const mayCase = T && 'may_case' in T ? !!T.may_case : feedSays('may_case');
+    if (mayCase && !removing) {
+      const zoneId = p.zone_id || dgUnit(farmId, f.unitId)?.zone_id || null;
+      const ca = el('div', 'fb-actions dg-acts dg-case-acts');
+      const oc = el('button', 'fb-btn', '{i:alert} Open a case'); oc.type = 'button'; oc.onclick = () => dgCaseOpen(kind, p, farmId, zoneId);
+      const ac = el('button', 'fb-btn', 'Add to a case'); ac.type = 'button'; ac.onclick = () => dgCaseAdd(kind, p, farmId, zoneId);
+      ca.append(oc, ac);
+      post.append(ca);
+    }
+    // the conversation, in time order: the comments, the AI's answers under the comment they answer
     const pendNotes = mine.filter(r => r.payload.view.kind === 'note');
     const n = thread.length + pendNotes.filter(r => !r.dead).length;
     post.append(el('div', 'fb-sec dg-h', n ? `Comments · ${n}` : 'Comments'));
     if (!T || P.stale) post.append(el('div', 'fb-meta', navigator.onLine && session ? (T ? 'Could not be read again — as read before.' : 'Reading the comments…')
                                                                                   : 'No signal: the comments as read before.'));
     const list = el('div', 'dg-thread');
-    const ctx = { P, kind, p, farmId, D, pend };
+    const ctx = { P, kind, p, farmId, D, pend, mayVerify, verifiedId: V ? V.id : null };
     dgThreadOrder(thread).forEach(({ item, depth }) => list.append(dgPostMsg(item, depth, ctx)));
     pendNotes.forEach(r => list.append(dgPendingMsg(r)));
     if (!list.childNodes.length) list.append(el('div', 'fb-meta', 'No comment yet.'));
@@ -10003,9 +10309,11 @@ function sopOpen() {
     dgSwap(box);
   }
   // one message of the conversation: a comment, a question asked in Naked Heart's chat, or an AI answer
-  function dgPostMsg(n, depth, { P, kind, p, farmId, D, pend }) {
+  function dgPostMsg(n, depth, { P, kind, p, farmId, D, pend, mayVerify = false, verifiedId = null }) {
     const isAi = n.type === 'ai';
-    const m = el('div', 'dg-msg' + (isAi ? ' ai' : '') + (depth ? ' reply' : ''));
+    // the verified diagnosis (0.11.134): by the photo's counts when they say one, else by the comment itself
+    const verified = n.type === 'note' && !!n.id && (verifiedId ? n.id === verifiedId : !!n.verified_at);
+    const m = el('div', 'dg-msg' + (isAi ? ' ai' : '') + (depth ? ' reply' : '') + (verified ? ' verified' : ''));
     const head = el('div', 'dg-msg-head');
     const who = el('b'); who.textContent = isAi ? 'AI' : (firstName(n.by) || 'Somebody');
     head.append(dgFace(n.worker_id, n.by, isAi), who, el('span', 'fb-meta', dgWhen(n.at) + (n.type === 'question' ? ' · asked in Naked Heart' : '')));
@@ -10026,9 +10334,16 @@ function sopOpen() {
     m.append(b);
     if (!isNote) return m;
     const acts = el('div', 'dg-msg-acts');
+    if (verified) acts.append(el('span', 'dg-tagline dg-vtag', n.verified_by ? 'Verified by ' + firstName(n.verified_by) : 'Verified diagnosis'));
     if (n.asked_ai) acts.append(el('span', 'dg-tagline', 'sent to the AI'));
     if (gone) acts.append(el('span', 'dg-sending', 'deleting'));
     else {
+      // a manager or the agronomist marks it as the photo's verified diagnosis, or takes that back
+      if (mayVerify && n.id) {
+        const v = el('button', 'fb-link', verified ? 'Unverify' : 'Verify'); v.type = 'button';
+        v.onclick = () => dgVerify(P, n, !verified);
+        acts.append(v);
+      }
       // my comment, once posted: I decide whether the AI or somebody of the team should see it
       if (n.id && D && D.me && n.by_user === D.me) {
         if (P.asking.has(n.id)) acts.append(el('span', 'dg-sending', 'The AI is answering…'));
@@ -10106,10 +10421,123 @@ function sopOpen() {
       try { const j = JSON.parse(why); if (j && j.error) why = String(j.error); } catch (e2) { /* plain words already */ }
       if (!/^409 /.test(String((e && e.message) || ''))) showToast('The AI did not answer: ' + why.slice(0, 120), 'error');
     } finally { clearTimeout(cut); P.asking.delete(n.id); }
+    DG.feed.dirty = true;
     if (DG.post !== P) return;
     await dgReadThread();
     if (DG.post === P && dgOpen() && !document.querySelector('.fb-sheet, .fb-cam, .fb-viewer')) await dgPaintPost();
     dgSoon(300);                                   // the card's counts on the zone page
+  }
+  // what the server said, in its own words: PostgREST answers "400 {"message": …}"
+  function dgWhy(e) {
+    let why = String((e && e.message) || e || '').replace(/^\d{3} /, '');
+    try { const j = JSON.parse(why); if (j && (j.message || j.error)) why = String(j.message || j.error); } catch (e2) { /* plain words already */ }
+    return why.slice(0, 120);
+  }
+  // (0.11.134) a comment marked as its photo's verified diagnosis, or unmarked (dg_verify_note): a manager or the
+  // agronomist, with signal — not left in the outbox: the next person reads the post as it is now. The photo's new
+  // counts go on its cards at once, as a vote's do (dgSent); the conversation is read again
+  async function dgVerify(P, n, on) {
+    if (!navigator.onLine || !session) { showToast('Needs signal', 'error'); return; }
+    if (P.verifying) return;
+    P.verifying = true;
+    try {
+      const s = await dgRpc('dg_verify_note', { p: { note_id: n.id, on } });
+      if (s && typeof s === 'object') dgPatchSocial(P.id, s);
+      showToast(on ? 'Verified: it now stands under the AI\'s reading' : 'No longer the verified diagnosis', 'success');
+    } catch (e) { showToast((on ? 'Not verified: ' : 'Still verified: ') + dgWhy(e), 'error'); }
+    finally { P.verifying = false; }
+    DG.feed.dirty = true;
+    if (DG.post !== P) return;
+    await dgReadThread();
+    if (DG.post === P && dgOpen() && !document.querySelector('.fb-sheet, .fb-cam, .fb-viewer')) await dgPaintPost();
+    dgSoon(300);
+  }
+
+  // ── a case from a post (0.11.134; Naked Heart's "Open a case from this photo" and "Add to this case"): everybody but
+  // workers and trainees (may_case), with signal; the photo becomes a point on the case's curve ──
+  const DG_CASE_KINDS = [['pest', 'Pest'], ['disease', 'Disease'], ['disorder', 'Disorder']];
+  const dgSevChips = o => dgChips(DG_SEV.map((w, i) => [String(i), w]), () => o.sev, v => { o.sev = v; });
+  async function dgCaseOpen(kind, p, farmId, zoneId) {
+    if (!navigator.onLine || !session) { showToast('Needs signal', 'error'); return null; }
+    let cat;
+    try { cat = DG.catalog || (DG.catalog = await dgRpc('pest_catalog', {})); }
+    catch (e) { showToast('The list of pests could not be read: ' + dgWhy(e), 'error'); return null; }
+    const list = (Array.isArray(cat) ? cat : []).filter(c => c && DG_CASE_KINDS.some(([k]) => k === c.kind));
+    if (!list.length) { showToast('The list of pests is empty', 'error'); return null; }
+    const guess = dgCaseGuess(kind, p);
+    // the AI's pest when the catalogue knows it; otherwise nothing chosen — a case is not opened on the list's first pest
+    const o = { code: list.some(c => c.code === guess.code) ? guess.code : '', sev: String(guess.severity) };
+    const r = await dgSheet('Open a case from this ' + (kind === 'trap' ? 'trap photo' : 'photo'), (card, done) => {
+      card.append(el('div', 'fb-meta', 'The photo becomes the first point of the case.'));
+      const sel = el('select', 'fb-num dg-select'); sel.setAttribute('aria-label', 'What it is');
+      const none = document.createElement('option'); none.value = ''; none.textContent = 'Choose what it is'; sel.append(none);
+      DG_CASE_KINDS.forEach(([k, word]) => {
+        const g = document.createElement('optgroup'); g.label = word;
+        list.filter(c => c.kind === k).forEach(c => { const op = document.createElement('option'); op.value = c.code; op.textContent = c.label || c.code; g.append(op); });
+        if (g.childNodes.length) sel.append(g);
+      });
+      sel.value = o.code; sel.onchange = () => { o.code = sel.value; };
+      const ta = el('textarea', 'fb-runnote'); ta.rows = 2; ta.placeholder = 'What was seen, how widespread (optional)';
+      const ok = el('button', 'fb-btn fb-btn-primary', 'Open the case'), no = el('button', 'fb-btn', 'Cancel'); ok.type = no.type = 'button';
+      let sending = false;
+      ok.onclick = async () => {
+        if (sending) return;
+        if (!sel.value) { showToast('Choose what it is first', 'error'); return; }
+        if (!navigator.onLine || !session) { showToast('Needs signal', 'error'); return; }
+        sending = true; ok.disabled = true;
+        try {
+          const c = await dgRpc('open_case', { p: { farm_id: farmId, code: sel.value, severity: Number(o.sev), note: ta.value.trim(),
+                                                    zone_id: zoneId || null, from_kind: kind, from_id: p.id } });
+          showToast('Case opened' + (c && c.title ? ': ' + c.title : ''), 'success');
+          done(c || true);
+        } catch (e) { sending = false; ok.disabled = false; showToast('The case was not opened: ' + dgWhy(e), 'error'); }
+      };
+      no.onclick = () => done(null);
+      const acts = el('div', 'fb-actions'); acts.append(ok, no);
+      card.append(sel, el('div', 'fb-meta', 'How bad now'), dgSevChips(o), ta, acts);
+    });
+    if (r) { DG.feed.dirty = true; dgSoon(300); }    // its risk dot changes
+    return r;
+  }
+  async function dgCaseAdd(kind, p, farmId, zoneId) {
+    if (!navigator.onLine || !session) { showToast('Needs signal', 'error'); return null; }
+    let cs;
+    try { cs = (((await dgRpc('cases', { p_farm: farmId, p_include_closed: false })) || {}).cases || []).filter(c => c && c.status !== 'closed'); }
+    catch (e) { showToast('The cases could not be read: ' + dgWhy(e), 'error'); return null; }
+    if (!cs.length) { showToast('No open case on this farm — open one from this photo', 'info'); return null; }
+    // the cases of the photo's zone first
+    cs = cs.map((c, i) => [c, i]).sort((a, b) => ((b[0].zone_id === zoneId && !!zoneId) - (a[0].zone_id === zoneId && !!zoneId)) || a[1] - b[1]).map(([c]) => c);
+    const o = { id: null, sev: String(dgCaseGuess(kind, p).severity) };
+    const r = await dgSheet('Add this ' + (kind === 'trap' ? 'trap photo' : 'photo') + ' to a case', (card, done) => {
+      const box = el('div', 'dg-cases');
+      const paint = () => [...box.childNodes].forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === o.id)));
+      cs.forEach(c => {
+        const b = el('button', 'fb-btn'); b.type = 'button'; b.dataset.v = c.id;
+        b.textContent = (c.title || c.label || 'Case') + (zoneId && c.zone_id === zoneId ? ' · this zone' : '');
+        b.onclick = () => { o.id = c.id; paint(); };
+        box.append(b);
+      });
+      paint();
+      const ok = el('button', 'fb-btn fb-btn-primary', 'Add'), no = el('button', 'fb-btn', 'Cancel'); ok.type = no.type = 'button';
+      let sending = false;
+      ok.onclick = async () => {
+        if (sending) return;
+        if (!o.id) { showToast('Choose a case', 'error'); return; }
+        if (!navigator.onLine || !session) { showToast('Needs signal', 'error'); return; }
+        sending = true; ok.disabled = true;
+        try {
+          await dgRpc('add_case_point', { p_case: o.id, p_kind: kind, p_ref: p.id, p_severity: Number(o.sev), p_count: null, p_note: null });
+          const c = cs.find(x => x.id === o.id);
+          showToast('Added to the case' + (c && c.title ? ': ' + c.title : '') + ' — it is on its curve', 'success');
+          done(true);
+        } catch (e) { sending = false; ok.disabled = false; showToast('Not added: ' + dgWhy(e), 'error'); }
+      };
+      no.onclick = () => done(null);
+      const acts = el('div', 'fb-actions'); acts.append(ok, no);
+      card.append(box, el('div', 'fb-meta', 'How bad on this photo'), dgSevChips(o), acts);
+    });
+    if (r) { DG.feed.dirty = true; dgSoon(300); }
+    return r;
   }
   // a recording of the evidence bucket, played on the person's own sign-in
   async function dgPlay(path, btn) {
@@ -10136,11 +10564,12 @@ function sopOpen() {
     const data = u && u.args && u.args.p && u.args.p.photo_data;
     if (res && res.id && data && u.day === DG.day) { DG.thumbs.set(res.id, data); DG.asked.add(res.id); }
     // a vote answers with the photo's new counts: on its card and its post at once, before the report is read again
+    // (0.11.134) on every copy read: the day's report and the feed's answers
     if (u && u.rpc === 'dg_vote' && res && typeof res === 'object') {
-      const ref = u.args && u.args.p && u.args.p.ref_id, f = ref ? dgFindItem(ref) : null;
-      if (f) f.p.social = res;
-      if (DG.post && DG.post.id === ref && DG.post.thread) DG.post.thread.social = res;
+      const ref = u.args && u.args.p && u.args.p.ref_id;
+      if (ref) dgPatchSocial(ref, res);
     }
+    if (u && u.__dg) DG.feed.dirty = true;         // the feed is read again when it is next on screen
     dgSoon();
   }
 
