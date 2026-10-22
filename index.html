@@ -1401,7 +1401,7 @@
   }
 
   // ─── VERSION CHECK ────────────────────────────────────────
-  const CURRENT_VERSION = '0.11.139';
+  const CURRENT_VERSION = '0.11.140';
   let updateAvailable = false;
 
   let lastSaid = null, notYetAt = 0;
@@ -1593,6 +1593,7 @@
   // Same idea as the console's Settings › Version log (release_note): one line per
   // release, what it changed, in plain words. Add the new release on top with each bump.
   const VERSION_LOG = [
+    ['0.11.140', '2026-10-23', 'The trap photo is the card', 'A trap photo is now just the card: the phone crops it and sends only that, smaller and quicker to send, and it is what both apps show. The phone no longer shows a count of its own: the trap says counting until the AI has counted the card, then the AI\'s number. If the card is not fully in the photo, or too much of it cannot be read, the phone asks for a retake; if it still cannot find the card, you can keep the photo and type the count. A number you type yourself in I counted it myself always stands.'],
     ['0.11.139', '2026-10-22', 'Traps: one row of chips, their photos behind the chip', 'Digital scouting, a zone: the trap row is only the chips. Each chip has a yellow and a blue dot for the card sides (a ring until that side is photographed, filled after) and turns from red to green once every side is in. Tap a chip: with no photo yet the camera opens; otherwise its photos open side by side, swipe from one to the other, tap one to open it, and from there photograph a side or say the trap is not read today. The Trap photos line and the read line are gone: how many traps are done is on top, Traps 4/6, green when all are done.'],
     ['0.11.138', '2026-10-23', 'Traps counted by the AI', 'Traps are now counted by the AI. The phone crops the card from each trap photo and sends it with the photo; a few seconds later the AI\'s count replaces the phone\'s first guess (Haiku counts, Opus counts again on a crowded card). A number you type yourself always stands. Trap photos say where the figure comes from: AI, counting or typed. The question "fewer than this card already had, is it a new card?" is gone: it came from the phone\'s own count, which read glare as insects. New card and Replaced are now buttons you always see on the trap sheet.'],
     ['0.11.137', '2026-10-22', 'The AI notes in one block, the most serious first', 'Under each photo the AI now writes one block instead of several: every finding in it, the most serious first, and the block in the colour of the worst one (red high risk, yellow low, green none). On a trap, one block with all the insects, the pests first and the most counted first. On the photo page the AI reading lists its findings in the same order.'],
@@ -10078,7 +10079,7 @@ function sopOpen() {
     const c = el('div', 'fb-step dg-item pending');
     const img = el('img', 'dg-img'); img.alt = ''; if (v.thumb) img.src = v.thumb;
     const txt = el('div', 'dg-text');
-    txt.append(el('b', null, v.kind === 'trap' ? `Trap ${v.code || ''}${v.side ? ' · ' + v.side : ''} · ${v.total ?? '?'}${v.reference ? ' · reference' : ''}` : `${v.section === 'growth' ? 'Growth' : 'Plant health'}${v.part ? ' · ' + v.part : ''}`));
+    txt.append(el('b', null, v.kind === 'trap' ? `Trap ${v.code || ''}${v.side ? ' · ' + v.side : ''} · ${dgTrapFigure({ total: v.total, corrected: !!v.corrected, sending: true })}${v.reference ? ' · reference' : ''}` : `${v.section === 'growth' ? 'Growth' : 'Plant health'}${v.part ? ' · ' + v.part : ''}`));
     txt.append(el('span', 'dg-sending' + (r.dead ? ' bad' : ''), r.dead ? 'could not be sent: ' + String(r.error || '').replace(/^\d+ /, '').slice(0, 90) : 'sending…'));
     if (v.note) { const n = el('div', 'fb-rv-comment'); const lv = noteLevelOf(v); if (lv) n.append(el('span', 'fb-risk-dot ' + lv)); n.append(document.createTextNode('“' + v.note + '”')); txt.append(n); }
     c.append(img, txt);
@@ -10099,11 +10100,24 @@ function sopOpen() {
   const dgHm = iso => iso ? new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
   // a time on the page's own day as 10:25, any other with its date
   const dgWhen = iso => !iso ? '' : (dgDayOf(iso) === DG.day ? '' : new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) + ' ') + dgHm(iso);
-  // where a trap's figure comes from (counting v5, 0.11.138): the AI's count, the AI still counting (the figure is the
-  // phone's first guess until then), or typed by a person — nothing said for an older reading or one the AI could not count
-  const dgCountWord = it => it.corrected ? 'typed' : it.ai_count_status === 'done' ? 'AI'
-    : it.ai_count_status === 'queued' || it.ai_count_status === 'running' ? 'counting…' : '';
-  const dgTrapFigure = it => { const w = dgCountWord(it); return `${it.total ?? '?'} insect${it.total === 1 ? '' : 's'}${w ? ` (${w})` : ''}`; };
+  // where a trap's figure comes from (counting v5, 0.11.138): the AI's count, the AI still counting, or typed by a
+  // person — nothing said for an older reading. While the AI counts, the figure is the phone's hidden placeholder: no
+  // number is shown then (a reading still sending, or queued or running, or one whose photo is the card — …-card.jpg,
+  // sent since the card is the photo — not yet given to the AI). The AI could not count such a reading: the phone's
+  // number stands, and says so
+  const dgCardOnly = it => /-card\.jpe?g$/i.test(String(it.photo_path || ''));
+  // only a card-only reading whose AI status is known (the report and, since 0258, a post carry it); an older reading
+  // counted on its whole photo keeps its number, which the AI does not replace (0256)
+  const dgCounting = it => !it.corrected && (!!it.sending || (dgCardOnly(it) && 'ai_count_status' in it
+    && (it.ai_count_status == null || it.ai_count_status === 'queued' || it.ai_count_status === 'running')));
+  const dgCountWord = it => it.corrected ? 'typed' : dgCounting(it) ? 'counting…'
+    : it.ai_count_status === 'done' ? (it.ai_count == null || it.ai_count === it.total ? 'AI' : '')
+    : dgCardOnly(it) ? 'phone' : '';
+  const dgTrapFigure = it => {
+    if (dgCounting(it)) return 'counting…';
+    const w = dgCountWord(it);
+    return `${it.total ?? '?'} insect${it.total === 1 ? '' : 's'}${w ? ` (${w})` : ''}`;
+  };
   function dgItemTitle(kind, it, p) {
     if (kind === 'trap') return [`Trap ${shortCode(it.code)}`, it.side, dgTrapFigure(it), p.reference ? 'reference photo' : null].filter(Boolean).join(' · ');
     return [it.section === 'growth' ? 'Growth' : 'Plant health', dgPartWord(it.part), (it.measures || []).map(m => `${m.what} ${m.mm} mm`).join(', ') || null].filter(Boolean).join(' · ');
@@ -10785,10 +10799,12 @@ function sopOpen() {
   // the in-app camera's still is now
   const dgTakenAt = f => { const t = Number(f && f.lastModified); return t && t <= Date.now() + 6e4 && Date.now() - t < 36 * 36e5 ? new Date(t).toISOString() : new Date().toISOString(); };
   // counting v5 (0.11.138, FarmBox 0254; owner 22–23 Oct 2026): the server's AI counts every trap photo — the card
-  // alone, cropped from the full photo, counted far better than the phone (164 photos counted by eye). The phone's
-  // count is a first guess. The card goes up beside the full photo as <photo>-card.jpg, at the size the AI reads whole:
-  // the long side at most 2576 px and at most 4784 tiles of 28 px, shrunk until both hold
-  const DG_CARD_PX = 2576, DG_CARD_TILES = 4784;
+  // alone, cropped from the full photo, counted far better than the phone (164 photos counted by eye). Since the next
+  // version (owner 23 Oct 2026: "crop properly the pic to the card and send only the cropped pic on database … we do
+  // not need the phone counting, it is confusing for the user") the card IS the side's photo: one file, <photo>-card.jpg
+  // (the server takes a photo of that name as the card itself), at the size the AI reads whole: the long side at most
+  // 2576 px and at most 4784 tiles of 28 px, shrunk until both hold. The phone's own count is not shown any more.
+  const DG_CARD_PX = 2576, DG_CARD_TILES = 4784, DG_CARD_MARGIN = 0.03;
   function dgCardSize(w, h) {
     const tiles = (a, b) => Math.ceil(a / 28) * Math.ceil(b / 28);
     let k = Math.min(1, DG_CARD_PX / Math.max(w, h), Math.sqrt(DG_CARD_TILES * 784 / Math.max(1, w * h)));
@@ -10797,41 +10813,60 @@ function sopOpen() {
     return [W, H];
   }
   const dgCardPath = path => String(path).replace(/\.jpe?g$/i, '') + '-card.jpg';
-  // the card, ~2 % round it, as a JPEG; no card found: none (the server then counts the whole photo)
+  // the side's photo: the card's box ~3 % round it (box null: the whole photo) at that size, as a JPEG at 0.92, and its
+  // 640 px copy for the report. The photo's canvas is given back as soon as the part kept is drawn, the part's after
+  // it is encoded: the camera opens next for the other side (the 0.11.110 memory notes)
   async function dgCardBlob(canvas, box) {
-    if (!Array.isArray(box) || box.length !== 4) return null;
-    const [x0, y0, x1, y1] = box, mx = 0.02 * (x1 - x0), my = 0.02 * (y1 - y0);
-    const sx = Math.max(0, Math.floor(x0 - mx)), sy = Math.max(0, Math.floor(y0 - my));
-    const sw = Math.min(canvas.width, Math.ceil(x1 + mx)) - sx, sh = Math.min(canvas.height, Math.ceil(y1 + my)) - sy;
+    let sx = 0, sy = 0, sw = canvas.width, sh = canvas.height;
+    if (box != null) {
+      if (!Array.isArray(box) || box.length !== 4) return null;
+      const [x0, y0, x1, y1] = box, mx = DG_CARD_MARGIN * (x1 - x0), my = DG_CARD_MARGIN * (y1 - y0);
+      sx = Math.max(0, Math.floor(x0 - mx)); sy = Math.max(0, Math.floor(y0 - my));
+      sw = Math.min(canvas.width, Math.ceil(x1 + mx)) - sx; sh = Math.min(canvas.height, Math.ceil(y1 + my)) - sy;
+    }
     if (sw < 28 || sh < 28) return null;
     const [W, H] = dgCardSize(sw, sh);
     const c = document.createElement('canvas'); c.width = W; c.height = H;
-    let blob = null;
+    let blob = null, thumb = null;
     try {
       c.getContext('2d').drawImage(canvas, sx, sy, sw, sh, 0, 0, W, H);
+      freeCanvas(canvas);
+      thumb = shrinkCanvas(c, 640, 0.6);
       blob = await new Promise(res => c.toBlob(res, 'image/jpeg', 0.92));
     } catch (e) { blob = null; }
-    freeCanvas(c);                                // given back at once: the camera opens next for the other side
-    return blob;
+    freeCanvas(c);
+    return blob ? { blob, thumb } : null;
   }
-  async function dgSide(file, colour) {
+  // one side: the phone finds the card (countInsects: its box, the rows seen, the light) and keeps the card cropped from
+  // the photo — S.full and S.thumb, S.card true. Its count is kept hidden: sent as a placeholder the AI's count replaces.
+  // No card found, or the card clearly not whole (part outside, more than a row missing): S.card false, nothing kept
+  // (S.full null) and the sheet asks for a retake; on a photo taken again (again true) the whole photo, made small the
+  // same way, so the person may keep it and type the count
+  async function dgSide(file, colour, again) {
     let big;
     try { big = await shrinkPhoto(file, FULL_PX, null); } catch (e) { return null; }
-    const S = { taken_at: dgTakenAt(file), full_w: big.canvas.width, thumb: shrinkCanvas(big.canvas, 640, 0.6) };
-    S.full = await new Promise(res => big.canvas.toBlob(res, 'image/jpeg', FULL_Q));
+    const S = { taken_at: dgTakenAt(file), card: false, full: null, thumb: null };
     let box = null;
     try {
       const r = countInsects(big.canvas, { colour: colour || cardColour(scaleCanvas(big.canvas, 800)) });
       Object.assign(S, { counts: r.counts, total: r.total, algo_total: r.total, algorithm: r.algorithm, confidence: r.confidence, corrected: false });
       box = r.card_box || null;
+      const few = r.rows_seen != null && r.rows_seen < GRID_ROWS - 1;
       const lc = lightCheck(r);
       if (r.partial) S.check = 'part of the card is outside the photo — retake it with the whole card';
+      else if (box && few) S.check = `only ${Math.max(0, Math.round(r.rows_seen))} of the card's ${GRID_ROWS} rows are in the photo — retake it with the whole card`;
       else if (lc) S.check = lc;
-    } catch (e) { S.total = null; }
-    // no card found: no crop — the AI's count on a whole photo is kept apart and does not set the figure (0256)
-    S.card = box ? await dgCardBlob(big.canvas, box) : null;
-    freeCanvas(big.canvas);
-    return S.full ? S : null;
+      S.card = !!box && !r.partial && !few;
+    } catch (e) { S.total = null; S.algo_total = null; }
+    let kept = S.card ? await dgCardBlob(big.canvas, box) : null;
+    if (!kept) {
+      S.card = false;
+      if (big.canvas.width && again) kept = await dgCardBlob(big.canvas, null);
+      else if (big.canvas.width) { try { S.thumb = shrinkCanvas(big.canvas, 640, 0.6); } catch (e) { S.thumb = null; } }   // shown, not kept
+    }
+    freeCanvas(big.canvas);                         // (given back already when a part of it was kept)
+    if (kept) { S.full = kept.blob; S.thumb = kept.thumb; }
+    return S.full || (!again && S.thumb) ? S : null;
   }
   async function dgReadTrap(farmId, u, ru, t) {
     let sides = t.colour === 'both' ? ['yellow', 'blue'].filter(s => !t[s]) : [null];
@@ -10845,42 +10880,56 @@ function sopOpen() {
       if (!pick) return;
       sides = [pick];
     }
-    for (let i = 0; i < sides.length; i++) {
+    // missed: photos of this side with no whole card found — from the second on, the person may keep the photo
+    for (let i = 0, missed = 0; i < sides.length; i++) {
       const side = sides[i];
       const r = await takeTrapPhoto(t.code, `Trap ${dgTrapName(t)}${side ? ' — the ' + side + ' side' : ''}: square-on, the whole card, top to bottom`, 'trap');
       if (r === 'cancel') return;
       const f = r || await dgPickFile();
       if (!f) return;
-      const S = await dgSide(f, side || (t.colour === 'blue' ? 'blue' : 'yellow'));
+      const S = await dgSide(f, side || (t.colour === 'blue' ? 'blue' : 'yellow'), missed > 0);
       if (!S) { showToast('That photo could not be read — try again', 'error'); i--; continue; }
       const out = await dgTrapSheet(farmId, u, ru, t, side, S);
-      if (out === 'retake') { i--; continue; }
+      if (out === 'retake') { if (!S.card) missed++; i--; continue; }
       if (out !== 'saved') return;
+      missed = 0;
     }
   }
-  // one side: the phone's first guess (a number typed stands as the person's own), New card or Replaced if the person
-  // says so, then sent. Counting v5 (0.11.138): no more question from the phone's count against the card's history —
-  // "fewer than this card already had … a new card?", "Keep N" and the reference picture on a 0 came from a count
-  // that reads glare as insects and misses gnats, and a wrong answer spoilt the card's history; the server counts the
-  // card with the AI and works out the rates
+  // one side: the card cropped from the photo, the check when there is one, New card or Replaced if the person says so,
+  // then sent. Counting v5 (0.11.138): no more question from the phone's count against the card's history — "fewer
+  // than this card already had … a new card?", "Keep N" and the reference picture on a 0 came from a count that reads
+  // glare as insects and misses gnats; the server counts the card with the AI and works out the rates. Since the next
+  // version no phone count is shown: the AI's is the figure, unless the person counted the card and types it (then
+  // theirs stands). No whole card in the photo: Retake; on a photo taken again the person may keep it, the count typed
   async function dgTrapSheet(farmId, u, ru, t, side, S) {
     const D = dgFarmData(farmId).dg;
-    const st = { total: S.total, new_card: false, replaced: false, note: '', note_level: null };
+    const st = { total: null, new_card: false, replaced: false, note: '', note_level: null };
     const earlier = (ru?.traps || []).filter(r => r.code === t.code && (r.side || null) === (side || null));
     return dgSheet(`Trap ${dgTrapName(t)}${side ? ' · ' + side + ' side' : ''}`, (card, done) => {
       const img = el('img', 'dg-img big'); img.src = S.thumb; img.alt = '';
-      img.onclick = () => photoViewer(S.full, { title: `Trap ${dgTrapName(t)}` });
+      img.onclick = () => photoViewer(S.full || S.thumb, { title: `Trap ${dgTrapName(t)}` });
       card.append(img, dgZoomButton(() => img.onclick()));
       if (S.check) card.append(el('span', 'fb-chip late', S.check));
-      const cnt = el('input', 'fb-num'); cnt.type = 'number'; cnt.min = '0'; cnt.step = '1'; cnt.value = st.total == null ? '' : String(st.total);
-      cnt.setAttribute('aria-label', 'Insects on this side');
-      const crow = el('div', 'fb-actions'); crow.append(el('span', null, 'Insects'), cnt);
-      card.append(crow);
-      card.append(el('div', 'fb-meta dg-guess', S.algo_total != null
-        ? `Phone's first guess: ${S.algo_total} — the AI counts the card a few seconds after it is sent. Change the number only if you counted the card yourself: yours then stands.`
-        : 'The phone could not count this photo: type the number of insects.'));
-      if (S.counts && S.algo_total != null) card.append(el('div', 'fb-meta', dgSizesWords(S.counts)));
       const btn = (l, fn, primary) => { const b = el('button', 'fb-btn' + (primary ? ' fb-btn-primary' : ''), l); b.type = 'button'; b.onclick = fn; return b; };
+      if (!S.full) {                                // no whole card, first photo: nothing to keep — take it again
+        if (!S.check) card.append(el('span', 'fb-chip late', 'the card was not found — retake it with the whole card, square-on'));
+        card.append(el('div', 'fb-meta', 'Only the card is sent, for the AI to count: take the photo again with the whole card in it.'));
+        const a0 = el('div', 'fb-actions'); a0.append(btn('Retake', () => done('retake'), true), btn('Cancel', () => done(null)));
+        card.append(a0);
+        return;
+      }
+      const cnt = el('input', 'fb-num'); cnt.type = 'number'; cnt.min = '0'; cnt.step = '1'; cnt.value = '';
+      cnt.setAttribute('aria-label', 'Insects on this side');
+      if (S.card) {
+        card.append(el('div', 'fb-meta dg-guess', 'The AI counts the card when it is sent.'));
+        cnt.placeholder = 'optional';
+        const crow = el('div', 'fb-actions'); crow.append(el('span', null, 'I counted it myself'), cnt);
+        card.append(crow);
+      } else {                                      // kept without the card: the person's count is the figure
+        card.append(el('div', 'fb-meta dg-guess', 'The card was still not found. Retake it, or keep this photo and type the number of insects you count on the card: the AI counts only a card.'));
+        const crow = el('div', 'fb-actions'); crow.append(el('span', null, 'Insects'), cnt);
+        card.append(crow);
+      }
       const toggle = (l, key, title) => {
         const b = btn(l, () => { st[key] = !st[key]; b.setAttribute('aria-pressed', String(st[key])); });
         b.title = title; b.setAttribute('aria-pressed', 'false');
@@ -10894,9 +10943,10 @@ function sopOpen() {
       const rrow = el('div', 'fb-actions'); rrow.append(nc, rep);
       card.append(rrow, nrow);
       let saving = false;                           // one tap saves once: a second tap made a second reading
-      const save = btn('Save', async () => {
+      const save = btn(S.card ? 'Save' : 'Keep it', async () => {
         if (saving) return;
-        if (st.total == null || st.total < 0) { showToast('Type the number of insects', 'error'); cnt.focus(); return; }
+        if (st.total != null && st.total < 0) st.total = null;
+        if (!S.card && st.total == null) { showToast('Type the number of insects', 'error'); cnt.focus(); return; }
         saving = true; save.disabled = true;
         // that side already photographed today: in its place, or beside it — asked only when the earlier photo is one
         // this person may replace (theirs today, or a manager); somebody else's is kept, the new one goes beside it
@@ -10914,26 +10964,35 @@ function sopOpen() {
           if (!how) { saving = false; save.disabled = false; return; }
           if (how === 'replace') replaceId = prev.id;
         }
-        const cref = uuid(), path = dgPath(farmId, DG.day, 'trap-' + (side || t.colour || 'card'), cref);
+        const cref = uuid(), path0 = dgPath(farmId, DG.day, 'trap-' + (side || t.colour || 'card'), cref);
+        // the one file of the side: the card, named …-card.jpg (the server counts it as the card itself); a photo kept
+        // without the card under the plain name, so the server knows it is not one
+        const path = S.card ? dgCardPath(path0) : path0;
+        // a number typed is the person's own and stands; none typed: the phone's hidden count as a placeholder (the
+        // server needs a number), replaced by the AI's count of the card
+        const typed = st.total != null;
+        const total = typed ? st.total : (S.algo_total ?? 0);
         const level = noteLevelOf(st);
         await dgQueue({
           rpc: 'dg_read_trap',
           // a one-sided card is sent with no side, so it stays one-sided
-          args: { p: { farm_id: farmId, client_ref: cref, trap_id: t.trap_id, code: t.code, ...(side ? { side } : {}), total: st.total,
+          args: { p: { farm_id: farmId, client_ref: cref, trap_id: t.trap_id, code: t.code, ...(side ? { side } : {}), total,
                        counts: S.counts || {}, algo_total: S.algo_total ?? null, algorithm: S.algorithm || null, confidence: S.confidence ?? null,
-                       // a number typed (or typed because the phone could not count) is the person's own: the AI's count is kept apart
-                       corrected: S.algo_total == null || st.total !== S.algo_total, photo_path: path, photo_data: S.thumb,
+                       corrected: typed, photo_path: path, photo_data: S.thumb,
                        reference: false, new_card: !!st.new_card, replaced: !!st.replaced, lower_ok: false,
                        notes: String(st.note || '').trim() || null, note_level: level, read_at: S.taken_at, ...(replaceId ? { replace_id: replaceId } : {}) } },
-          // the files before the call: the full photo, and the card cropped from it for the AI (dgCardPath)
-          uploads: [{ path, blob: S.full, type: 'image/jpeg' }, ...(S.card ? [{ path: dgCardPath(path), blob: S.card, type: 'image/jpeg' }] : [])],
+          uploads: [{ path, blob: S.full, type: 'image/jpeg' }],
           chain: 'dg:' + cref,
-          view: { kind: 'trap', farm_id: farmId, unit_id: u.unit_id, trap_id: t.trap_id, code: dgTrapName(t), side, total: st.total,
+          // while sending, a figure only when typed: otherwise the AI is still to count it
+          view: { kind: 'trap', farm_id: farmId, unit_id: u.unit_id, trap_id: t.trap_id, code: dgTrapName(t), side, total: typed ? total : null, corrected: typed,
                   thumb: S.thumb, note: String(st.note || '').trim(), note_level: level }
         }).catch(e => { saving = false; save.disabled = false; throw e; });
         done('saved');
-      }, true);
-      const acts = el('div', 'fb-actions'); acts.append(save, btn('Retake', () => done('retake')), btn('Cancel', () => done(null)));
+      }, !!S.card);
+      // no card: Retake first, keeping the photo second
+      const acts = el('div', 'fb-actions');
+      if (S.card) acts.append(save, btn('Retake', () => done('retake')), btn('Cancel', () => done(null)));
+      else acts.append(btn('Retake', () => done('retake'), true), save, btn('Cancel', () => done(null)));
       card.append(acts);
     });
   }
@@ -11044,7 +11103,9 @@ function sopOpen() {
   }
   // a change by who may: a photo's part and note (its section by the switch); a trap reading's count and note
   function dgChangeSheet(kind, it, farmId) {
-    const o = { note: it.note || '', note_level: it.note_level || null, part: it.part, total: it.total };
+    // a trap the AI is still counting: no number shown — one typed is the person's own, none leaves it to the AI
+    const counting = kind === 'trap' && dgCounting(it);
+    const o = { note: it.note || '', note_level: it.note_level || null, part: it.part, total: counting ? null : it.total };
     return dgSheet('Change', (card, done) => {
       let cnt = null;
       if (kind === 'observation') card.append(dgChips(it.section === 'growth' ? GROWTH_PARTS : PARTS, () => o.part, v => { o.part = v; }));
@@ -11061,10 +11122,10 @@ function sopOpen() {
         const body = String(o.note || '').trim();
         if (body !== String(it.note || '').trim() || noteLevelOf(o) !== noteLevelOf(it)) { fields.note = body; fields.note_level = noteLevelOf(o); }
         if (kind === 'observation' && o.part !== it.part) fields.part = o.part;
-        if (kind === 'trap') {
+        if (kind === 'trap' && !(counting && cnt.value === '')) {
           const n = parseInt(cnt.value, 10);
           if (isNaN(n) || n < 0) { showToast('Type the number of insects', 'error'); return; }
-          if (n !== it.total) fields.total = n;
+          if (n !== it.total || counting) fields.total = n;
         }
         if (!Object.keys(fields).length) { done(null); return; }
         await dgQueue({ rpc: 'dg_edit_item', args: { p: { kind, id: it.id, ...fields } }, chain: 'dg:' + it.id,
