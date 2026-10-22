@@ -1396,7 +1396,7 @@
   }
 
   // ─── VERSION CHECK ────────────────────────────────────────
-  const CURRENT_VERSION = '0.11.136';
+  const CURRENT_VERSION = '0.11.137';
   let updateAvailable = false;
 
   let lastSaid = null, notYetAt = 0;
@@ -1588,6 +1588,7 @@
   // Same idea as the console's Settings › Version log (release_note): one line per
   // release, what it changed, in plain words. Add the new release on top with each bump.
   const VERSION_LOG = [
+    ['0.11.137', '2026-10-22', 'The AI notes in one block, the most serious first', 'Under each photo the AI now writes one block instead of several: every finding in it, the most serious first, and the block in the colour of the worst one (red high risk, yellow low, green none). On a trap, one block with all the insects, the pests first and the most counted first. On the photo page the AI reading lists its findings in the same order.'],
     ['0.11.136', '2026-10-22', 'Notes in the same blocks as Naked Heart', 'The AI notes and the team notes now look the same as in Naked Heart: one block each, in its risk colour (green no risk, yellow low, red high) as a coloured edge, with the face of the person on the left, or the robot face for the AI. Under each photo, the AI blocks and the person note; on the photo page, the AI reading and every comment in the same blocks, the AI answers set in under the comment they answer.'],
     ['0.11.135', '2026-10-22', 'Traps counted without the tiny insects, zoom after the photo, Gallery in the camera', 'Traps: the count is now small, medium and large insects; the tiny ones (under 1.5 mm, thrips size) are still measured and shown as not counted, to see later if they can be followed. Every past reading was recounted the same way. After a trap or plant photo, Zoom in shows it full size to check it up close before it is saved. The camera has a Gallery button: take the photos first with the phone\'s own camera app, then pick them here; each keeps the time it was taken.'],
     ['0.11.134', '2026-10-22', 'The photo feed and the verified diagnosis', 'Digital scouting has a Feed: switch Zones | Feed to see the farm\'s photos and trap photos of the last 7 or 30 days, as posts, in four orders: Needs attention (the highest risk first), Newest, Disagreements (someone disagreed with the AI, or the team\'s colour is not the AI\'s) and Mine. Each card has a coloured edge for its risk; More shows the next 20. Without signal the feed shows what was last read. A farm manager or the agronomist can mark one comment as the verified diagnosis: it shows under the AI\'s reading and on the cards, and gives the photo its colour. From a photo, everyone except workers can Open a case or Add to a case.'],
@@ -9321,17 +9322,29 @@ function sopOpen() {
   // a finding's first words, as on Naked Heart's cards: "Powdery mildew" of "Powdery mildew (Podosphaera)"
   const dgShortName = s => { const t = String(s || '').split(/\s*[(,;:]|\s+[—–-]\s+/)[0].trim(); return t.length > 26 ? t.slice(0, 25).trimEnd() + '…' : t; };
   const dgAiDone = (kind, p) => !!p && (p.ai_status === 'done' || (p.ai_status == null && (kind === 'trap' ? Array.isArray(p.species) && p.species.length > 0 : !!p.ai)));
-  // the AI's chips under a picture: a plant photo's findings, at most two, the most severe first ("AI: healthy" when it
-  // found nothing); a trap reading's species, at most two, yellow (green for a beneficial insect, as Naked Heart)
+  // by gravity, as Naked Heart (viewer.js byGravity, 0.7.275): red before yellow before green, then the higher severity,
+  // then the AI's own order; a trap's insects the pests first, the most counted first
+  const DG_RANK = { red: 3, yellow: 2, green: 1 };
+  const dgByGravity = all => all.map((x, i) => ({ x, i, lvl: dgRisk(x.severity, x.kind) }))
+    .sort((a, b) => (DG_RANK[b.lvl] - DG_RANK[a.lvl]) || (Number(b.x.severity ?? 1) - Number(a.x.severity ?? 1)) || a.i - b.i);
+  const dgInsectsByGravity = sp => sp.map((x, i) => ({ x, i }))
+    .sort((a, b) => (!!a.x.beneficial - !!b.x.beneficial) || (Number(b.x.count ?? 0) - Number(a.x.count ?? 0)) || a.i - b.i).map(o => o.x);
+  // the AI's block under a picture (0.11.137, owner 22 Oct 2026: "the AI notes in only one to be more visual, with
+  // first information according with gravity"): ONE block, every finding by gravity, in the colour of the worst
+  // ("AI: Healthy" when it found nothing); a trap reading's insects the same way, yellow when a pest is among them
   function dgAiChips(kind, p) {
     if (!dgAiDone(kind, p)) return [];
-    if (kind === 'trap') return (Array.isArray(p.species) ? p.species : []).slice(0, 2)
-      .map(x => ({ text: `AI: ${x.common || x.name || 'insect'}${x.count != null ? ' ' + x.count : ''}`, level: x.beneficial ? 'green' : 'yellow' }));
-    const all = (p.ai && Array.isArray(p.ai.findings)) ? p.ai.findings : [];
+    if (kind === 'trap') {
+      const sp = dgInsectsByGravity(Array.isArray(p.species) ? p.species : []);
+      if (!sp.length) return [];
+      const word = x => `${x.common || x.name || 'insect'}${x.count != null ? ' ' + x.count : ''}`;
+      return [{ text: 'AI: ' + sp.map(word).join(', '), level: sp.some(x => !x.beneficial) ? 'yellow' : 'green', title: sp.map(x => 'AI: ' + word(x)).join('\n') }];
+    }
+    const all = dgByGravity((p.ai && Array.isArray(p.ai.findings)) ? p.ai.findings : []);
     if (!all.length) return p.ai && p.ai.healthy === false ? [] : [{ text: 'AI: Healthy', level: 'green' }];
     const sevWord = x => x.severity != null && DG_SEV[x.severity] ? ' · ' + DG_SEV[x.severity] : '';
-    return all.map((x, i) => [x, i]).sort((a, b) => (Number(b[0].severity ?? 1) - Number(a[0].severity ?? 1)) || a[1] - b[1]).slice(0, 2)
-      .map(([x]) => ({ text: dgShortName(x.name || x.code) + sevWord(x), level: dgRisk(x.severity, x.kind), title: `AI: ${x.name || x.code}${sevWord(x)}` }));
+    return [{ text: 'AI: ' + all.map(({ x }) => dgShortName(x.name || x.code) + sevWord(x)).join(', '), level: all[0].lvl,
+              title: all.map(({ x }) => `AI: ${x.name || x.code}${sevWord(x)}`).join('\n') }];
   }
   // the counts under a picture as this phone will have them: a vote still in the outbox replaces mine, a comment still
   // in the outbox counts
@@ -10242,7 +10255,7 @@ function sopOpen() {
     sec.append(el('div', 'fb-sec', 'The AI\'s reading'));
     if (!ai) sec.append(el('div', 'fb-meta', 'Not read by the AI yet'));
     else if (kind === 'trap') {
-      const sp = Array.isArray(ai.species) ? ai.species : [];
+      const sp = dgInsectsByGravity(Array.isArray(ai.species) ? ai.species : []);      // the pests first (0.11.137)
       if (sp.length) {
         const row = el('div', 'dg-tags');
         sp.forEach(x => row.append(dgBlock(x.beneficial ? 'green' : 'yellow', dgG1Face(), `${x.common || x.name || 'insect'}${x.count != null ? ' ' + x.count : ''}`,
@@ -10254,7 +10267,7 @@ function sopOpen() {
       if (!sp.length && ai.total == null && !ai.notes) sec.append(el('div', 'fb-meta', 'No insect named.'));
     } else {
       if (ai.summary) { const s = el('div', 'dg-ai-text'); s.textContent = ai.summary; sec.append(s); }
-      const fs = Array.isArray(ai.findings) ? ai.findings : [];
+      const fs = dgByGravity(Array.isArray(ai.findings) ? ai.findings : []).map(o => o.x);      // the most serious first (0.11.137)
       if (!fs.length && ai.healthy !== false) sec.append(dgBlock('green', dgG1Face(), 'Healthy'));
       fs.forEach(x => {
         const r = el('div', 'dg-finding');
