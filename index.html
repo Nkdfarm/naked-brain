@@ -868,14 +868,19 @@
     .dg-tchip.wait { border-style: dashed; }
     .dg-tchip.bad { outline: 2px solid var(--error); outline-offset: 1px; }
     .dg-tchip:disabled { opacity: 1; cursor: default; }
-    .dg-tchip .dg-dot { width: 10px; height: 10px; }
-    .dg-tline { margin-top: 6px; }
-    .dg-fold { display:flex; align-items:center; gap: 6px; width: 100%; margin-top: var(--space-2); padding: 10px 2px; font: inherit; font-size: var(--text-sm);
-      font-weight: 650; text-align: left; color: var(--text); background: transparent; border: 0; border-top: 1px solid var(--border); }
-    .dg-chev { display:inline-block; transition: transform .15s; color: var(--text-muted); }
-    .dg-fold[aria-expanded="true"] .dg-chev { transform: rotate(90deg); }
-    .dg-foldbox { display:flex; flex-direction: column; gap: var(--space-2); }
-    .dg-foldbox[hidden] { display: none; }
+    /* a trap's sides on its chip: a yellow and a blue dot, filled once photographed, a ring until then, grey when not read
+       today; the chip itself is red until every side is in, green after */
+    .dg-sdot { width: 10px; height: 10px; border-radius: 50%; box-sizing: border-box; --c: #f2d21b; background: var(--c); }
+    .dg-sdot.blue { --c: #2f6fd6; }
+    .dg-sdot.todo { background: transparent; box-shadow: inset 0 0 0 2px var(--c); }
+    .dg-sdot.skip { --c: var(--text-muted); opacity: .6; }
+    /* a trap's photos as a gallery, one beside the other, a swipe from one side to the other */
+    .dg-gal { display:flex; gap: var(--space-2); overflow-x: auto; scroll-snap-type: x mandatory; margin: var(--space-2) 0; padding-bottom: 4px; }
+    .dg-gal-item { flex: 0 0 84%; scroll-snap-align: center; display:flex; flex-direction: column; gap: 4px; min-width: 0; }
+    .dg-gal-item:only-child { flex-basis: 100%; }
+    .dg-gal-item.tap { cursor: pointer; }
+    .dg-gal-item.pending { opacity: .8; }
+    .dg-gal-img { display:block; width: 100%; height: 44vh; object-fit: contain; border-radius: var(--radius-md); background: var(--surface-offset); }
     .dg-item .dg-img { width: 72px; height: 72px; }
     .dg-item.tap { cursor: pointer; }
     .dg-tags { display:flex; flex-direction: column; gap: 4px; min-width: 0; }
@@ -1396,7 +1401,7 @@
   }
 
   // ─── VERSION CHECK ────────────────────────────────────────
-  const CURRENT_VERSION = '0.11.138';
+  const CURRENT_VERSION = '0.11.139';
   let updateAvailable = false;
 
   let lastSaid = null, notYetAt = 0;
@@ -1588,6 +1593,7 @@
   // Same idea as the console's Settings › Version log (release_note): one line per
   // release, what it changed, in plain words. Add the new release on top with each bump.
   const VERSION_LOG = [
+    ['0.11.139', '2026-10-22', 'Traps: one row of chips, their photos behind the chip', 'Digital scouting, a zone: the trap row is only the chips. Each chip has a yellow and a blue dot for the card sides (a ring until that side is photographed, filled after) and turns from red to green once every side is in. Tap a chip: with no photo yet the camera opens; otherwise its photos open side by side, swipe from one to the other, tap one to open it, and from there photograph a side or say the trap is not read today. The Trap photos line and the read line are gone: how many traps are done is on top, Traps 4/6, green when all are done.'],
     ['0.11.138', '2026-10-23', 'Traps counted by the AI', 'Traps are now counted by the AI. The phone crops the card from each trap photo and sends it with the photo; a few seconds later the AI\'s count replaces the phone\'s first guess (Haiku counts, Opus counts again on a crowded card). A number you type yourself always stands. Trap photos say where the figure comes from: AI, counting or typed. The question "fewer than this card already had, is it a new card?" is gone: it came from the phone\'s own count, which read glare as insects. New card and Replaced are now buttons you always see on the trap sheet.'],
     ['0.11.137', '2026-10-22', 'The AI notes in one block, the most serious first', 'Under each photo the AI now writes one block instead of several: every finding in it, the most serious first, and the block in the colour of the worst one (red high risk, yellow low, green none). On a trap, one block with all the insects, the pests first and the most counted first. On the photo page the AI reading lists its findings in the same order.'],
     ['0.11.136', '2026-10-22', 'Notes in the same blocks as Naked Heart', 'The AI notes and the team notes now look the same as in Naked Heart: one block each, in its risk colour (green no risk, yellow low, red high) as a coloured edge, with the face of the person on the left, or the robot face for the AI. Under each photo, the AI blocks and the person note; on the photo page, the AI reading and every comment in the same blocks, the AI answers set in under the comment they answer.'],
@@ -9256,9 +9262,17 @@ function sopOpen() {
   const DG_SINCE = '2026-10-21';           // the first day of Digital scouting: a zone task from then on opens it, done or not
   const DG_PARTS = [['health', 'Health'], ['growth', 'Growth'], ['traps', 'Traps']];
   // a unit's counters: each part with a target, or with photos on a day it is not due
+  // the traps, whenever the zone has some (owner 22 Oct 2026: "the information will be on top as usual logic with eg.
+  // 4/6 traps and color according the reached target"): the traps done (every side in, or not read today with why) of
+  // the zone's traps; due = a trap day, when a trap still missing is said in red
   function dgCounters(u) {
     return DG_PARTS.map(([k, label]) => {
-      const c = (u && u[k]) || {}, done = Number(c.done) || 0, target = Number(c.target) || 0;
+      const c = (u && u[k]) || {};
+      if (k === 'traps' && Array.isArray(c.list) && c.list.length) {
+        const n = dgTrapCount(c.list);
+        return { key: k, label, done: n.done, target: n.total, ok: n.done >= n.total, due: Number(c.target) > 0 };
+      }
+      const done = Number(c.done) || 0, target = Number(c.target) || 0;
       return { key: k, label, done, target, ok: done >= target };
     }).filter(c => c.target > 0 || c.done > 0);
   }
@@ -9417,18 +9431,16 @@ function sopOpen() {
   }
   // a trap's chip: green once every side is photographed, grey when not read today with why, red until then
   const dgTrapState = t => t.skipped ? 'skip' : dgTrapDots(t).every(d => d.state === 'ok') ? 'ok' : 'todo';
-  // under the chips: "4 of 6 read · 1 not read today"
-  function dgTrapSummary(list) {
+  // the zone's traps done: every side photographed, or not read today with why (as dg_day counts a skip)
+  function dgTrapCount(list) {
     const l = Array.isArray(list) ? list : [];
-    if (!l.length) return '';
-    const read = l.filter(t => dgTrapState(t) === 'ok').length, skip = l.filter(t => t.skipped).length;
-    return `${read} of ${l.length} read` + (skip ? ` · ${skip} not read today` : '');
+    return { done: l.filter(t => dgTrapState(t) !== 'todo').length, total: l.length };
   }
 
   // ── reading the day ──
   const DG = { day: null, farms: [], data: new Map(), thumbs: new Map(), asked: new Set(), page: null, unitKey: null, timer: null,
                reqs: [], people: new Map(), reading: false, again: false, token: 0, lastSig: '', unsent: [],
-               post: null, threads: new Map(), trapsOpen: false, zoneY: 0, catalog: null,
+               post: null, threads: new Map(), zoneY: 0, catalog: null,
                // the feed (0.11.134): the answers read, one per farm, sort and period (dgFeedKey); the scroll it was left at
                view: 'zones', feed: { farmId: null, sort: 'attention', days: 7, answers: new Map(), tok: 0, loading: false, failed: null, y: 0, dirty: false } };
   const dgRpc = (name, args) => api('/rest/v1/rpc/' + name, { method: 'POST', body: JSON.stringify(args) });
@@ -9438,7 +9450,7 @@ function sopOpen() {
   const dgBox = () => { const f = document.createDocumentFragment(); f.append(el('span', 'dg-page hidden')); return f; };
   function dgSwap(frag) { const y = window.scrollY; $('task').replaceChildren(frag); window.scrollTo(0, y); dgFillThumbs(); }
   function dgFillThumbs() {
-    document.querySelectorAll('#fb-task img[data-thumb]').forEach(img => { const d = DG.thumbs.get(img.dataset.thumb); if (d && img.getAttribute('src') !== d) img.src = d; });
+    document.querySelectorAll('#fb-task img[data-thumb], .fb-sheet img[data-thumb]').forEach(img => { const d = DG.thumbs.get(img.dataset.thumb); if (d && img.getAttribute('src') !== d) img.src = d; });
   }
   // the day changes: what was read for the other day, and its pictures, are let go; an older read still on its way is
   // not written over the new day (DG.token)
@@ -9627,7 +9639,7 @@ function sopOpen() {
     const line = el('div', 'dg-count');
     dgCounters(u).forEach((c, i) => {
       if (i) line.append(document.createTextNode(' · '));
-      line.append(el('span', c.target > 0 ? (c.ok ? 'dg-ok' : 'dg-miss') : 'dg-plain', c.target > 0 ? `${c.label} ${c.done}/${c.target}` : `${c.label} ${c.done}`));
+      line.append(el('span', c.target > 0 ? (c.ok ? 'dg-ok' : c.due === false ? 'dg-plain' : 'dg-miss') : 'dg-plain', c.target > 0 ? `${c.label} ${c.done}/${c.target}` : `${c.label} ${c.done}`));
     });
     if (!line.childNodes.length) line.append(el('span', 'dg-plain', 'Nothing due today'));
     if (extra) line.append(el('span', 'dg-sending', ' · ' + extra));
@@ -9882,7 +9894,6 @@ function sopOpen() {
   // ── a zone ──
   async function dgZone(farmId, unitId) {
     // the trap photos start folded in each zone opened (they stay as left while the page is read again)
-    if (!DG.unitKey || DG.unitKey.farmId !== farmId || DG.unitKey.unitId !== unitId) DG.trapsOpen = false;
     DG.page = 'zone'; DG.unitKey = { farmId, unitId }; DG.post = null;
     await dgPaintZone();
     const u = dgUnit(farmId, unitId);
@@ -9925,8 +9936,9 @@ function sopOpen() {
     box.append(hero);
     if (u.task_id && DG.unsent.some(x => x.key === 'srv:' + u.task_id)) box.append(dgUnsentBox(DG.unsent.filter(x => x.key === 'srv:' + u.task_id)));
     const adds = pendHere.filter(r => !r.dead && ['photo', 'trap'].includes(r.payload.view.kind)).length;
-    box.append(dgCounterLine(u, adds ? `${adds} sending` : ''));
-    const miss = dgMissing(dgWithPending(u, pendHere.filter(r => !r.dead).map(r => r.payload.view))).text;
+    const uNow = dgWithPending(u, pendHere.filter(r => !r.dead).map(r => r.payload.view));    // as it will be once sent
+    box.append(dgCounterLine(uNow, adds ? `${adds} sending` : ''));
+    const miss = dgMissing(uNow).text;
     if (miss && D.is_today) box.append(el('div', 'fb-meta dg-missline', miss));
     const canAdd = dgCanAdd(D);
     if (canAdd) {
@@ -9935,11 +9947,14 @@ function sopOpen() {
       box.append(add);
     }
 
-    // the traps of the unit (0.11.133, owner 22 Oct 2026: "a more compact block for the traps section"): one row of
-    // small chips — red until photographed today, green after, grey when not read today — a tap photographs one; a line
-    // of counts under them; the day's trap photos folded under one line, closed until opened
+    // the traps of the unit: one row of chips, nothing under them (owner 22 Oct 2026: "remove the traps collapsed line,
+    // traps pics could be added and seen by clicking on the trap id … remove the double colour trap dot, just a yellow
+    // and blue dots and the dots trap box will change from red to green when both pics are collected, remove also the 6
+    // of 6 text"): a chip is red until every side is in, green after, grey when not read today; its dots are the card's
+    // sides, filled once photographed. A tap photographs a trap with no photo yet, else opens its photos (dgTrapGallery);
+    // how many traps are done is in the counter line on top
     const tl = (u.traps || {}).list || [];
-    const tlNow = (dgWithPending(u, pendHere.filter(r => !r.dead).map(r => r.payload.view)).traps || {}).list || [];
+    const tlNow = (uNow.traps || {}).list || [];
     const traps = (ru?.traps || []).slice().sort((a, b) => String(b.taken_at).localeCompare(String(a.taken_at)));
     const tPend = pendHere.filter(r => r.payload.view.kind === 'trap');
     if (tl.length || traps.length || tPend.length) {
@@ -9949,44 +9964,28 @@ function sopOpen() {
         tl.forEach(t0 => {
           const t = tlNow.find(x => x.trap_id === t0.trap_id) || t0;       // as it will be once this phone has sent its photos
           const waiting = pendHere.filter(r => r.payload.view.trap_id === t0.trap_id);
+          const shots = dgTrapShots(t0, traps, tPend);
           const st = dgTrapState(t);
           const b = el('button', 'dg-tchip ' + st + (waiting.some(r => r.dead) ? ' bad' : waiting.length ? ' wait' : ''));
           b.type = 'button';
           b.append(el('b', null, dgTrapName(t)));
           const dots = el('span', 'dg-dots');
-          dgTrapDots(t).forEach(d => dots.append(el('span', 'dg-dot ' + d.state + (d.side ? ' ' + d.side : ''))));
+          dgTrapDots(t).forEach(d => dots.append(el('span', 'dg-sdot ' + d.state + ' ' + (d.side || (t.colour === 'blue' ? 'blue' : 'yellow')))));
           b.append(dots);
           b.title = [dgTrapName(t), ...dgTrapDots(t).map(d => (d.side ? d.side + ' side: ' : '') + ({ ok: 'photographed', todo: 'to photograph', skip: 'not read today' }[d.state])),
                      t.skipped && t.skipped !== 'sending' ? 'not read: ' + t.skipped : null,
                      waiting.length ? (waiting.some(r => r.dead) ? 'could not be sent' : 'sending') : null].filter(Boolean).join(' · ');
           b.setAttribute('aria-label', b.title);
-          b.disabled = !canAdd;
-          b.onclick = () => dgReadTrap(farmId, u, ru, t0);
+          b.disabled = !canAdd && !shots.length && !(D.may_change_all && t.skipped);
+          b.onclick = () => (canAdd && !shots.length && !t.skipped ? dgReadTrap(farmId, u, ru, t0) : dgTrapGallery(farmId, u, ru, t0, t, D, shots, pend));
           chips.append(b);
         });
         box.append(chips);
-        const line = el('div', 'fb-meta dg-tline');
-        line.append(document.createTextNode(dgTrapSummary(tlNow.length ? tlNow : tl)));
-        // a trap not read today, with why — or that undone: from a short list of the zone's traps
-        if (canAdd || D.may_change_all) {
-          const sk = el('button', 'fb-link', 'Not read today…'); sk.type = 'button';
-          sk.onclick = () => dgSkipPick(farmId, u, tlNow.length ? tlNow : tl);
-          line.append(document.createTextNode(' · '), sk);
-        }
-        box.append(line);
       }
-      const nPh = traps.length + tPend.length;
-      if (nPh) {
-        const fold = el('button', 'dg-fold'); fold.type = 'button';
-        fold.append(el('span', null, `Trap photos (${nPh})`), el('span', 'dg-chev', '›'));
-        const inside = el('div', 'dg-foldbox');
-        const paintFold = () => { inside.hidden = !DG.trapsOpen; fold.setAttribute('aria-expanded', String(DG.trapsOpen)); };
-        fold.onclick = () => { DG.trapsOpen = !DG.trapsOpen; paintFold(); };      // in place: nothing else moves
-        tPend.forEach(r => inside.append(dgPendingCard(r)));
-        traps.forEach(t => inside.append(dgItemCard('trap', t, farmId, D, pend)));
-        paintFold();
-        box.append(fold, inside);
-      }
+      // a trap photo of no chip here (a trap moved or retired since): its card, as before
+      const lone = traps.filter(p => !tl.some(t0 => dgTrapOf(p, t0))), lonePend = tPend.filter(r => !tl.some(t0 => t0.trap_id === r.payload.view.trap_id));
+      lonePend.forEach(r => box.append(dgPendingCard(r)));
+      lone.forEach(p => box.append(dgItemCard('trap', p, farmId, D, pend)));
     }
 
     // the photos: plant health first, then growth, the newest first
@@ -10002,6 +10001,76 @@ function sopOpen() {
     }
     if (!photos.length && !traps.length && !pPend.length && !tPend.length) box.append(el('div', 'config-hint', canAdd ? 'Nothing yet today: add a photo or tap a trap.' : 'Nothing on this day.'));
     dgSwap(box);
+  }
+  // a report's trap photo belongs to a chip's trap: by the trap's id when the photo carries it, else by its code
+  const dgTrapOf = (p, t0) => (p.trap_id && t0.trap_id ? p.trap_id === t0.trap_id : p.code === t0.code);
+  // a trap's photos of the day: this phone's own still sending first, then the sides in their order (yellow, blue), the
+  // newest first within a side
+  const DG_SIDE_ORDER = { yellow: 0, blue: 1 };
+  function dgTrapShots(t0, traps, tPend) {
+    const sent = (traps || []).filter(p => dgTrapOf(p, t0))
+      .sort((a, b) => ((DG_SIDE_ORDER[a.side] ?? 2) - (DG_SIDE_ORDER[b.side] ?? 2)) || String(b.taken_at).localeCompare(String(a.taken_at)))
+      .map(p => ({ p }));
+    return [...(tPend || []).filter(r => r.payload.view.trap_id === t0.trap_id).map(r => ({ r })), ...sent];
+  }
+  // a trap's photos as a gallery (owner 22 Oct 2026: "when open a trap pic you can see the other one in a gallery
+  // style"): one beside the other, a swipe from side to side, each with its count, the AI's and the people's blocks
+  // and the comments; a tap opens it as a post. Under them: photograph a side, not read today (or that undone)
+  async function dgTrapGallery(farmId, u, ru, t0, t, D, shots, pend) {
+    const canAdd = dgCanAdd(D), name = dgTrapName(t);
+    const out = await dgSheet(`Trap ${name}`, (card, done) => {
+      const sides = dgTrapDots(t).map(d => (d.side ? d.side[0].toUpperCase() + d.side.slice(1) + ' side ' : '')
+        + ({ ok: 'photographed', todo: 'to photograph', skip: 'not read today' }[d.state]));
+      card.append(el('div', 'fb-meta', [...sides, t.skipped && t.skipped !== 'sending' ? t.skipped : null].filter(Boolean).join(' · ')));
+      if (shots.length) {
+        const gal = el('div', 'dg-gal');
+        shots.forEach(({ p, r }) => {
+          const g = el('div', 'dg-gal-item' + (r ? ' pending' : ' tap'));
+          const img = el('img', 'dg-gal-img'); img.alt = '';
+          if (r) {
+            const v = r.payload.view;
+            if (v.thumb) img.src = v.thumb;
+            g.append(img, el('b', null, [v.side ? v.side + ' side' : null, v.total != null ? `${v.total} insect${v.total === 1 ? '' : 's'}` : null].filter(Boolean).join(' · ') || 'Trap photo'),
+                     el('div', 'fb-meta', r.dead ? 'could not be sent' : 'sending'));
+          } else {
+            const mine = pend.filter(x => x.payload.view.ref_id === p.id);
+            const { it } = dgEdited(p, mine);
+            g.dataset.ref = p.id;
+            img.dataset.thumb = p.id;
+            { const t1 = dgThumb(p.id, p.photo_data); if (t1) img.src = t1; }
+            g.append(img, el('b', null, dgItemTitle('trap', it, p)), el('div', 'fb-meta', [dgHm(p.taken_at), p.by ? firstName(p.by) : null].filter(Boolean).join(' · ')));
+            const blocks = dgChipRow('trap', p, it);
+            if (blocks) g.append(blocks);
+            const sl = dgSocialText(dgSocialWith(p.social, dgPendVote(mine), dgPendNotes(mine)));
+            if (sl) g.append(el('div', 'dg-social', sl));
+            g.setAttribute('role', 'button'); g.tabIndex = 0;
+            g.onclick = () => done({ post: p.id });
+            g.onkeydown = e => { if (e.key === 'Enter') done({ post: p.id }); };
+          }
+          gal.append(g);
+        });
+        card.append(gal);
+        if (shots.length > 1) card.append(el('div', 'fb-meta', 'Swipe for the other photo · tap one to open it'));
+      }
+      const acts = el('div', 'fb-actions');
+      const btn = (label, v, primary) => { const b = el('button', 'fb-btn' + (primary ? ' fb-btn-primary' : ''), label); b.type = 'button'; b.onclick = () => done(v); acts.append(b); };
+      if (canAdd && !t.skipped) {
+        const todo = dgTrapDots(t).filter(d => d.state === 'todo');
+        btn(t.colour === 'both' ? (todo.length ? `{i:camera} The ${todo.map(d => d.side).join(' and ')} side` : '{i:camera} A side again')
+                                : (todo.length ? '{i:camera} Photograph it' : '{i:camera} Again'), 'read', true);
+      }
+      if (canAdd || D.may_change_all) {
+        if (t.skipped && t.skipped !== 'sending') btn('Read after all', 'unskip');
+        else if (!t.skipped) btn('Not read today…', 'skip');
+      }
+      btn('Close', null);
+      card.append(acts);
+    });
+    if (!out) return;
+    if (out.post) return dgOpenPost(out.post, 'zone');
+    if (out === 'read') return dgReadTrap(farmId, u, ru, t0);
+    if (out === 'skip') return dgSkip(farmId, u, t0);
+    if (out === 'unskip') return dgUnskip(farmId, u, t0);
   }
   // an item this phone made and has not sent yet
   function dgPendingCard(r) {
@@ -10869,24 +10938,6 @@ function sopOpen() {
     });
   }
   // the zone's traps to say one is not read today, or to undo that (0.11.133: the traps are chips, the link is one)
-  async function dgSkipPick(farmId, u, list) {
-    const pick = await dgSheet('Not read today', (card, done) => {
-      card.append(el('div', 'fb-meta', 'Which trap is not read today? A trap already said so can be undone.'));
-      const row = el('div', 'dg-tchips');
-      (list || []).forEach(t => {
-        const b = el('button', 'dg-tchip ' + (t.skipped ? 'skip' : dgTrapState(t))); b.type = 'button';
-        b.append(el('b', null, dgTrapName(t)));
-        if (t.skipped) b.append(el('span', null, 'Undo · ' + t.skipped));
-        b.onclick = () => done(t);
-        row.append(b);
-      });
-      const no = el('button', 'fb-btn', 'Cancel'); no.type = 'button'; no.onclick = () => done(null);
-      const acts = el('div', 'fb-actions'); acts.append(no);
-      card.append(row, acts);
-    });
-    if (!pick) return;
-    return pick.skipped ? dgUnskip(farmId, u, pick) : dgSkip(farmId, u, pick);
-  }
   // a trap not read today, with why — handled, not missing
   async function dgSkip(farmId, u, t) {
     const why = await dgSheet(`Trap ${dgTrapName(t)} not read today`, (card, done) => {
