@@ -1393,7 +1393,7 @@
   }
 
   // ─── VERSION CHECK ────────────────────────────────────────
-  const CURRENT_VERSION = '0.11.134';
+  const CURRENT_VERSION = '0.11.135';
   let updateAvailable = false;
 
   let lastSaid = null, notYetAt = 0;
@@ -1585,6 +1585,7 @@
   // Same idea as the console's Settings › Version log (release_note): one line per
   // release, what it changed, in plain words. Add the new release on top with each bump.
   const VERSION_LOG = [
+    ['0.11.135', '2026-10-22', 'Traps counted without the tiny insects, zoom after the photo, Gallery in the camera', 'Traps: the count is now small, medium and large insects; the tiny ones (under 1.5 mm, thrips size) are still measured and shown as not counted, to see later if they can be followed. Every past reading was recounted the same way. After a trap or plant photo, Zoom in shows it full size to check it up close before it is saved. The camera has a Gallery button: take the photos first with the phone\'s own camera app, then pick them here; each keeps the time it was taken.'],
     ['0.11.134', '2026-10-22', 'The photo feed and the verified diagnosis', 'Digital scouting has a Feed: switch Zones | Feed to see the farm\'s photos and trap photos of the last 7 or 30 days, as posts, in four orders: Needs attention (the highest risk first), Newest, Disagreements (someone disagreed with the AI, or the team\'s colour is not the AI\'s) and Mine. Each card has a coloured edge for its risk; More shows the next 20. Without signal the feed shows what was last read. A farm manager or the agronomist can mark one comment as the verified diagnosis: it shows under the AI\'s reading and on the cards, and gives the photo its colour. From a photo, everyone except workers can Open a case or Add to a case.'],
     ['0.11.133', '2026-10-22', 'A photo as a post', 'Digital scouting, more compact: a zone\'s traps are one row of chips (green once photographed, a tap takes the photo), with the trap photos folded. Under each photo only the small colour blocks of the AI and the team, and a line with the comments and how many agree or disagree with the AI. A tap opens the photo as a post: the AI\'s reading in full, Agree or Disagree (the same again takes it back, Disagree asks why), and the conversation. Write a comment; under your own comment choose Ask the AI (a short answer, kept under your comment) or Ask someone. Nothing goes to the AI unless you ask.'],
     ['0.11.132', '2026-10-21', 'Digital scouting', 'Extra scouting becomes Digital scouting: the day\'s scouting page, live, for everybody. Choose the day (today by default); each zone shows what is done against its target (Health 5/2 · Growth 0/2 · Traps 4/6). In a zone: tap a trap id (red until photographed, green after) to read that trap; Add a photo — with the scale card it is measured and goes in Growth, without it in Plant health; notes on every photo, typed or by holding to record; Ask someone for their opinion. Everything is saved at once in the report, nothing waits for a Finish, so no photo is left unfiled. You change or delete your own items until the end of the day; a manager always. Leaving a zone with something missing says what. The daily scouting task of each zone shows what is missing and is ticked done in the responsible person\'s own app once the zone\'s minimums are reached. A round left unsent on this phone shows Send it.'],
@@ -10606,7 +10607,7 @@ function sopOpen() {
     if (!f) return;
     let big;
     try { big = await shrinkPhoto(f, FULL_PX, null); } catch (e) { showToast('That photo could not be read — try again', 'error'); return; }
-    const p = { taken_at: new Date().toISOString(), full_w: big.canvas.width, full_h: big.canvas.height, measures: [], note: '', note_level: null };
+    const p = { taken_at: dgTakenAt(f), full_w: big.canvas.width, full_h: big.canvas.height, measures: [], note: '', note_level: null };
     p.thumb = shrinkCanvas(big.canvas, 640, 0.6);
     p.full = await new Promise(res => big.canvas.toBlob(res, 'image/jpeg', FULL_Q));
     const c1600 = scaleCanvas(big.canvas, 1600), cw = c1600.width;
@@ -10626,7 +10627,8 @@ function sopOpen() {
     p.part = p.section === 'growth' ? (crops.length && crops.every(c => HEAD_RE.test(c.name || '')) ? 'head' : 'fruit') : 'leaf';
     const ok = await dgSheet(p.section === 'growth' ? 'Growth photo' : 'Plant health photo', (card, done) => {
       const img = el('img', 'dg-img big'); img.src = p.thumb; img.alt = '';
-      card.append(img);
+      img.onclick = () => photoViewer(p.full, { title: p.section === 'growth' ? 'Growth photo' : 'Plant health photo' });
+      card.append(img, dgZoomButton(() => img.onclick()));
       if (p.section === 'growth') card.append(el('div', 'fb-meta', p.measures.length ? 'Sizes: ' + p.measures.map(x => `${x.what} ${x.mm} mm`).join(', ') : 'The scale card is in the picture: it goes in Growth.'));
       else card.append(el('div', 'fb-meta', m && m.error ? 'The scale card reader is not on this phone yet (it needs signal once): it goes in Plant health.' : 'No scale card in the picture: it goes in Plant health.'));
       card.append(dgChips(p.section === 'growth' ? GROWTH_PARTS : PARTS, () => p.part, v => { p.part = v; }));
@@ -10660,12 +10662,24 @@ function sopOpen() {
     return row;
   }
 
+  // the sizes under a count (0.11.135): the three counted, the tiny apart — not in the total, kept to learn from
+  const dgSizesWords = c => `Counted: small ${c?.small ?? 0} · medium ${c?.medium ?? 0} · large ${c?.large ?? 0}. `
+    + `Tiny ${c?.tiny ?? 0} (under 1.5 mm, thrips size): not counted — shown to see if they can be followed later.`;
+  // the photo just taken, full size, to look closely before it is saved (0.11.135, owner 22 Oct 2026: "possibility to
+  // zoom on the pic after take the photo for a deep check")
+  function dgZoomButton(open) {
+    const b = el('button', 'fb-btn', 'Zoom in: check the photo up close'); b.type = 'button'; b.onclick = open;
+    return b;
+  }
   // ── a trap: each side photographed, counted, checked, then sent on its own ──
   // the count of one side (the round's own reader: countInsects, the light and the whole-card checks)
+  // when a photo was taken: a file from the gallery says it (lastModified) — kept when it is of the last day and a half;
+  // the in-app camera's still is now
+  const dgTakenAt = f => { const t = Number(f && f.lastModified); return t && t <= Date.now() + 6e4 && Date.now() - t < 36 * 36e5 ? new Date(t).toISOString() : new Date().toISOString(); };
   async function dgSide(file, colour) {
     let big;
     try { big = await shrinkPhoto(file, FULL_PX, null); } catch (e) { return null; }
-    const S = { taken_at: new Date().toISOString(), full_w: big.canvas.width, thumb: shrinkCanvas(big.canvas, 640, 0.6) };
+    const S = { taken_at: dgTakenAt(file), full_w: big.canvas.width, thumb: shrinkCanvas(big.canvas, 640, 0.6) };
     S.full = await new Promise(res => big.canvas.toBlob(res, 'image/jpeg', FULL_Q));
     try {
       const r = countInsects(big.canvas, { colour: colour || cardColour(scaleCanvas(big.canvas, 800)) });
@@ -10730,12 +10744,13 @@ function sopOpen() {
     return dgSheet(`Trap ${dgTrapName(t)}${side ? ' · ' + side + ' side' : ''}`, (card, done) => {
       const img = el('img', 'dg-img big'); img.src = S.thumb; img.alt = '';
       img.onclick = () => photoViewer(S.full, { title: `Trap ${dgTrapName(t)}` });
-      card.append(img);
+      card.append(img, dgZoomButton(() => img.onclick()));
       if (S.check) card.append(el('span', 'fb-chip late', S.check));
       const cnt = el('input', 'fb-num'); cnt.type = 'number'; cnt.min = '0'; cnt.step = '1'; cnt.value = st.total == null ? '' : String(st.total);
       cnt.setAttribute('aria-label', 'Insects on this side');
       const crow = el('div', 'fb-actions'); crow.append(el('span', null, 'Insects'), cnt, el('span', 'fb-chip', S.algo_total != null ? `phone counted ${S.algo_total}` : 'type the count'));
       card.append(crow);
+      if (S.counts && S.algo_total != null) card.append(el('div', 'fb-meta', dgSizesWords(S.counts)));
       const box = el('div', 'fb-sc-few');
       const btn = (l, fn, primary) => { const b = el('button', 'fb-btn' + (primary ? ' fb-btn-primary' : ''), l); b.type = 'button'; b.onclick = fn; return b; };
       const paint = () => {
@@ -15258,7 +15273,7 @@ function sopOpen() {
         state.algorithm = r.algorithm; state.confidence = r.confidence; state.corrected = false;
         totalIn.value = String(r.total);
         algoNote.textContent = 'counted by the phone';
-        sizes.textContent = `tiny ${r.counts.tiny} · small ${r.counts.small} · medium ${r.counts.medium} · large ${r.counts.large}` +
+        sizes.textContent = dgSizesWords(r.counts) +
           (r.confidence < 0.4 ? ' · the yellow card was hard to find: check the number' : '');
         counts.classList.remove('hidden');
       } catch (e) {
@@ -15319,7 +15334,7 @@ function sopOpen() {
       note.value = state.notes || '';
       algoNote.textContent = state.algo_total != null ? (state.corrected ? `phone said ${state.algo_total}` : 'counted by the phone') : '';
       const c = state.counts || {};
-      sizes.textContent = state.algo_total != null ? `tiny ${c.tiny ?? 0} · small ${c.small ?? 0} · medium ${c.medium ?? 0} · large ${c.large ?? 0}` : '';
+      sizes.textContent = state.algo_total != null ? dgSizesWords(c) : '';
       counts.classList.remove('hidden');
       paintLevel();
     }
@@ -15541,7 +15556,11 @@ function sopOpen() {
       const shutter = el('button', 'fb-cam-shutter'); shutter.setAttribute('aria-label', 'Take the photo');
       const native = el('button', 'fb-btn', '{i:camera} Phone camera');
       native.title = "Use the phone's own camera app — its macro and its sharpening";
-      bar.append(cancel, shutter, native);
+      // a photo already taken with the phone's own camera app (0.11.135, owner 22 Oct 2026: "a solution to avoid the
+      // samsung camera memory saturation"): shot outside Naked Brain, it is in the gallery whatever Android closes
+      const gallery = el('button', 'fb-btn', '{i:image}'); gallery.type = 'button';
+      gallery.title = "A photo from the gallery — taken first with the phone's camera app"; gallery.setAttribute('aria-label', 'Photo from the gallery');
+      bar.append(cancel, shutter, native, gallery);
       ov.append(video, hint, ring, ctl, bar);
       document.body.append(ov);
       camOpenAt = 0;                                      // on screen: from here the picture itself stops a second camera
@@ -15679,6 +15698,17 @@ function sopOpen() {
         inp.onchange = () => settle(inp.files?.[0] || 'cancel');
         inp.addEventListener('cancel', () => settle('cancel'));
         window.addEventListener('focus', onFocus);
+        inp.click();
+      };
+      gallery.onclick = () => {
+        try { stream.getTracks().forEach(x => x.stop()); } catch (e) {}
+        const inp = document.createElement('input');
+        inp.type = 'file'; inp.accept = 'image/*'; inp.style.display = 'none';     // no capture: the picker, not a camera
+        document.body.append(inp);
+        let back = false;
+        const settle = v => { if (back) return; back = true; inp.remove(); finish(v); };
+        inp.onchange = () => settle(inp.files?.[0] || 'cancel');
+        inp.addEventListener('cancel', () => settle('cancel'));
         inp.click();
       };
 
@@ -15843,7 +15873,7 @@ function sopOpen() {
       // relative to the light: the lower half of a card is often in shade
       // (a yellow card has red about as high as green, a sunlit leaf much less; a blue card is bluer than the sky)
       return blue ? (b > 80 && b > r + 35 && b > g + 10) : (r > 95 && g > 75 && r > 0.82 * g && r - b > 50 && g - b > 35); };
-    const empty = { counts: { tiny: 0, small: 0, medium: 0, large: 0 }, total: 0, blobs: [], confidence: 0, algorithm: 'blobs-v3', scale: 'none', px_per_mm: null };
+    const empty = { counts: { tiny: 0, small: 0, medium: 0, large: 0 }, total: 0, blobs: [], confidence: 0, algorithm: 'blobs-v4', scale: 'none', px_per_mm: null };
     // 1. the card, on a small copy
     const sm = scratch(scaleCanvas(canvas, 800), canvas), sw = sm.width, sh = sm.height;
     const sd = sm.getContext('2d').getImageData(0, 0, sw, sh).data, sIs = cardOf(sd);
@@ -16057,9 +16087,12 @@ function sopOpen() {
       blobs.push([X0 + minx, Y0 + miny, w, h, Math.round(mm * 10) / 10]);
       if (mm < 1.5) counts.tiny++; else if (mm < 3) counts.small++; else if (mm < 6) counts.medium++; else counts.large++;
     }
-    const total = counts.tiny + counts.small + counts.medium + counts.large;
+    // blobs-v4 (0.11.135, owner 22 Oct 2026: "stop counting the very small thrips (not consistent), focus on medium and
+    // big insects … show the tiny just for info"): the total is small + medium + large; the tiny (< 1.5 mm) are still
+    // counted apart, shown as "not counted", to see later whether they can be followed
+    const total = counts.small + counts.medium + counts.large;
     const area = (cx1 - cx0) * (cy1 - cy0);
-    return { counts, total, blobs, confidence: Math.round(Math.min(1, tot / Math.max(1, area)) * 100) / 100, algorithm: 'blobs-v3',
+    return { counts, total, blobs, confidence: Math.round(Math.min(1, tot / Math.max(1, area)) * 100) / 100, algorithm: 'blobs-v4',
              scale, px_per_mm: Math.round(ppm * 1000) / 1000, header_px: top, grid_by: gridBy, partial: edges.length ? edges.join(',') : null, rows_seen: rowsSeen, work_px: want, lines: [H.length, V.length], light };
   }
   window.fbCountInsects = countInsects;   // for support: count a canvas from the console
