@@ -1401,7 +1401,7 @@
   }
 
   // ─── VERSION CHECK ────────────────────────────────────────
-  const CURRENT_VERSION = '0.11.140';
+  const CURRENT_VERSION = '0.11.141';
   let updateAvailable = false;
 
   let lastSaid = null, notYetAt = 0;
@@ -1593,6 +1593,7 @@
   // Same idea as the console's Settings › Version log (release_note): one line per
   // release, what it changed, in plain words. Add the new release on top with each bump.
   const VERSION_LOG = [
+    ['0.11.141', '2026-10-23', 'No phone count of traps', 'The phone no longer counts traps at all. A trap card waits for the AI\'s count and says counting until then; if the AI could not count it, it says needs a count, and anyone who may change the reading types it on the photo\'s page. The phone still checks each photo at once (the whole card in it, not too much glare) and crops the card. The older scouting round no longer takes trap photos: its Traps tab opens Digital scouting on the zone.'],
     ['0.11.140', '2026-10-23', 'The trap photo is the card', 'A trap photo is now just the card: the phone crops it and sends only that, smaller and quicker to send, and it is what both apps show. The phone no longer shows a count of its own: the trap says counting until the AI has counted the card, then the AI\'s number. If the card is not fully in the photo, or too much of it cannot be read, the phone asks for a retake; if it still cannot find the card, you can keep the photo and type the count. A number you type yourself in I counted it myself always stands.'],
     ['0.11.139', '2026-10-22', 'Traps: one row of chips, their photos behind the chip', 'Digital scouting, a zone: the trap row is only the chips. Each chip has a yellow and a blue dot for the card sides (a ring until that side is photographed, filled after) and turns from red to green once every side is in. Tap a chip: with no photo yet the camera opens; otherwise its photos open side by side, swipe from one to the other, tap one to open it, and from there photograph a side or say the trap is not read today. The Trap photos line and the read line are gone: how many traps are done is on top, Traps 4/6, green when all are done.'],
     ['0.11.138', '2026-10-23', 'Traps counted by the AI', 'Traps are now counted by the AI. The phone crops the card from each trap photo and sends it with the photo; a few seconds later the AI\'s count replaces the phone\'s first guess (Haiku counts, Opus counts again on a crowded card). A number you type yourself always stands. Trap photos say where the figure comes from: AI, counting or typed. The question "fewer than this card already had, is it a new card?" is gone: it came from the phone\'s own count, which read glare as insects. New card and Replaced are now buttons you always see on the trap sheet.'],
@@ -10031,7 +10032,7 @@ function sopOpen() {
           if (r) {
             const v = r.payload.view;
             if (v.thumb) img.src = v.thumb;
-            g.append(img, el('b', null, [v.side ? v.side + ' side' : null, v.total != null ? `${v.total} insect${v.total === 1 ? '' : 's'}` : null].filter(Boolean).join(' · ') || 'Trap photo'),
+            g.append(img, el('b', null, [v.side ? v.side + ' side' : null, dgTrapFigure({ total: v.total, corrected: !!v.corrected, sending: true })].filter(Boolean).join(' · ')),
                      el('div', 'fb-meta', r.dead ? 'could not be sent' : 'sending'));
           } else {
             const mine = pend.filter(x => x.payload.view.ref_id === p.id);
@@ -10101,22 +10102,25 @@ function sopOpen() {
   // a time on the page's own day as 10:25, any other with its date
   const dgWhen = iso => !iso ? '' : (dgDayOf(iso) === DG.day ? '' : new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) + ' ') + dgHm(iso);
   // where a trap's figure comes from (counting v5, 0.11.138): the AI's count, the AI still counting, or typed by a
-  // person — nothing said for an older reading. While the AI counts, the figure is the phone's hidden placeholder: no
-  // number is shown then (a reading still sending, or queued or running, or one whose photo is the card — …-card.jpg,
-  // sent since the card is the photo — not yet given to the AI). The AI could not count such a reading: the phone's
-  // number stands, and says so
+  // person — nothing said for an older reading. Since FarmBox 0260 (owner 23 Oct 2026: "why we want to have the phone
+  // counting? we can remove it to avoid confusion") the phone sends no count of its own: a card (…-card.jpg) goes with
+  // no figure and gets the AI's; "counting…" while the AI is still to count it (sending, queued, running, or no status
+  // yet), "needs a count" when the AI could not (failed, or skipped after three tries) — a person types it then
   const dgCardOnly = it => /-card\.jpe?g$/i.test(String(it.photo_path || ''));
-  // only a card-only reading whose AI status is known (the report and, since 0258, a post carry it); an older reading
-  // counted on its whole photo keeps its number, which the AI does not replace (0256)
-  const dgCounting = it => !it.corrected && (!!it.sending || (dgCardOnly(it) && 'ai_count_status' in it
-    && (it.ai_count_status == null || it.ai_count_status === 'queued' || it.ai_count_status === 'running')));
-  const dgCountWord = it => it.corrected ? 'typed' : dgCounting(it) ? 'counting…'
-    : it.ai_count_status === 'done' ? (it.ai_count == null || it.ai_count === it.total ? 'AI' : '')
-    : dgCardOnly(it) ? 'phone' : '';
+  const dgAiWaiting = it => it.ai_count_status == null || it.ai_count_status === 'queued' || it.ai_count_status === 'running';
+  // no figure of a person or of the AI: none at all, or the phone's hidden placeholder on a card sent by 0.11.138–0.11.140
+  // whose AI status is known (the report and, since 0258, a post carry it). An older reading counted on its whole photo
+  // keeps its number, which the AI does not replace (0256)
+  const dgNoFigure = it => !it.corrected && (it.total == null || (dgCardOnly(it) && 'ai_count_status' in it && it.ai_count_status !== 'done'));
+  const dgCounting = it => !it.corrected && (!!it.sending || (dgNoFigure(it) && dgAiWaiting(it)));
+  const dgNeedsCount = it => !it.sending && dgNoFigure(it) && !dgAiWaiting(it);
+  const dgCountWord = it => it.corrected ? 'typed' : dgCounting(it) ? 'counting…' : dgNeedsCount(it) ? 'needs a count'
+    : it.ai_count_status === 'done' ? (it.ai_count == null || it.ai_count === it.total ? 'AI' : '') : '';
   const dgTrapFigure = it => {
     if (dgCounting(it)) return 'counting…';
+    if (dgNeedsCount(it) || it.total == null) return 'needs a count';
     const w = dgCountWord(it);
-    return `${it.total ?? '?'} insect${it.total === 1 ? '' : 's'}${w ? ` (${w})` : ''}`;
+    return `${it.total} insect${it.total === 1 ? '' : 's'}${w ? ` (${w})` : ''}`;
   };
   function dgItemTitle(kind, it, p) {
     if (kind === 'trap') return [`Trap ${shortCode(it.code)}`, it.side, dgTrapFigure(it), p.reference ? 'reference photo' : null].filter(Boolean).join(' · ');
@@ -10312,6 +10316,8 @@ function sopOpen() {
     more.push(removing ? 'deleting — sending' : Object.keys(edit).length ? 'change sending' : null);
     if (more.some(Boolean)) head.append(el('div', 'fb-meta', more.filter(Boolean).join(' · ')));
     post.append(head);
+    // a card the AI could not count (0260): who may change it types the count here — the person's figure, the rates follow
+    if (kind === 'trap' && !removing && dgNeedsCount(it) && dgMayChange(p, D)) post.append(dgCountRow(it, farmId));
     // what the item view had: Ask someone; Change, the section and Delete by who may
     if (!removing) {
       const acts = el('div', 'fb-actions dg-acts');
@@ -10784,9 +10790,6 @@ function sopOpen() {
     return row;
   }
 
-  // the sizes under a count (0.11.135): the three counted, the tiny apart — not in the total, kept to learn from
-  const dgSizesWords = c => `Counted: small ${c?.small ?? 0} · medium ${c?.medium ?? 0} · large ${c?.large ?? 0}. `
-    + `Tiny ${c?.tiny ?? 0} (under 1.5 mm, thrips size): not counted — shown to see if they can be followed later.`;
   // the photo just taken, full size, to look closely before it is saved (0.11.135, owner 22 Oct 2026: "possibility to
   // zoom on the pic after take the photo for a deep check")
   function dgZoomButton(open) {
@@ -10838,8 +10841,8 @@ function sopOpen() {
     return blob ? { blob, thumb } : null;
   }
   // one side: the phone finds the card (countInsects: its box, the rows seen, the light) and keeps the card cropped from
-  // the photo — S.full and S.thumb, S.card true. Its count is kept hidden: sent as a placeholder the AI's count replaces.
-  // No card found, or the card clearly not whole (part outside, more than a row missing): S.card false, nothing kept
+  // the photo — S.full and S.thumb, S.card true. Its count is not kept: the card goes with no figure, the AI counts it
+  // (0260). No card found, or the card clearly not whole (part outside, more than a row missing): S.card false, nothing kept
   // (S.full null) and the sheet asks for a retake; on a photo taken again (again true) the whole photo, made small the
   // same way, so the person may keep it and type the count
   async function dgSide(file, colour, again) {
@@ -10849,7 +10852,6 @@ function sopOpen() {
     let box = null;
     try {
       const r = countInsects(big.canvas, { colour: colour || cardColour(scaleCanvas(big.canvas, 800)) });
-      Object.assign(S, { counts: r.counts, total: r.total, algo_total: r.total, algorithm: r.algorithm, confidence: r.confidence, corrected: false });
       box = r.card_box || null;
       const few = r.rows_seen != null && r.rows_seen < GRID_ROWS - 1;
       const lc = lightCheck(r);
@@ -10857,7 +10859,7 @@ function sopOpen() {
       else if (box && few) S.check = `only ${Math.max(0, Math.round(r.rows_seen))} of the card's ${GRID_ROWS} rows are in the photo — retake it with the whole card`;
       else if (lc) S.check = lc;
       S.card = !!box && !r.partial && !few;
-    } catch (e) { S.total = null; S.algo_total = null; }
+    } catch (e) { /* no card found: a retake */ }
     let kept = S.card ? await dgCardBlob(big.canvas, box) : null;
     if (!kept) {
       S.card = false;
@@ -10968,23 +10970,21 @@ function sopOpen() {
         // the one file of the side: the card, named …-card.jpg (the server counts it as the card itself); a photo kept
         // without the card under the plain name, so the server knows it is not one
         const path = S.card ? dgCardPath(path0) : path0;
-        // a number typed is the person's own and stands; none typed: the phone's hidden count as a placeholder (the
-        // server needs a number), replaced by the AI's count of the card
+        // a number typed is the person's own and stands; none typed: no figure at all — the card waits for the AI's count
+        // (0260). The phone sends no count of its own: no counts, algo_total, algorithm or confidence
         const typed = st.total != null;
-        const total = typed ? st.total : (S.algo_total ?? 0);
         const level = noteLevelOf(st);
         await dgQueue({
           rpc: 'dg_read_trap',
           // a one-sided card is sent with no side, so it stays one-sided
-          args: { p: { farm_id: farmId, client_ref: cref, trap_id: t.trap_id, code: t.code, ...(side ? { side } : {}), total,
-                       counts: S.counts || {}, algo_total: S.algo_total ?? null, algorithm: S.algorithm || null, confidence: S.confidence ?? null,
+          args: { p: { farm_id: farmId, client_ref: cref, trap_id: t.trap_id, code: t.code, ...(side ? { side } : {}), ...(typed ? { total: st.total } : {}),
                        corrected: typed, photo_path: path, photo_data: S.thumb,
                        reference: false, new_card: !!st.new_card, replaced: !!st.replaced, lower_ok: false,
                        notes: String(st.note || '').trim() || null, note_level: level, read_at: S.taken_at, ...(replaceId ? { replace_id: replaceId } : {}) } },
           uploads: [{ path, blob: S.full, type: 'image/jpeg' }],
           chain: 'dg:' + cref,
           // while sending, a figure only when typed: otherwise the AI is still to count it
-          view: { kind: 'trap', farm_id: farmId, unit_id: u.unit_id, trap_id: t.trap_id, code: dgTrapName(t), side, total: typed ? total : null, corrected: typed,
+          view: { kind: 'trap', farm_id: farmId, unit_id: u.unit_id, trap_id: t.trap_id, code: dgTrapName(t), side, total: typed ? st.total : null, corrected: typed,
                   thumb: S.thumb, note: String(st.note || '').trim(), note_level: level }
         }).catch(e => { saving = false; save.disabled = false; throw e; });
         done('saved');
@@ -11101,16 +11101,34 @@ function sopOpen() {
       card.append(row, acts);
     });
   }
+  // a trap reading with no figure the AI could give (0260, "needs a count"): the count typed, sent as the person's own
+  function dgCountRow(it, farmId) {
+    const row = el('div', 'fb-actions dg-needcount');
+    const cnt = el('input', 'fb-num'); cnt.type = 'number'; cnt.min = '0'; cnt.step = '1'; cnt.placeholder = 'insects';
+    cnt.setAttribute('aria-label', 'Insects on this card');
+    const ok = el('button', 'fb-btn fb-btn-primary', 'Save the count'); ok.type = 'button';
+    ok.onclick = async () => {
+      const n = parseInt(cnt.value, 10);
+      if (isNaN(n) || n < 0) { showToast('Type the number of insects', 'error'); cnt.focus(); return; }
+      ok.disabled = true;
+      await dgQueue({ rpc: 'dg_edit_item', args: { p: { kind: 'trap', id: it.id, total: n } }, chain: 'dg:' + it.id,
+                      view: { kind: 'edit', farm_id: farmId, ref_id: it.id, fields: { total: n } } });
+    };
+    row.append(el('span', null, 'The AI could not count this card: count it and type it'), cnt, ok);
+    return row;
+  }
   // a change by who may: a photo's part and note (its section by the switch); a trap reading's count and note
   function dgChangeSheet(kind, it, farmId) {
-    // a trap the AI is still counting: no number shown — one typed is the person's own, none leaves it to the AI
-    const counting = kind === 'trap' && dgCounting(it);
-    const o = { note: it.note || '', note_level: it.note_level || null, part: it.part, total: counting ? null : it.total };
+    // a trap the AI is still counting, or could not count: no number shown — one typed is the person's own, none
+    // leaves it as it is
+    const blank = kind === 'trap' && (dgCounting(it) || dgNeedsCount(it) || it.total == null);
+    const o = { note: it.note || '', note_level: it.note_level || null, part: it.part, total: blank ? null : it.total };
     return dgSheet('Change', (card, done) => {
       let cnt = null;
       if (kind === 'observation') card.append(dgChips(it.section === 'growth' ? GROWTH_PARTS : PARTS, () => o.part, v => { o.part = v; }));
       else {
         cnt = el('input', 'fb-num'); cnt.type = 'number'; cnt.min = '0'; cnt.value = o.total == null ? '' : String(o.total);
+        if (blank) cnt.placeholder = dgCounting(it) ? 'counting…' : 'needs a count';
         const r = el('div', 'fb-actions'); r.append(el('span', null, 'Insects'), cnt); card.append(r);
       }
       const note = el('input', 'fb-note'); note.type = 'text'; note.value = o.note; note.placeholder = 'Note (optional)';
@@ -11122,10 +11140,10 @@ function sopOpen() {
         const body = String(o.note || '').trim();
         if (body !== String(it.note || '').trim() || noteLevelOf(o) !== noteLevelOf(it)) { fields.note = body; fields.note_level = noteLevelOf(o); }
         if (kind === 'observation' && o.part !== it.part) fields.part = o.part;
-        if (kind === 'trap' && !(counting && cnt.value === '')) {
+        if (kind === 'trap' && !(blank && cnt.value === '')) {
           const n = parseInt(cnt.value, 10);
           if (isNaN(n) || n < 0) { showToast('Type the number of insects', 'error'); return; }
-          if (n !== it.total || counting) fields.total = n;
+          if (n !== it.total || blank) fields.total = n;
         }
         if (!Object.keys(fields).length) { done(null); return; }
         await dgQueue({ rpc: 'dg_edit_item', args: { p: { kind, id: it.id, ...fields } }, chain: 'dg:' + it.id,
@@ -12186,7 +12204,7 @@ function sopOpen() {
       box.append(el('div', 'config-hint', 'No sticky trap is registered for this zone. Add them on the console (IPM page) and sync; the round can still be finished without readings.'));
       return box;
     }
-    box.append(el('div', 'config-hint', `${traps.length} trap${traps.length > 1 ? 's' : ''} — photograph each one square-on with its code in the picture. The phone counts; correct it if it is wrong.`));
+    box.append(el('div', 'config-hint', `${traps.length} trap${traps.length > 1 ? 's' : ''} — photograph each one square-on with its code in the picture, then type the number of insects you count on it.`));
     const kept = traps.filter(t => prior.get(t.id)?.photo_data).length;
     if (kept) box.append(el('div', 'config-hint', `${kept} photo${kept > 1 ? 's' : ''} from before the app was closed ${kept > 1 ? 'are' : 'is'} back — carry on from there.`));
     traps.forEach(t => box.append(trapCard(t, th, prior.get(t.id))));
@@ -12772,6 +12790,11 @@ function sopOpen() {
       if (so) Object.entries(so).forEach(([k, v]) => { sc.verdict[k] = { ok: v.outcome === 'ok', note: v.note || '' }; });
       else if (sc.outcome === 'ok') SC_TABS.forEach(([k]) => { sc.verdict[k] = { ok: true, note: '' }; });
     }
+    // the traps are read in Digital scouting (0260, owner 23 Oct 2026: "why we want to have the phone counting? we can
+    // remove it to avoid confusion"): the round takes no trap photo, counts none and sends none. A trap photo left in a
+    // draft from before is dropped; an edit sends no `traps`, so the server keeps the readings it has as they are
+    [...sc.photos.values()].forEach(p => { if (p.section === 'trap') sc.photos.delete(p.ref); });
+    sc.noTraps = false; sc.status.clear(); delete sc.verdict.trap;
     // The sections due today (FarmBox 0145): the procedure's days (Settings of the procedure › Sections), a
     // holiday's moved to the next working day by the server (task.sections), and a trap or growth day that
     // was missed — no trap read, no growth photo since — comes back the next day. The others can still be
@@ -12788,7 +12811,7 @@ function sopOpen() {
     const earlier = (await all('tasks')).filter(t => t.sop_id === task.sop_id && t.farm_id === task.farm_id && t.status !== 'cancelled'
       && t.planned_date < task.planned_date).sort((a, b) => (a.planned_date < b.planned_date ? 1 : -1));
     sc.due = {}; sc.missed = {};
-    for (const k of ['trap', 'health', 'growth']) {
+    for (const k of ['health', 'growth']) {               // the traps: in Digital scouting (0260)
       if (scheduled(task, k)) { sc.due[k] = true; continue; }
       if (k === 'health' || (cfg && !cfg[k])) continue;
       const prev = earlier.find(t => scheduled(t, k));
@@ -12846,6 +12869,7 @@ function sopOpen() {
       : count(k) >= MIN_PHOTOS[k];
     sc.need = need; sc.met = met; sc.minPhotos = MIN_PHOTOS;
     const tabSub = (k, n) => {
+      if (k === 'trap') return 'in Digital scouting';
       if (free) return n ? `${n} photo${n === 1 ? '' : 's'}` : 'optional';
       if (!need(k)) return n ? `not today · ${n} photo${n === 1 ? '' : 's'}` : 'not today';
       if (k === 'trap' && sc.noTraps) return 'no traps today';
@@ -12859,14 +12883,14 @@ function sopOpen() {
         b.textContent = '';
         const ok = !need(k) || met(k);
         const name = el('span', 'fb-sc-name');
-        name.append(el('span', 'fb-sc-v ' + (ok ? 'ok' : 'nok'), ok ? '✓' : ''));
+        name.append(el('span', 'fb-sc-v' + (k === 'trap' ? '' : ok ? ' ok' : ' nok'), ok && k !== 'trap' ? '✓' : ''));
         if (sc.verdict[k] && sc.verdict[k].ok === false) name.append(nbIcon('alert'), document.createTextNode(' '));
         // a phone is narrow: "Plant health" is "Health" on the tab under 420 px
         if (k === 'health') name.append(el('span', 'fb-sc-long', label), el('span', 'fb-sc-short', 'Health'));
         else name.append(document.createTextNode(label));
         b.append(name, el('small', 'fb-sc-sub', tabSub(k, count(k))));
         b.setAttribute('aria-pressed', String(sc.tab === k));
-        b.setAttribute('aria-label', `${label}: ${tabSub(k, count(k))}${need(k) ? (ok ? ', done' : ', still required') : ''}`);
+        b.setAttribute('aria-label', `${label}: ${tabSub(k, count(k))}${need(k) && k !== 'trap' ? (ok ? ', done' : ', still required') : ''}`);
         b.classList.toggle('off', false);
         panes[k].classList.toggle('hidden', sc.tab !== k);
         verdicts[k]?._paint();
@@ -12921,7 +12945,7 @@ function sopOpen() {
     };
     function paintReview() {
       const R = panes.review; R.textContent = '';
-      const secs = SC_TABS.filter(([k]) => shown(k) || count(k));
+      const secs = SC_TABS.filter(([k]) => k !== 'trap' && (shown(k) || count(k)));
       if (!secs.length) { R.append(el('div', 'config-hint', 'Nothing captured yet.')); return; }
       secs.forEach(([k, label]) => {
         const v = sc.verdict[k] || {};
@@ -13013,6 +13037,7 @@ function sopOpen() {
     };
 
     async function shoot(section, forTrap, fromGallery) {
+      if (section === 'trap') return;               // the traps are read in Digital scouting (0260): no trap photo here
       const hint = section === 'trap'
         ? (forTrap ? `Trap ${forTrap.code} — square-on, the WHOLE card in the photo, top to bottom` : 'A sticky trap — square-on, the whole card, top to bottom, and its code in the picture')
         : section === 'growth' ? 'The fruit or leaf with the scale card beside it, flat, at the same distance'
@@ -13978,10 +14003,17 @@ function sopOpen() {
       scan.classList.toggle('hidden', !!sc.noTraps);
     };
     sc.paintNone = paintNone;
-    panes.trap.append(missedLine('trap'),
-      el('div', 'config-hint', traps.length ? 'Tap a trap to photograph it: one side, then the other. Tap a done trap for its counts.' : 'Photograph every card: the phone reads its position and adds it.'),
-      cover, lists.trap, scan, noneRow, verdictBlock('trap', 'Traps'));
-    paintNone();
+    // the traps are read in Digital scouting (0260): this tab only leads there, to this zone of today
+    const toDg = el('button', 'btn btn-primary', 'Open Digital scouting'); toDg.type = 'button';
+    toDg.onclick = async () => {
+      const zl = zoneLines[0] || {};
+      setKV('run_open', null).catch(() => {});
+      await leaveRun();
+      openDigital({ day: todayISO(), taskId: task.extraZone ? null : (task.members?.[0]?.id || task.id || null),
+                    unitId: zl.area_system_id || zl.area_zone_id || task.system_id || task.zone_id || null });
+    };
+    const toDgRow = el('div', 'fb-actions fb-sc-add'); toDgRow.append(toDg);
+    panes.trap.append(el('div', 'config-hint', 'Traps are read in Digital scouting: there each card is photographed and the AI counts it.'), toDgRow);
     // Plant health
     lists.health = el('div');
     panes.health.append(el('div', 'config-hint', 'A photo of anything that looks wrong on a plant: where in the zone if you want (row and metres, B6), a comment, the AI note if you want it. Tap a photo to zoom.'),
@@ -14008,17 +14040,16 @@ function sopOpen() {
     d.append(el('summary', null, 'How the scouting works'));
     const list = el('ol');
     [
-      ['Today\u2019s sections are the tabs.', 'Each tab has a dot: red while it is required today and its minimum is not reached yet, green when it is, or when it is not required today (it says not today, and still opens: more is always welcome). The minimum: every trap of the zone, both sides (or marked taken down / out of reach); 2 plant-health photos; 2 growth photos. Traps on Monday, Wednesday and Friday, Health every working day, Growth on Tuesday and Thursday (set in the console). One missed on its day comes back the next day.'],
-      ['Work in parallel.', 'Walk the greenhouse once and photograph what you meet — a trap, a sick plant, a fruit to measure — each in its tab, in any order. Switching tab loses nothing, and neither does the app closing: it comes back as you left it.'],
-      ['Writing the position.', 'Always the same spot: on the blue side, in the plain band at the top, above the three holes and at least 1 cm from the edge, clear of the holes and the hanging wire. Black marker, capitals about 1 cm high, on one line, a little apart (1B6, no dashes). Photograph the blue side first. A trap of the list is never read: tap it in the list. If a new card is not read, the AI reads it or you type it.'],
-      ['Traps.', 'Photograph one side of the card square-on with its position written on it (1B6 = zone 1, row B, 6 m). The phone reads the position: confirm it or correct it, and the camera opens for the other side. Each side is counted; the insects are sized on the 23 mm grid printed on the card; correct the numbers if needed. A new position is a new trap, added by itself. After changing a card press Replaced (a hard drop in the count is noticed too). The colour is new insects a day, both sides together: green, orange, red.'],
-      ['One zone a task.', 'Each zone has its own scouting task (Zone 1, 2, 3, 4.1, 4.2): its traps only, its photos, its OK. In Zone 4 write the table in a card code: 4.1B6, 4.2B6.'],
+      ['Today\u2019s sections are the tabs.', 'Each tab has a dot: red while it is required today and its minimum is not reached yet, green when it is, or when it is not required today (it says not today, and still opens: more is always welcome). The minimum: 2 plant-health photos; 2 growth photos. Health every working day, Growth on Tuesday and Thursday (set in the console). One missed on its day comes back the next day.'],
+      ['Work in parallel.', 'Walk the greenhouse once and photograph what you meet — a sick plant, a fruit to measure — each in its tab, in any order. Switching tab loses nothing, and neither does the app closing: it comes back as you left it.'],
+      ['Traps.', 'Traps are read in Digital scouting: the Traps tab opens it on this zone. There each card is photographed and the AI counts it.'],
+      ['One zone a task.', 'Each zone has its own scouting task (Zone 1, 2, 3, 4.1, 4.2): its photos, its OK.'],
       ['Health.', 'Anything that looks wrong: the zone comes from the task; write the row and metres if you want (B6), choose the part, add a note. With the scale card in the photo the phone says Scale detected and measures the fruit or leaf by itself ({i:square}, the object framed in the middle); tap the photo, then Re-measure and tap the right object if it took another; two taps with {i:ruler} measure by hand; Estimate the size asks the AI. Tap any photo to zoom.'],
       ['Growth.', 'Fruit or leaves with the scale card beside them (the black 5 cm square, flat, the same distance from the phone, the whole square in the photo): the phone finds it and outlines it in green; {i:ruler} Measure, then tap the two ends — the size is read in the card\u2019s plane, so a tilted card still measures right. The size the phone takes by itself is a suggestion. No card? A ruler or tape along the fruit works too: tap two marks on it, say the centimetres between them, then measure.'],
-      ['AI note.', 'Only when you press it, one photo at a time; it needs signal. One exception: when the phone cannot read the position on a new card, the AI reads it by itself — you still confirm it.'],
-      ['Each tab ends the same way.', 'At the bottom of Traps, Health and Growth: a green line says the section is OK. Something wrong? Tap it — it turns red — and say what in the note under it; the manager is told.'],
-      ['Review.', 'The Review tab shows everything captured — every photo with its counts, sizes, position, AI note and comment, and each section’s result. Tap a photo to zoom, a line to go back to it.'],
-      ['Finish.', 'The result follows by itself: every section OK = OK; a section left red is asked about once and sent as not OK with its note. The phone says what is still missing: a section under its minimum is asked about once, and on a trap day it asks about the traps not photographed. A trap taken down or out of reach can be marked in its row with the dots.'],
+      ['AI note.', 'Only when you press it, one photo at a time; it needs signal.'],
+      ['Each tab ends the same way.', 'At the bottom of Health and Growth: a green line says the section is OK. Something wrong? Tap it — it turns red — and say what in the note under it; the manager is told.'],
+      ['Review.', 'The Review tab shows everything captured — every photo with its sizes, position, AI note and comment, and each section’s result. Tap a photo to zoom, a line to go back to it.'],
+      ['Finish.', 'The result follows by itself: every section OK = OK; a section left red is asked about once and sent as not OK with its note. The phone says what is still missing: a section under its minimum is asked about once.'],
       ['No signal?', 'Everything is kept on the phone and sent later; the full photos follow over the connection chosen in Settings.'],
     ].forEach(([b, t]) => { const li = el('li'); li.append(el('b', null, b + ' '), nbFrag(t)); list.append(li); });
     d.append(list);
@@ -15029,7 +15060,7 @@ function sopOpen() {
     const posOf = v => { const c = String(v || '').toUpperCase().replace(/\s/g, ''); const f = c && /^[A-Z]/.test(c) && /^\d+(\.\d+)?$/.test(zp) ? zp + c : c; return parsePos(f) ? f : null; };
     // each section today says OK or not OK (0.11.63): one still red is asked about once, then needs its note
     const LABEL = Object.fromEntries(SC_TABS);
-    const secs = SC_TABS.map(([k]) => k).filter(k => sc.shown?.(k));
+    const secs = SC_TABS.map(([k]) => k).filter(k => k !== 'trap' && sc.shown?.(k));
     // an extra scouting (0.11.94) asks for no verdict: a section is "not OK" only when its note says what is wrong
     const X = !!R.task.extraZone;
     if (X && !photos.length && !secs.some(k => String(sc.verdict[k]?.note || '').trim())) {
@@ -15067,13 +15098,8 @@ function sopOpen() {
       section_outcomes: Object.fromEntries((X ? red : secs).map(k => [k, { outcome: sc.verdict[k]?.ok ? 'ok' : 'nok', note: String(sc.verdict[k]?.note || '').trim() || null }])) }),
       steps: step && !X ? [{ seq: step.seq, step_id: step.id, result: sc.outcome === 'ok' ? 'ok' : 'nok', note: String(sc.outcomeNote || '').trim() || null,
                        media: [], recorded_at: finished }] : [],
-      trap_status: missing.map(t => ({ trap_id: t.id, status: sc.status.get(t.id).status, note: sc.status.get(t.id).note || null })),
-      traps: trapsP.flatMap(p => SIDES.map(([k]) => [k, p.sides[k]]).map(([k, S]) => ({ trap_id: p.trap_id, code: p.code, side: k, colour: k,
-        photo_data: S.thumb || null, photo_path: S.photo_path || null,
-        counts: S.counts || {}, total: S.total ?? 0, algo_total: S.algo_total ?? null, algorithm: S.algorithm || null, confidence: S.confidence ?? null,
-        corrected: !!S.corrected, replaced: !!p.replaced, new_card: !!p.new_card, lower_ok: !!S.lower_ok, reference: !!S.reference,
-        notes: p.note || null, note_level: noteLevelOf(p), read_at: S.taken_at || p.taken_at, code_read: p.code_read || null,
-        code_source: p.code_source || null, code_confirmed: !!p.code_ok, gps: null, ai: S.ai || null }))),
+      // no `traps` and no `trap_status` (0260): the traps are read in Digital scouting, and an edit without them keeps
+      // the trap readings the run already has
       observations: plants.map(p => ({ client_ref: p.ref, section: p.section, part: p.part || 'other', crop_id: p.crop_id || null,
         // an extra's photo names its zone line (0.11.100): without it the server filed the photo with no zone, and the
         // report, which reads by zone, never showed it (20 photos on 4 Oct)
@@ -15104,8 +15130,8 @@ function sopOpen() {
     $('finish').disabled = false;
     const edited = !!R.edit && !R.resume;
     // an extra scouting: sent as it is — only a word about the sections left empty this time
-    const empty = X ? SC_TABS.filter(([k]) => !photos.some(p => p.section === k)).map(([, l]) => l.toLowerCase()) : [];
-    showToast(X ? 'Sent ✓ — added to today\'s report' + (sc.outcome === 'nok' ? ', the manager is told' : '') + (empty.length && empty.length < 3 ? ` · no ${empty.join(', no ')} this time` : '')
+    const empty = X ? SC_TABS.filter(([k]) => k !== 'trap' && !photos.some(p => p.section === k)).map(([, l]) => l.toLowerCase()) : [];
+    showToast(X ? 'Sent ✓ — added to today\'s report' + (sc.outcome === 'nok' ? ', the manager is told' : '') + (empty.length && empty.length < 2 ? ` · no ${empty.join(', no ')} this time` : '')
       : edited ? 'Changes saved ✓' : sc.outcome === 'nok' ? 'Saved — not OK, the manager is told' : 'Scouting done ✓', sc.outcome === 'nok' ? 'error' : 'success');
     R.sentOk = true;
     if (run === R) backFromRun();        // back to the day's zones (0.11.67)
@@ -15386,9 +15412,8 @@ function sopOpen() {
     const counts = el('div', 'fb-trap-counts hidden');
     const totalIn = el('input', 'fb-num'); totalIn.type = 'number'; totalIn.min = '0'; totalIn.step = '1';
     totalIn.setAttribute('aria-label', 'Insects on trap ' + t.code);
-    const algoNote = el('span', 'fb-chip', '');
     const line = el('div', 'fb-actions');
-    line.append(el('span', 'fb-trap-lbl', 'Insects'), totalIn, algoNote);
+    line.append(el('span', 'fb-trap-lbl', 'Insects'), totalIn);
     counts.append(line);
     const sizes = el('div', 'fb-meta');
     counts.append(sizes);
@@ -15405,34 +15430,24 @@ function sopOpen() {
     totalIn.oninput = () => {
       const n = parseInt(totalIn.value, 10);
       state.total = isNaN(n) ? null : n;
-      state.corrected = state.algo_total != null && state.total !== state.algo_total;
-      algoNote.textContent = state.algo_total != null ? (state.corrected ? `phone said ${state.algo_total}` : 'counted by the phone') : '';
+      state.corrected = state.total != null;          // the person's own count (0260: the phone sends none of its own)
       paintLevel();
       saveTrapDraft();
     };
 
-    // a shrunk canvas of the trap, from the in-app camera or a picked file
+    // a shrunk canvas of the trap, from the in-app camera or a picked file. The phone does not count it (0260, owner
+    // 23 Oct 2026: "why we want to have the phone counting? we can remove it to avoid confusion"): the person types it
     const gotCanvas = async canvas => {
-      status.textContent = 'counting…';
       try {
         state.photo_data = shrinkCanvas(canvas, 640, 0.6);
         img.src = state.photo_data; img.style.display = '';
-        await saveTrapDraft();                                   // the photo is safe before the count
-        await new Promise(r => setTimeout(r, 40));               // let it paint first
-        const r = countInsects(canvas, t);
-        state.counts = r.counts; state.algo_total = r.total; state.total = r.total;
-        state.algorithm = r.algorithm; state.confidence = r.confidence; state.corrected = false;
-        totalIn.value = String(r.total);
-        algoNote.textContent = 'counted by the phone';
-        sizes.textContent = dgSizesWords(r.counts) +
-          (r.confidence < 0.4 ? ' · the yellow card was hard to find: check the number' : '');
-        counts.classList.remove('hidden');
+        Object.assign(state, { counts: null, algo_total: null, algorithm: null, confidence: null });
       } catch (e) {
-        console.warn('count failed', e);
+        console.warn('photo failed', e);
         state.photo_data = state.photo_data || null;
-        counts.classList.remove('hidden');
-        sizes.textContent = 'The phone could not count this one — type the number.';
       }
+      counts.classList.remove('hidden');
+      sizes.textContent = 'Type the number of insects you count on the card.';
       paintLevel();
       saveTrapDraft();
     };
@@ -15483,9 +15498,7 @@ function sopOpen() {
       if (state.total != null) totalIn.value = String(state.total);
       rep.setAttribute('aria-pressed', String(!!state.replaced));
       note.value = state.notes || '';
-      algoNote.textContent = state.algo_total != null ? (state.corrected ? `phone said ${state.algo_total}` : 'counted by the phone') : '';
-      const c = state.counts || {};
-      sizes.textContent = state.algo_total != null ? dgSizesWords(c) : '';
+      sizes.textContent = state.total == null ? 'Type the number of insects you count on the card.' : '';
       counts.classList.remove('hidden');
       paintLevel();
     }
@@ -16601,8 +16614,8 @@ function sopOpen() {
       // IPM readings, on the first run only (a phone-grouped round is one zone anyway)
       ...(run.traps && !i ? { traps: [...run.traps.values()].filter(x => x.photo_data != null).map(x => ({
         trap_id: x.trap_id, code: x.code, photo_data: x.photo_data, photo_path: x.photo_path || null,
-        counts: x.counts || {}, total: x.total ?? 0,
-        algo_total: x.algo_total, algorithm: x.algorithm, confidence: x.confidence, corrected: x.corrected,
+        // the count typed by the person: the phone sends none of its own (0260)
+        total: x.total ?? 0, corrected: true,
         // the old round has no Risk menu: a comment goes up yellow, the same rule as a comment whose risk was never chosen
         pest: x.pest || null, replaced: x.replaced, notes: x.notes || null, note_level: noteLevelOf({ note: x.notes, note_level: x.note_level }), read_at: finished })) } : {}),
       // the scouting photos, on the first run only (0096)
@@ -16638,10 +16651,10 @@ function sopOpen() {
   // and the scouting drafts — photos taken in a scouting that was never finished, or added to a done one and left with
   // Back, which nothing sent until Finish. The button sends the outbox whatever the connection (the Wi-Fi-only choice is
   // lifted for this once) and, for every scouting draft, the report as it stands (0.11.88, owner: "send all the daily
-  // report by the top button also if not finished yet"): its plant photos and every trap side that has its position and
-  // a count, on the run the task already has (nothing of it is replaced — no answers, no OK / not OK) or on a run kept
-  // `partial` that Finish completes later (the draft remembers its id). A trap count goes as the phone counted it or as
-  // the person corrected it so far. Other unfinished checklists are not sent: the result says how many stayed.
+  // report by the top button also if not finished yet"): its plant photos, on the run the task already has (nothing of
+  // it is replaced — no answers, no OK / not OK) or on a run kept `partial` that Finish completes later (the draft
+  // remembers its id). A trap photo of a round is not sent (0260: the traps are read in Digital scouting). Other
+  // unfinished checklists are not sent: the result says how many stayed.
   // Force send says what it is before it runs (0.11.107, owner: "change the sending in force send, with a message to
   // advise"): the normal way is Finish inside a task; this one sends whatever the phone holds, complete or not
   function askForce() {
@@ -16697,8 +16710,10 @@ function sopOpen() {
         // the trap sides taken on this phone and not sent yet: [trap, side key, side]
         const sidesAll = photos.filter(q => q.section === 'trap').flatMap(q => Object.entries(q.sides || {})
           .filter(([, S]) => S && S.full instanceof Blob && !S.sent).map(([k, S]) => [q, k, S]));
-        const sides = sidesAll.filter(([q, , S]) => q.code && S.total != null);
-        const trapsLeft = sidesAll.length - sides.length;
+        // none is sent any more (0260): the traps are read in Digital scouting, where the AI counts the card — a trap photo
+        // of a round of before carries the phone's own count
+        const sides = [];
+        const trapsLeft = sidesAll.length;
         // its task left the list (cancelled, replanned, older than a week): the photos still go (0.11.90, owner: "how to
         // recover these pics") — on that task when the server still has it, else on a run with no task, which Naked Heart
         // shows under the day's zones by the position written on each photo
@@ -16751,12 +16766,12 @@ function sopOpen() {
             say(`${name}: ${what} sent${noScale.length ? ` (${noScale.length} growth without the scale card: no sizes)` : ''}${done ? '' : ' — the report is in, not finished: Finish still closes the task'}.`);
           } catch (e) { say(`${name}: ${go.length + sides.length} photo${go.length + sides.length === 1 ? '' : 's'} not sent — ${String(e.message || e).replace(/^\d+ /, '').slice(0, 110)}`, true); }
         }
-        // a trap photo with no position or no count cannot be filed as a reading: it is completed in its zone, or removed
-        if (trapsLeft) cant(`${name}: ${trapsLeft} trap photo${trapsLeft === 1 ? '' : 's'} cannot be sent — no position written on the card, or no count.`, async () => {
+        // a trap photo of the round is not sent (0260): it is removed, and the trap read again in Digital scouting
+        if (trapsLeft) cant(`${name}: ${trapsLeft} trap photo${trapsLeft === 1 ? '' : 's'} cannot be sent — traps are read in Digital scouting now.`, async () => {
           const dr = await getKV(row.id);
           if (!dr) return;
           (dr.photos || []).forEach(q => { if (q.section === 'trap') Object.entries(q.sides || {}).forEach(([k, S]) => {
-            if (S && !S.sent && !(q.code && S.total != null)) delete q.sides[k]; }); });
+            if (S && !S.sent) delete q.sides[k]; }); });
           dr.photos = (dr.photos || []).filter(q => q.section !== 'trap' || Object.keys(q.sides || {}).length);
           await setKV(row.id, dr);
         });
