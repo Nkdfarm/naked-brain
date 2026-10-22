@@ -878,16 +878,20 @@
     .dg-foldbox[hidden] { display: none; }
     .dg-item .dg-img { width: 72px; height: 72px; }
     .dg-item.tap { cursor: pointer; }
-    .dg-tags { display:flex; flex-wrap: wrap; gap: 4px; min-width: 0; }
-    .dg-tag { display:inline-flex; align-items:center; gap: 4px; max-width: 100%; min-width: 0; font-size: 11px; font-weight: 650; line-height: 1.3;
-      padding: 2px 7px; border-radius: var(--radius-full); border: 1px solid transparent; }
-    .dg-tag.ai { border-style: dashed; }
-    .dg-tag.r-green { background: var(--success-bg); color: var(--success); border-color: var(--success); }
-    .dg-tag.r-yellow { background: var(--warning-bg); color: var(--warning); border-color: var(--warning); }
-    .dg-tag.r-red { background: var(--error-bg); color: var(--error); border-color: var(--error); }
-    .dg-tag.note { color: var(--text); }
-    .dg-tag .fb-face { width: 1.3em; height: 1.3em; vertical-align: 0; }
-    .dg-tag-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+    .dg-tags { display:flex; flex-direction: column; gap: 4px; min-width: 0; }
+    /* a note, a person's or the AI's, as one block — Naked Heart's (viewer.js noteChip / aiNote, 0.7.273): the risk colour
+       as the left edge and the ground, the face inside on the left (the robot's for the AI), the words in ink */
+    .dg-block { display:flex; align-items:flex-start; gap: 6px; width: 100%; box-sizing: border-box; min-width: 0; padding: 5px 9px 5px 6px;
+      border-radius: 3px 10px 10px 10px; border-left: 4px solid var(--border); background: var(--surface-offset);
+      font-size: 12px; font-weight: 500; line-height: 1.4; }
+    .dg-block.r-green { border-left-color: var(--success); background: var(--success-bg); }
+    .dg-block.r-yellow { border-left-color: var(--warning); background: var(--warning-bg); }
+    .dg-block.r-red { border-left-color: var(--error); background: var(--error-bg); }
+    .dg-block > .fb-face, .dg-block > .dg-init, .dg-block > .dg-g1 { width: 18px; height: 18px; flex: none; vertical-align: 0; font-size: 8px; }
+    .dg-block-text { flex: 1; min-width: 0; color: var(--text); white-space: pre-wrap; overflow-wrap: anywhere; padding-top: 1px; }
+    .dg-block-text.clamp { display:-webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; white-space: normal; }
+    .dg-g1 { display:inline-block; border-radius: 50%; overflow: hidden; background: #e3f6fa; box-shadow: inset 0 0 0 1px rgba(27,191,168,.45); }
+    .dg-g1 svg { width: 100%; height: 100%; display: block; }
     .dg-social { font-size: var(--text-xs); font-weight: 600; color: var(--text-muted); }
     .dg-post { display:flex; flex-direction: column; gap: var(--space-2); }
     .dg-post-img { display:block; width: 100%; max-height: 55vh; object-fit: contain; border-radius: var(--radius-md); background: var(--surface-offset); cursor: zoom-in; }
@@ -902,15 +906,14 @@
     .dg-msg { display:flex; flex-direction: column; gap: 3px; min-width: 0; }
     .dg-msg.reply { margin-left: 26px; }
     .dg-msg.sending { opacity: .75; }
-    .dg-msg-head { display:flex; align-items: center; gap: 6px; font-size: var(--text-xs); }
-    .dg-msg-head .fb-meta { margin-top: 0; }
     .dg-init { display:inline-flex; align-items:center; justify-content:center; flex: none; width: 1.6em; height: 1.6em; border-radius: 50%;
       font-size: 10px; font-weight: 800; background: var(--surface-offset); color: var(--text); }
-    .dg-init.ai { background: var(--accent-soft); color: var(--accent); border: 1px dashed var(--accent); }
-    .dg-bubble { font-size: var(--text-sm); padding: 7px 10px; border-radius: var(--radius-md); background: var(--surface-offset);
-      border-left: 4px solid var(--border); white-space: pre-wrap; overflow-wrap: anywhere; }
-    .dg-bubble.r-green { border-left-color: var(--success); } .dg-bubble.r-yellow { border-left-color: var(--warning); } .dg-bubble.r-red { border-left-color: var(--error); }
-    .dg-msg.ai .dg-bubble { border-left: 3px dashed var(--accent); background: var(--accent-soft); }
+    /* the conversation in the same blocks: a comment in its risk colour, "Name · time" on top; the AI's answer indented
+       under it with the accent edge, as Naked Heart's .vw-reply */
+    .dg-msg .dg-block { font-size: var(--text-sm); padding: 7px 10px 7px 7px; }
+    .dg-msg .dg-block > .fb-face, .dg-msg .dg-block > .dg-init, .dg-msg .dg-block > .dg-g1 { width: 22px; height: 22px; font-size: 9px; }
+    .dg-msg-who { display:block; font-size: var(--text-xs); font-weight: 650; color: var(--text-muted); white-space: normal; }
+    .dg-msg.ai .dg-block { border-left-color: var(--accent); background: var(--surface-offset); }
     .dg-msg-acts { display:flex; flex-wrap: wrap; align-items: center; gap: 14px; padding-left: 2px; }
     .dg-msg-acts .fb-link:disabled { opacity: .5; }
     .dg-tagline { font-size: var(--text-xs); color: var(--accent); font-weight: 650; }
@@ -934,7 +937,7 @@
     .dg-post-verified { display:flex; flex-direction: column; gap: 4px; padding: 8px 10px; border-left: 3px solid var(--success); background: var(--success-bg); border-radius: 6px; }
     .dg-post-verified.r-yellow { border-left-color: var(--warning); } .dg-post-verified.r-red { border-left-color: var(--error); }
     .dg-post-verified .fb-sec { color: var(--success); }
-    .dg-msg.verified .dg-bubble { box-shadow: inset 0 0 0 1.5px var(--success); }
+    .dg-msg.verified .dg-block { box-shadow: inset 0 0 0 1.5px var(--success); }
     .dg-vtag { color: var(--success); }
     .dg-select { width: 100%; margin-bottom: var(--space-2); }
     .dg-cases { display:flex; flex-direction: column; gap: 6px; margin: var(--space-2) 0; }
@@ -1393,7 +1396,7 @@
   }
 
   // ─── VERSION CHECK ────────────────────────────────────────
-  const CURRENT_VERSION = '0.11.135';
+  const CURRENT_VERSION = '0.11.136';
   let updateAvailable = false;
 
   let lastSaid = null, notYetAt = 0;
@@ -1585,6 +1588,7 @@
   // Same idea as the console's Settings › Version log (release_note): one line per
   // release, what it changed, in plain words. Add the new release on top with each bump.
   const VERSION_LOG = [
+    ['0.11.136', '2026-10-22', 'Notes in the same blocks as Naked Heart', 'The AI notes and the team notes now look the same as in Naked Heart: one block each, in its risk colour (green no risk, yellow low, red high) as a coloured edge, with the face of the person on the left, or the robot face for the AI. Under each photo, the AI blocks and the person note; on the photo page, the AI reading and every comment in the same blocks, the AI answers set in under the comment they answer.'],
     ['0.11.135', '2026-10-22', 'Traps counted without the tiny insects, zoom after the photo, Gallery in the camera', 'Traps: the count is now small, medium and large insects; the tiny ones (under 1.5 mm, thrips size) are still measured and shown as not counted, to see later if they can be followed. Every past reading was recounted the same way. After a trap or plant photo, Zoom in shows it full size to check it up close before it is saved. The camera has a Gallery button: take the photos first with the phone\'s own camera app, then pick them here; each keeps the time it was taken.'],
     ['0.11.134', '2026-10-22', 'The photo feed and the verified diagnosis', 'Digital scouting has a Feed: switch Zones | Feed to see the farm\'s photos and trap photos of the last 7 or 30 days, as posts, in four orders: Needs attention (the highest risk first), Newest, Disagreements (someone disagreed with the AI, or the team\'s colour is not the AI\'s) and Mine. Each card has a coloured edge for its risk; More shows the next 20. Without signal the feed shows what was last read. A farm manager or the agronomist can mark one comment as the verified diagnosis: it shows under the AI\'s reading and on the cards, and gives the photo its colour. From a photo, everyone except workers can Open a case or Add to a case.'],
     ['0.11.133', '2026-10-22', 'A photo as a post', 'Digital scouting, more compact: a zone\'s traps are one row of chips (green once photographed, a tap takes the photo), with the trap photos folded. Under each photo only the small colour blocks of the AI and the team, and a line with the comments and how many agree or disagree with the AI. A tap opens the photo as a post: the AI\'s reading in full, Agree or Disagree (the same again takes it back, Disagree asks why), and the conversation. Write a comment; under your own comment choose Ask the AI (a short answer, kept under your comment) or Ask someone. Nothing goes to the AI unless you ask.'],
@@ -9324,7 +9328,7 @@ function sopOpen() {
     if (kind === 'trap') return (Array.isArray(p.species) ? p.species : []).slice(0, 2)
       .map(x => ({ text: `AI: ${x.common || x.name || 'insect'}${x.count != null ? ' ' + x.count : ''}`, level: x.beneficial ? 'green' : 'yellow' }));
     const all = (p.ai && Array.isArray(p.ai.findings)) ? p.ai.findings : [];
-    if (!all.length) return p.ai && p.ai.healthy === false ? [] : [{ text: 'AI: healthy', level: 'green' }];
+    if (!all.length) return p.ai && p.ai.healthy === false ? [] : [{ text: 'AI: Healthy', level: 'green' }];
     const sevWord = x => x.severity != null && DG_SEV[x.severity] ? ' · ' + DG_SEV[x.severity] : '';
     return all.map((x, i) => [x, i]).sort((a, b) => (Number(b[0].severity ?? 1) - Number(a[0].severity ?? 1)) || a[1] - b[1]).slice(0, 2)
       .map(([x]) => ({ text: dgShortName(x.name || x.code) + sevWord(x), level: dgRisk(x.severity, x.kind), title: `AI: ${x.name || x.code}${sevWord(x)}` }));
@@ -10016,18 +10020,35 @@ function sopOpen() {
     if (kind === 'trap') return [`Trap ${shortCode(it.code)}`, it.side, `${it.total ?? '?'} insect${it.total === 1 ? '' : 's'}`, p.reference ? 'reference photo' : null].filter(Boolean).join(' · ');
     return [it.section === 'growth' ? 'Growth' : 'Plant health', dgPartWord(it.part), (it.measures || []).map(m => `${m.what} ${m.mm} mm`).join(', ') || null].filter(Boolean).join(' · ');
   }
-  // the small blocks: the AI's (dashed) and the person's note in its risk colour, on one line
+  // the AI's face: the G1's, as on Naked Heart (ui.js G1_SVG)
+  const DG_G1_SVG = '<svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" fill="#e3f6fa"/>'
+    + '<path d="M4 66C6 54 18 50.5 32 50.5S58 54 60 66z" fill="#7d8b9b"/><path d="M24 46h16v9H24z" fill="#0b0e13"/>'
+    + '<path d="M32 5.5c12.5 0 20.5 8.5 20.5 21 0 13-7.5 26-20.5 28.5C19 53.5 11.5 40.5 11.5 26.5 11.5 14 19.5 5.5 32 5.5z" fill="#0b0e13"/>'
+    + '<path d="M19 15.5Q32 9.5 45 15.5C54 26 44 48 32 49.5 20 48 10 26 19 15.5z" fill="none" stroke="#3fe0ff" stroke-opacity=".28" stroke-width="5" stroke-linejoin="round"/>'
+    + '<path d="M19 15.5Q32 9.5 45 15.5C54 26 44 48 32 49.5 20 48 10 26 19 15.5z" fill="#05070a" stroke="#4fe6ff" stroke-width="2" stroke-linejoin="round"/>'
+    + '<circle cx="26" cy="19" r="1.1" fill="#1f7f99"/><circle cx="32" cy="18.3" r="1.1" fill="#1f7f99"/><circle cx="38" cy="19" r="1.1" fill="#1f7f99"/>'
+    + '<path d="M22.5 25.5h19" fill="none" stroke="#9ff3ff" stroke-width="2.6" stroke-linecap="round"/>'
+    + '<circle cx="32" cy="32.5" r="3.2" fill="#1a232f" stroke="#536478" stroke-width=".8"/><circle cx="32" cy="32.5" r="1.3" fill="#05070a"/>'
+    + '<circle cx="33" cy="31.5" r=".5" fill="#cfe9ff"/></svg>';
+  const dgG1Face = () => { const b = el('span', 'dg-g1'); b.innerHTML = DG_G1_SVG; b.title = 'The AI'; return b; };
+  // one note as Naked Heart's block (0.11.136, owner 22 Oct 2026: the same look as Naked Heart for the AI's and the
+  // people's notes): the risk colour, the face inside on the left, the words clamped to two lines under a picture
+  function dgBlock(level, face, words, { clamp = false, title = '' } = {}) {
+    const b = el('div', 'dg-block' + (level ? ' r-' + level : ''));
+    const t = el('span', 'dg-block-text' + (clamp ? ' clamp' : '')); t.textContent = words;
+    if (face) b.append(face);
+    b.append(t);
+    if (title) b.title = title;
+    return b;
+  }
+  // under a picture: the AI's blocks (at most two) and the person's note, one under the other
   function dgChipRow(kind, p, it) {
     const row = el('div', 'dg-tags');
-    dgAiChips(kind, p).forEach(x => { const s = el('span', 'dg-tag ai r-' + x.level, x.text); if (x.title) s.title = x.title; row.append(s); });
+    dgAiChips(kind, p).forEach(x => row.append(dgBlock(x.level, dgG1Face(), x.text.replace(/^AI: /, ''), { clamp: true, title: x.title || x.text })));
     const lv = noteLevelOf(it);
     if (lv) {
       const words = String(it.note).trim();
-      const s = el('span', 'dg-tag note r-' + lv);
-      if (p.worker_id && WORKERS.has(p.worker_id)) s.append(faceOf(p.worker_id));
-      const t = el('span', 'dg-tag-text'); t.textContent = words; s.append(t);
-      s.title = (p.by ? firstName(p.by) + ': ' : '') + words;
-      row.append(s);
+      row.append(dgBlock(lv, p.worker_id || p.by ? dgFace(p.worker_id, p.by) : null, words, { clamp: true, title: (p.by ? firstName(p.by) + ': ' : '') + words }));
     }
     return row.childNodes.length ? row : null;
   }
@@ -10130,9 +10151,9 @@ function sopOpen() {
       P.thread = t; P.sig = JSON.stringify(t); P.stale = false; DG.threads.set(P.id, t);
     } catch (e) { if (DG.post === P) P.stale = true; }
   }
-  // a face, or the first letter of the name; "AI" for the AI
+  // a face, or the first letter of the name; the G1's for the AI
   function dgFace(workerId, name, ai) {
-    if (ai) return el('span', 'dg-init ai', 'AI');
+    if (ai) return dgG1Face();
     if (workerId && WORKERS.has(workerId)) return faceOf(workerId);
     const s = el('span', 'dg-init'); s.textContent = (String(name || '').trim()[0] || '?').toUpperCase();
     return s;
@@ -10224,8 +10245,8 @@ function sopOpen() {
       const sp = Array.isArray(ai.species) ? ai.species : [];
       if (sp.length) {
         const row = el('div', 'dg-tags');
-        sp.forEach(x => { const s = el('span', 'dg-tag ai r-' + (x.beneficial ? 'green' : 'yellow')); s.textContent = `${x.common || x.name || 'insect'}${x.count != null ? ' ' + x.count : ''}`;
-                          if (x.name && x.common && x.name !== x.common) s.title = x.name; row.append(s); });
+        sp.forEach(x => row.append(dgBlock(x.beneficial ? 'green' : 'yellow', dgG1Face(), `${x.common || x.name || 'insect'}${x.count != null ? ' ' + x.count : ''}`,
+                                           { title: x.name && x.common && x.name !== x.common ? x.name : '' })));
         sec.append(row);
       }
       if (ai.total != null) sec.append(el('div', 'dg-ai-text', `About ${ai.total} insect${ai.total === 1 ? '' : 's'}.`));
@@ -10234,11 +10255,10 @@ function sopOpen() {
     } else {
       if (ai.summary) { const s = el('div', 'dg-ai-text'); s.textContent = ai.summary; sec.append(s); }
       const fs = Array.isArray(ai.findings) ? ai.findings : [];
-      if (!fs.length && ai.healthy !== false) { const row = el('div', 'dg-tags'); row.append(el('span', 'dg-tag ai r-green', 'Healthy')); sec.append(row); }
+      if (!fs.length && ai.healthy !== false) sec.append(dgBlock('green', dgG1Face(), 'Healthy'));
       fs.forEach(x => {
         const r = el('div', 'dg-finding');
-        const s = el('span', 'dg-tag ai r-' + dgRisk(x.severity, x.kind)); s.textContent = `${x.name || x.code}${x.severity != null && DG_SEV[x.severity] ? ' · ' + DG_SEV[x.severity] : ''}`;
-        r.append(s);
+        r.append(dgBlock(dgRisk(x.severity, x.kind), dgG1Face(), `${x.name || x.code}${x.severity != null && DG_SEV[x.severity] ? ' · ' + DG_SEV[x.severity] : ''}`));
         if (x.evidence) { const e = el('span', 'fb-meta'); e.textContent = x.evidence; r.append(e); }
         sec.append(r);
       });
@@ -10315,22 +10335,22 @@ function sopOpen() {
     // the verified diagnosis (0.11.134): by the photo's counts when they say one, else by the comment itself
     const verified = n.type === 'note' && !!n.id && (verifiedId ? n.id === verifiedId : !!n.verified_at);
     const m = el('div', 'dg-msg' + (isAi ? ' ai' : '') + (depth ? ' reply' : '') + (verified ? ' verified' : ''));
-    const head = el('div', 'dg-msg-head');
-    const who = el('b'); who.textContent = isAi ? 'AI' : (firstName(n.by) || 'Somebody');
-    head.append(dgFace(n.worker_id, n.by, isAi), who, el('span', 'fb-meta', dgWhen(n.at) + (n.type === 'question' ? ' · asked in Naked Heart' : '')));
-    m.append(head);
     const isNote = n.type === 'note';
     const gone = isNote && pend.some(r => r.payload.view.kind === 'note-delete' && r.payload.view.note_id === n.id);
     const editedTo = isNote ? pend.filter(r => r.payload.view.kind === 'note-edit' && r.payload.view.note_id === n.id).pop() : null;
     const words = editedTo ? editedTo.payload.view.body : (n.body || n.transcript || '');
-    const lv = isNote && NOTE_LEVELS.some(([v]) => v === n.level) ? n.level : null;
-    const b = el('div', 'dg-bubble' + (lv ? ' r-' + lv : ''));
-    if (words) b.append(document.createTextNode(words));
+    // a comment without a colour reads as yellow, as on Naked Heart; a question from its chat and an AI answer have none
+    const lv = isNote ? (NOTE_LEVELS.some(([v]) => v === n.level) ? n.level : 'yellow') : null;
+    const b = dgBlock(lv, dgFace(n.worker_id, n.by, isAi), words);
+    const t = b.lastChild;
+    const who = el('span', 'dg-msg-who');
+    who.textContent = [isAi ? 'AI' : (firstName(n.by) || 'Somebody'), dgWhen(n.at), n.type === 'question' ? 'asked in Naked Heart' : null].filter(Boolean).join(' · ');
+    t.prepend(who);
     if (n.audio_path) {
       const play = el('button', 'fb-link', '{i:play} Listen'); play.type = 'button';
       play.onclick = () => dgPlay(n.audio_path, play);
-      b.append(document.createTextNode(words ? ' ' : ''), play);
-      if (!n.transcript && n.voice_status !== 'done' && n.voice_status !== 'failed') b.append(el('span', 'dg-sending', ' writing it down…'));
+      t.append(document.createTextNode(words ? ' ' : ''), play);
+      if (!n.transcript && n.voice_status !== 'done' && n.voice_status !== 'failed') t.append(el('span', 'dg-sending', ' writing it down…'));
     }
     m.append(b);
     if (!isNote) return m;
@@ -10374,11 +10394,11 @@ function sopOpen() {
   function dgPendingMsg(r) {
     const v = r.payload.view;
     const m = el('div', 'dg-msg sending');
-    const head = el('div', 'dg-msg-head');
-    head.append(el('b', null, 'You'), el('span', 'dg-sending' + (r.dead ? ' bad' : ''), r.dead ? 'could not be sent' : 'sending'));
-    const b = el('div', 'dg-bubble' + (v.level ? ' r-' + v.level : ''));
-    b.textContent = v.body || (v.audio ? 'Voice note' : '');
-    m.append(head, b);
+    const b = dgBlock(v.level || 'yellow', dgFace(null, 'You'), v.body || (v.audio ? 'Voice note' : ''));
+    const who = el('span', 'dg-msg-who', 'You · ');
+    who.append(el('span', 'dg-sending' + (r.dead ? ' bad' : ''), r.dead ? 'could not be sent' : 'sending'));
+    b.lastChild.prepend(who);
+    m.append(b);
     return m;
   }
   // Agree / Disagree: the same again takes the vote back; Disagree asks why (optional). Through the outbox: a later vote
