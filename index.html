@@ -1396,7 +1396,7 @@
   }
 
   // ─── VERSION CHECK ────────────────────────────────────────
-  const CURRENT_VERSION = '0.11.137';
+  const CURRENT_VERSION = '0.11.138';
   let updateAvailable = false;
 
   let lastSaid = null, notYetAt = 0;
@@ -1588,6 +1588,7 @@
   // Same idea as the console's Settings › Version log (release_note): one line per
   // release, what it changed, in plain words. Add the new release on top with each bump.
   const VERSION_LOG = [
+    ['0.11.138', '2026-10-23', 'Traps counted by the AI', 'Traps are now counted by the AI. The phone crops the card from each trap photo and sends it with the photo; a few seconds later the AI\'s count replaces the phone\'s first guess (Haiku counts, Opus counts again on a crowded card). A number you type yourself always stands. Trap photos say where the figure comes from: AI, counting or typed. The question "fewer than this card already had, is it a new card?" is gone: it came from the phone\'s own count, which read glare as insects. New card and Replaced are now buttons you always see on the trap sheet.'],
     ['0.11.137', '2026-10-22', 'The AI notes in one block, the most serious first', 'Under each photo the AI now writes one block instead of several: every finding in it, the most serious first, and the block in the colour of the worst one (red high risk, yellow low, green none). On a trap, one block with all the insects, the pests first and the most counted first. On the photo page the AI reading lists its findings in the same order.'],
     ['0.11.136', '2026-10-22', 'Notes in the same blocks as Naked Heart', 'The AI notes and the team notes now look the same as in Naked Heart: one block each, in its risk colour (green no risk, yellow low, red high) as a coloured edge, with the face of the person on the left, or the robot face for the AI. Under each photo, the AI blocks and the person note; on the photo page, the AI reading and every comment in the same blocks, the AI answers set in under the comment they answer.'],
     ['0.11.135', '2026-10-22', 'Traps counted without the tiny insects, zoom after the photo, Gallery in the camera', 'Traps: the count is now small, medium and large insects; the tiny ones (under 1.5 mm, thrips size) are still measured and shown as not counted, to see later if they can be followed. Every past reading was recounted the same way. After a trap or plant photo, Zoom in shows it full size to check it up close before it is saved. The camera has a Gallery button: take the photos first with the phone\'s own camera app, then pick them here; each keeps the time it was taken.'],
@@ -10020,7 +10021,7 @@ function sopOpen() {
     const removing = mine.some(r => r.payload.view.kind === 'remove');
     const edit = mine.filter(r => r.payload.view.kind === 'edit').map(r => r.payload.view.fields || {}).reduce((a, x) => ({ ...a, ...x }), {});
     const it = { ...p, ...('section' in edit ? { section: edit.section } : {}), ...('part' in edit ? { part: edit.part } : {}),
-                 ...('note' in edit ? { note: edit.note, note_level: edit.note_level } : {}), ...('total' in edit ? { total: edit.total } : {}) };
+                 ...('note' in edit ? { note: edit.note, note_level: edit.note_level } : {}), ...('total' in edit ? { total: edit.total, corrected: true } : {}) };
     return { it, removing, edit };
   }
   const dgPendVote = mine => { const r = mine.filter(x => x.payload.view.kind === 'vote' && !x.dead).sort((a, b) => (a.at || 0) - (b.at || 0)).pop(); return r ? r.payload.view.vote : undefined; };
@@ -10029,8 +10030,13 @@ function sopOpen() {
   const dgHm = iso => iso ? new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
   // a time on the page's own day as 10:25, any other with its date
   const dgWhen = iso => !iso ? '' : (dgDayOf(iso) === DG.day ? '' : new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) + ' ') + dgHm(iso);
+  // where a trap's figure comes from (counting v5, 0.11.138): the AI's count, the AI still counting (the figure is the
+  // phone's first guess until then), or typed by a person — nothing said for an older reading or one the AI could not count
+  const dgCountWord = it => it.corrected ? 'typed' : it.ai_count_status === 'done' ? 'AI'
+    : it.ai_count_status === 'queued' || it.ai_count_status === 'running' ? 'counting…' : '';
+  const dgTrapFigure = it => { const w = dgCountWord(it); return `${it.total ?? '?'} insect${it.total === 1 ? '' : 's'}${w ? ` (${w})` : ''}`; };
   function dgItemTitle(kind, it, p) {
-    if (kind === 'trap') return [`Trap ${shortCode(it.code)}`, it.side, `${it.total ?? '?'} insect${it.total === 1 ? '' : 's'}`, p.reference ? 'reference photo' : null].filter(Boolean).join(' · ');
+    if (kind === 'trap') return [`Trap ${shortCode(it.code)}`, it.side, dgTrapFigure(it), p.reference ? 'reference photo' : null].filter(Boolean).join(' · ');
     return [it.section === 'growth' ? 'Growth' : 'Plant health', dgPartWord(it.part), (it.measures || []).map(m => `${m.what} ${m.mm} mm`).join(', ') || null].filter(Boolean).join(' · ');
   }
   // the AI's face: the G1's, as on Naked Heart (ui.js G1_SVG)
@@ -10218,7 +10224,7 @@ function sopOpen() {
                                  : [noSection ? null : it.section === 'growth' ? 'Growth' : 'Plant health', dgPartWord(it.part)].filter(Boolean).join(' · ');
     const head = el('div', 'dg-post-head');
     head.append(el('b', null, [p.by ? firstName(p.by) : null, zone, what, dgWhen(p.taken_at)].filter(Boolean).join(' · ')));
-    const more = kind === 'trap' ? [`${it.total ?? '?'} insect${it.total === 1 ? '' : 's'}`, p.reference ? 'reference photo' : null]
+    const more = kind === 'trap' ? [dgTrapFigure(it), p.reference ? 'reference photo' : null]
                                  : [(it.measures || []).map(m => `${m.what} ${m.mm} mm`).join(', ') || null];
     more.push(removing ? 'deleting — sending' : Object.keys(edit).length ? 'change sending' : null);
     if (more.some(Boolean)) head.append(el('div', 'fb-meta', more.filter(Boolean).join(' · ')));
@@ -10709,28 +10715,54 @@ function sopOpen() {
   // when a photo was taken: a file from the gallery says it (lastModified) — kept when it is of the last day and a half;
   // the in-app camera's still is now
   const dgTakenAt = f => { const t = Number(f && f.lastModified); return t && t <= Date.now() + 6e4 && Date.now() - t < 36 * 36e5 ? new Date(t).toISOString() : new Date().toISOString(); };
+  // counting v5 (0.11.138, FarmBox 0254; owner 22–23 Oct 2026): the server's AI counts every trap photo — the card
+  // alone, cropped from the full photo, counted far better than the phone (164 photos counted by eye). The phone's
+  // count is a first guess. The card goes up beside the full photo as <photo>-card.jpg, at the size the AI reads whole:
+  // the long side at most 2576 px and at most 4784 tiles of 28 px, shrunk until both hold
+  const DG_CARD_PX = 2576, DG_CARD_TILES = 4784;
+  function dgCardSize(w, h) {
+    const tiles = (a, b) => Math.ceil(a / 28) * Math.ceil(b / 28);
+    let k = Math.min(1, DG_CARD_PX / Math.max(w, h), Math.sqrt(DG_CARD_TILES * 784 / Math.max(1, w * h)));
+    let W = Math.max(1, Math.round(w * k)), H = Math.max(1, Math.round(h * k));
+    while (tiles(W, H) > DG_CARD_TILES) { k *= 0.99; W = Math.max(1, Math.round(w * k)); H = Math.max(1, Math.round(h * k)); }
+    return [W, H];
+  }
+  const dgCardPath = path => String(path).replace(/\.jpe?g$/i, '') + '-card.jpg';
+  // the card, ~2 % round it, as a JPEG; no card found: none (the server then counts the whole photo)
+  async function dgCardBlob(canvas, box) {
+    if (!Array.isArray(box) || box.length !== 4) return null;
+    const [x0, y0, x1, y1] = box, mx = 0.02 * (x1 - x0), my = 0.02 * (y1 - y0);
+    const sx = Math.max(0, Math.floor(x0 - mx)), sy = Math.max(0, Math.floor(y0 - my));
+    const sw = Math.min(canvas.width, Math.ceil(x1 + mx)) - sx, sh = Math.min(canvas.height, Math.ceil(y1 + my)) - sy;
+    if (sw < 28 || sh < 28) return null;
+    const [W, H] = dgCardSize(sw, sh);
+    const c = document.createElement('canvas'); c.width = W; c.height = H;
+    let blob = null;
+    try {
+      c.getContext('2d').drawImage(canvas, sx, sy, sw, sh, 0, 0, W, H);
+      blob = await new Promise(res => c.toBlob(res, 'image/jpeg', 0.92));
+    } catch (e) { blob = null; }
+    freeCanvas(c);                                // given back at once: the camera opens next for the other side
+    return blob;
+  }
   async function dgSide(file, colour) {
     let big;
     try { big = await shrinkPhoto(file, FULL_PX, null); } catch (e) { return null; }
     const S = { taken_at: dgTakenAt(file), full_w: big.canvas.width, thumb: shrinkCanvas(big.canvas, 640, 0.6) };
     S.full = await new Promise(res => big.canvas.toBlob(res, 'image/jpeg', FULL_Q));
+    let box = null;
     try {
       const r = countInsects(big.canvas, { colour: colour || cardColour(scaleCanvas(big.canvas, 800)) });
       Object.assign(S, { counts: r.counts, total: r.total, algo_total: r.total, algorithm: r.algorithm, confidence: r.confidence, corrected: false });
+      box = r.card_box || null;
       const lc = lightCheck(r);
       if (r.partial) S.check = 'part of the card is outside the photo — retake it with the whole card';
       else if (lc) S.check = lc;
     } catch (e) { S.total = null; }
+    // no card found: no crop — the AI's count on a whole photo is kept apart and does not set the figure (0256)
+    S.card = box ? await dgCardBlob(big.canvas, box) : null;
     freeCanvas(big.canvas);
     return S.full ? S : null;
-  }
-  // the card's last count for that side, from the sync — not when it is a reading of today's own report
-  async function dgLastSide(t, side, ru) {
-    let st = null; try { st = (await all('traps')).find(x => x.id === t.trap_id) || null; } catch (e) { st = null; }
-    const last = st?.last_sides?.[side || ''];
-    if (!last || last.total == null || !last.at || last.replaced || Date.now() - new Date(last.at) > 21 * 864e5) return null;
-    const own = (ru?.traps || []).some(r => r.code === t.code && (r.side || null) === (side || null) && new Date(r.taken_at).getTime() === new Date(last.at).getTime());
-    return own ? null : last;
   }
   async function dgReadTrap(farmId, u, ru, t) {
     let sides = t.colour === 'both' ? ['yellow', 'blue'].filter(s => !t[s]) : [null];
@@ -10757,22 +10789,14 @@ function sopOpen() {
       if (out !== 'saved') return;
     }
   }
-  // one side: its count (correct it if wrong), the card's history said, the reference picture by itself on a 0, then sent
+  // one side: the phone's first guess (a number typed stands as the person's own), New card or Replaced if the person
+  // says so, then sent. Counting v5 (0.11.138): no more question from the phone's count against the card's history —
+  // "fewer than this card already had … a new card?", "Keep N" and the reference picture on a 0 came from a count
+  // that reads glare as insects and misses gnats, and a wrong answer spoilt the card's history; the server counts the
+  // card with the AI and works out the rates
   async function dgTrapSheet(farmId, u, ru, t, side, S) {
     const D = dgFarmData(farmId).dg;
-    const last = await dgLastSide(t, side, ru);
-    const st = { total: S.total, reference: false, refUndone: false, new_card: false, lower_ok: false, replaced: false, note: '', note_level: null };
-    const fewer = () => {
-      if (!last || st.total == null) return null;
-      const high = last.high ?? last.total;
-      return (high - st.total >= 3 && st.total < high * 0.95) ? { high, hard: st.total < high * 0.6, at: new Date(last.at) } : null;
-    };
-    // the same rule as the round (0.11.129): a 0 on a card that had insects is a reference picture, not counted
-    const auto = () => {
-      const want = st.total === 0 && !st.new_card && !st.replaced && !st.lower_ok && !!fewer();
-      if (st.reference && !want) st.reference = false;
-      if (!st.reference && want && !st.refUndone) st.reference = true;
-    };
+    const st = { total: S.total, new_card: false, replaced: false, note: '', note_level: null };
     const earlier = (ru?.traps || []).filter(r => r.code === t.code && (r.side || null) === (side || null));
     return dgSheet(`Trap ${dgTrapName(t)}${side ? ' · ' + side + ' side' : ''}`, (card, done) => {
       const img = el('img', 'dg-img big'); img.src = S.thumb; img.alt = '';
@@ -10781,44 +10805,24 @@ function sopOpen() {
       if (S.check) card.append(el('span', 'fb-chip late', S.check));
       const cnt = el('input', 'fb-num'); cnt.type = 'number'; cnt.min = '0'; cnt.step = '1'; cnt.value = st.total == null ? '' : String(st.total);
       cnt.setAttribute('aria-label', 'Insects on this side');
-      const crow = el('div', 'fb-actions'); crow.append(el('span', null, 'Insects'), cnt, el('span', 'fb-chip', S.algo_total != null ? `phone counted ${S.algo_total}` : 'type the count'));
+      const crow = el('div', 'fb-actions'); crow.append(el('span', null, 'Insects'), cnt);
       card.append(crow);
+      card.append(el('div', 'fb-meta dg-guess', S.algo_total != null
+        ? `Phone's first guess: ${S.algo_total} — the AI counts the card a few seconds after it is sent. Change the number only if you counted the card yourself: yours then stands.`
+        : 'The phone could not count this photo: type the number of insects.'));
       if (S.counts && S.algo_total != null) card.append(el('div', 'fb-meta', dgSizesWords(S.counts)));
-      const box = el('div', 'fb-sc-few');
       const btn = (l, fn, primary) => { const b = el('button', 'fb-btn' + (primary ? ' fb-btn-primary' : ''), l); b.type = 'button'; b.onclick = fn; return b; };
-      const paint = () => {
-        auto();
-        box.textContent = ''; box.className = 'fb-sc-few';
-        if (st.reference) {
-          box.classList.add('done');
-          box.append(el('span', '', 'No insect read on this photo: kept as a reference picture, not counted — the card goes on from its last count. '));
-          const k0 = btn('Keep 0', () => { st.lower_ok = true; paint(); });
-          k0.title = 'This 0 is right: the card goes on from 0 (its earlier count is set aside)';
-          const a = el('div', 'fb-actions');
-          a.append(btn('New card', () => { st.new_card = true; st.reference = false; paint(); }), btn('Retake', () => done('retake')),
-                   fewer() ? btn('Undo', () => { st.reference = false; st.refUndone = true; paint(); }) : k0);
-          box.append(a);
-          return;
-        }
-        if (st.new_card) { box.classList.add('done'); box.append(el('span', '', 'New card: every insect on it counts as new. '), btn('Undo', () => { st.new_card = false; paint(); })); return; }
-        if (st.lower_ok) { box.classList.add('done'); box.append(el('span', '', `Kept ${st.total}: the card goes on from ${st.total}. `), btn('Undo', () => { st.lower_ok = false; paint(); })); return; }
-        const f = fewer();
-        if (!f) { box.classList.add('hidden'); return; }
-        const day = f.at.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
-        box.append(el('div', 'fb-sc-few-t', f.hard ? `${st.total} insects — far fewer than the ${f.high} this card already had (last photo ${day}). Is it a new card?`
-          : `${st.total} insects — fewer than the ${f.high} this card already had (last photo ${day}). A card keeps its insects: retake it, or say what happened.`));
-        const a = el('div', 'fb-actions');
-        a.append(btn('New card', () => { st.new_card = true; paint(); }, f.hard), btn('Retake', () => done('retake'), !f.hard), btn(`Keep ${st.total}`, () => { st.lower_ok = true; paint(); }));
-        box.append(a);
+      const toggle = (l, key, title) => {
+        const b = btn(l, () => { st[key] = !st[key]; b.setAttribute('aria-pressed', String(st[key])); });
+        b.title = title; b.setAttribute('aria-pressed', 'false');
+        return b;
       };
-      cnt.oninput = () => { const n = parseInt(cnt.value, 10); st.total = isNaN(n) ? null : n; paint(); };
-      card.append(box);
-      const rep = btn('Replaced', () => { st.replaced = !st.replaced; rep.setAttribute('aria-pressed', String(st.replaced)); paint(); });
-      rep.title = 'The card was changed after this photo: the next count starts from nothing';
-      rep.setAttribute('aria-pressed', 'false');
+      cnt.oninput = () => { const n = parseInt(cnt.value, 10); st.total = isNaN(n) ? null : n; };
+      const nc = toggle('New card', 'new_card', 'A new card was put up before this photo: every insect on it counts as new');
+      const rep = toggle('Replaced', 'replaced', 'The card was changed after this photo: the next count starts from nothing');
       const note = el('input', 'fb-note'); note.type = 'text'; note.placeholder = 'Comment (optional): torn, wet, missing…';
       const nrow = el('div', 'fb-note-row'); nrow.append(note, riskMenu(st, note, () => {}));
-      const rrow = el('div', 'fb-actions'); rrow.append(rep);
+      const rrow = el('div', 'fb-actions'); rrow.append(nc, rep);
       card.append(rrow, nrow);
       let saving = false;                           // one tap saves once: a second tap made a second reading
       const save = btn('Save', async () => {
@@ -10848,18 +10852,20 @@ function sopOpen() {
           // a one-sided card is sent with no side, so it stays one-sided
           args: { p: { farm_id: farmId, client_ref: cref, trap_id: t.trap_id, code: t.code, ...(side ? { side } : {}), total: st.total,
                        counts: S.counts || {}, algo_total: S.algo_total ?? null, algorithm: S.algorithm || null, confidence: S.confidence ?? null,
-                       corrected: S.algo_total != null && st.total !== S.algo_total, photo_path: path, photo_data: S.thumb,
-                       reference: !!st.reference, new_card: !!st.new_card, replaced: !!st.replaced, lower_ok: !!st.lower_ok,
+                       // a number typed (or typed because the phone could not count) is the person's own: the AI's count is kept apart
+                       corrected: S.algo_total == null || st.total !== S.algo_total, photo_path: path, photo_data: S.thumb,
+                       reference: false, new_card: !!st.new_card, replaced: !!st.replaced, lower_ok: false,
                        notes: String(st.note || '').trim() || null, note_level: level, read_at: S.taken_at, ...(replaceId ? { replace_id: replaceId } : {}) } },
-          uploads: [{ path, blob: S.full, type: 'image/jpeg' }], chain: 'dg:' + cref,
-          view: { kind: 'trap', farm_id: farmId, unit_id: u.unit_id, trap_id: t.trap_id, code: dgTrapName(t), side, total: st.total, reference: !!st.reference,
+          // the files before the call: the full photo, and the card cropped from it for the AI (dgCardPath)
+          uploads: [{ path, blob: S.full, type: 'image/jpeg' }, ...(S.card ? [{ path: dgCardPath(path), blob: S.card, type: 'image/jpeg' }] : [])],
+          chain: 'dg:' + cref,
+          view: { kind: 'trap', farm_id: farmId, unit_id: u.unit_id, trap_id: t.trap_id, code: dgTrapName(t), side, total: st.total,
                   thumb: S.thumb, note: String(st.note || '').trim(), note_level: level }
         }).catch(e => { saving = false; save.disabled = false; throw e; });
         done('saved');
       }, true);
       const acts = el('div', 'fb-actions'); acts.append(save, btn('Retake', () => done('retake')), btn('Cancel', () => done(null)));
       card.append(acts);
-      paint();
     });
   }
   // the zone's traps to say one is not read today, or to undo that (0.11.133: the traps are chips, the link is one)
@@ -15906,7 +15912,7 @@ function sopOpen() {
       // relative to the light: the lower half of a card is often in shade
       // (a yellow card has red about as high as green, a sunlit leaf much less; a blue card is bluer than the sky)
       return blue ? (b > 80 && b > r + 35 && b > g + 10) : (r > 95 && g > 75 && r > 0.82 * g && r - b > 50 && g - b > 35); };
-    const empty = { counts: { tiny: 0, small: 0, medium: 0, large: 0 }, total: 0, blobs: [], confidence: 0, algorithm: 'blobs-v4', scale: 'none', px_per_mm: null };
+    const empty = { counts: { tiny: 0, small: 0, medium: 0, large: 0 }, total: 0, blobs: [], confidence: 0, algorithm: 'blobs-v4', scale: 'none', px_per_mm: null, card_box: null };
     // 1. the card, on a small copy
     const sm = scratch(scaleCanvas(canvas, 800), canvas), sw = sm.width, sh = sm.height;
     const sd = sm.getContext('2d').getImageData(0, 0, sw, sh).data, sIs = cardOf(sd);
@@ -15939,6 +15945,10 @@ function sopOpen() {
     };
     const [cx0, cx1] = longest(colN, 0.2), [cy0, cy1] = longest(rowN, 0.2);
     if (cx1 - cx0 < 20 || cy1 - cy0 < 20) return empty;
+    // the card's box on the canvas given (counting v5, 0.11.138): the phone crops it for the AI's count (dgCardBlob)
+    const fx = canvas.width / sw, fy = canvas.height / sh;
+    const cardBox = [Math.max(0, Math.floor(cx0 * fx)), Math.max(0, Math.floor(cy0 * fy)),
+                     Math.min(canvas.width, Math.ceil((cx1 + 1) * fx)), Math.min(canvas.height, Math.ceil((cy1 + 1) * fy))];
     // the light round the card: a card held against the sky is lit from behind
     let bgSum = 0, bgN = 0, bgBright = 0;
     for (let y = 0; y < sh; y += 3) for (let x = 0; x < sw; x += 3) {
@@ -16126,7 +16136,8 @@ function sopOpen() {
     const total = counts.small + counts.medium + counts.large;
     const area = (cx1 - cx0) * (cy1 - cy0);
     return { counts, total, blobs, confidence: Math.round(Math.min(1, tot / Math.max(1, area)) * 100) / 100, algorithm: 'blobs-v4',
-             scale, px_per_mm: Math.round(ppm * 1000) / 1000, header_px: top, grid_by: gridBy, partial: edges.length ? edges.join(',') : null, rows_seen: rowsSeen, work_px: want, lines: [H.length, V.length], light };
+             scale, px_per_mm: Math.round(ppm * 1000) / 1000, header_px: top, grid_by: gridBy, partial: edges.length ? edges.join(',') : null, rows_seen: rowsSeen, work_px: want, lines: [H.length, V.length], light,
+             card_box: cardBox };
   }
   window.fbCountInsects = countInsects;   // for support: count a canvas from the console
   function brighten(canvas, gain) {
