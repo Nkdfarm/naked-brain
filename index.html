@@ -902,11 +902,20 @@
     .dg-post-img { display:block; width: 100%; max-height: 55vh; object-fit: contain; border-radius: var(--radius-md); background: var(--surface-offset); cursor: zoom-in; }
     .dg-post-img.loading { opacity: .6; }
     .dg-post-head b { font-size: var(--text-sm); }
-    .dg-post-ai { display:flex; flex-direction: column; gap: 6px; padding: 8px 10px; border-left: 3px dashed var(--accent); background: var(--accent-soft); border-radius: 6px; }
     .dg-ai-text { font-size: var(--text-sm); white-space: pre-wrap; overflow-wrap: anywhere; }
     .dg-finding { display:flex; flex-direction: column; align-items: flex-start; gap: 2px; }
-    .dg-vote { display:flex; flex-wrap: wrap; gap: 8px; margin-top: 2px; }
-    .dg-vote .fb-btn[aria-pressed="true"] { background: var(--ink, #111); color: #fff; }
+    /* the post as a comment flow (0.11.142): the AI's whole reading opened under its one line; the reactions under every
+       comment — small emoji there only, the line icons everywhere else */
+    .dg-ai-full { display:flex; flex-direction: column; gap: 6px; margin-left: 26px; padding: 8px 10px; border-left: 3px solid var(--accent);
+      background: var(--surface-offset); border-radius: 6px; }
+    .dg-ai-full[hidden] { display: none; }
+    .dg-react { display:inline-flex; align-items: center; gap: 4px; }
+    .dg-rb { min-height: 30px; min-width: 38px; padding: 2px 8px; font: inherit; font-size: 13px; line-height: 1; border-radius: var(--radius-full);
+      border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; }
+    .dg-rb.on { border-color: var(--accent); background: var(--accent-soft); font-weight: 750; }
+    .dg-rb:disabled { opacity: .55; cursor: default; }
+    .dg-who-line { padding: 6px 2px; font-size: var(--text-sm); border-bottom: 1px solid var(--border); }
+    .dg-new { color: var(--accent); font-weight: 750; }
     .dg-thread { display:flex; flex-direction: column; gap: 10px; }
     .dg-msg { display:flex; flex-direction: column; gap: 3px; min-width: 0; }
     .dg-msg.reply { margin-left: 26px; }
@@ -1401,7 +1410,7 @@
   }
 
   // ─── VERSION CHECK ────────────────────────────────────────
-  const CURRENT_VERSION = '0.11.141';
+  const CURRENT_VERSION = '0.11.142';
   let updateAvailable = false;
 
   let lastSaid = null, notYetAt = 0;
@@ -1593,6 +1602,7 @@
   // Same idea as the console's Settings › Version log (release_note): one line per
   // release, what it changed, in plain words. Add the new release on top with each bump.
   const VERSION_LOG = [
+    ['0.11.142', '2026-10-23', 'A photo\'s comments as a social flow, with reactions', 'Open a photo: its comments read like a social post. First the AI, in one line (its findings, the most serious first, and the first thing it says), with See the full reading under it; then the note of who took the photo; then everybody\'s comments, the AI\'s answers set in under the comment they answer. Under every comment three reactions, 👍 👎 🤔 (not sure): tap one, tap it again to take it back; Who shows who gave which. They replace Agree and Disagree. Writing a comment: Post, Post + ask the AI (a short answer comes at once; More detail under it asks for the long one) or Post + ask someone. Comments added since you last opened a photo say new. The line under each photo counts the comments and the reactions.'],
     ['0.11.141', '2026-10-23', 'No phone count of traps', 'The phone no longer counts traps at all. A trap card waits for the AI\'s count and says counting until then; if the AI could not count it, it says needs a count, and anyone who may change the reading types it on the photo\'s page. The phone still checks each photo at once (the whole card in it, not too much glare) and crops the card. The older scouting round no longer takes trap photos: its Traps tab opens Digital scouting on the zone.'],
     ['0.11.140', '2026-10-23', 'The trap photo is the card', 'A trap photo is now just the card: the phone crops it and sends only that, smaller and quicker to send, and it is what both apps show. The phone no longer shows a count of its own: the trap says counting until the AI has counted the card, then the AI\'s number. If the card is not fully in the photo, or too much of it cannot be read, the phone asks for a retake; if it still cannot find the card, you can keep the photo and type the count. A number you type yourself in I counted it myself always stands.'],
     ['0.11.139', '2026-10-22', 'Traps: one row of chips, their photos behind the chip', 'Digital scouting, a zone: the trap row is only the chips. Each chip has a yellow and a blue dot for the card sides (a ring until that side is photographed, filled after) and turns from red to green once every side is in. Tap a chip: with no photo yet the camera opens; otherwise its photos open side by side, swipe from one to the other, tap one to open it, and from there photograph a side or say the trap is not read today. The Trap photos line and the read line are gone: how many traps are done is on top, Traps 4/6, green when all are done.'],
@@ -9301,7 +9311,7 @@ function sopOpen() {
   // a call on an item that is gone meanwhile (deleted, already removed): the server answers "no such …" or "… not found"
   // — finished, not retried for ever. Never for a new photo or trap reading, which is set aside instead of lost.
   const DG_ON_ITEM = ['remove_photo', 'dg_edit_item', 'dg_add_note', 'dg_edit_note', 'dg_delete_note', 'dg_ask_opinion',
-                      'dg_dismiss_request', 'dg_skip_trap', 'dg_unskip_trap', 'dg_vote'];
+                      'dg_dismiss_request', 'dg_skip_trap', 'dg_unskip_trap', 'dg_vote', 'dg_react'];
   const dgGoneAlready = (u, e) => !!u && DG_ON_ITEM.includes(u.rpc) && /no such|not found/i.test(String((e && e.message) || e || ''));
   // a unit as it will be once this phone has sent what it holds: its photos and trap sides waiting in the outbox count
   // as made (Leave would otherwise list a trap photographed without signal as missing)
@@ -9365,29 +9375,61 @@ function sopOpen() {
   }
   // the counts under a picture as this phone will have them: a vote still in the outbox replaces mine, a comment still
   // in the outbox counts
-  function dgSocialWith(s, vote, notes = 0) {
-    if (!s && vote === undefined && !notes) return s || null;
-    const x = { comments: Number(s?.comments) || 0, agree: Number(s?.agree) || 0, disagree: Number(s?.disagree) || 0, mine: s?.mine ?? null };
+  // (0.11.142, FarmBox 0261) the reactions replace Agree / Disagree: like, dislike, pensive ("not sure") on every
+  // comment, the AI's reading included. The counts read from a server before 0261 (agree / disagree / mine) read as the
+  // AI's likes and dislikes. `react`: my reaction on the AI's reading still in the outbox (null takes it back)
+  function dgSocialWith(s, react, notes = 0) {
+    if (!s && react === undefined && !notes) return s || null;
+    const n = v => Number(v) || 0;
+    const ai = s && s.ai ? s.ai : { like: n(s?.agree), dislike: n(s?.disagree), pensive: 0, mine: s?.mine === 1 ? 'like' : s?.mine === -1 ? 'dislike' : null };
+    const x = { comments: n(s?.comments) + notes, like: s && 'like' in s ? n(s.like) : n(s?.agree), dislike: s && 'dislike' in s ? n(s.dislike) : n(s?.disagree),
+                pensive: n(s?.pensive), ai: { like: n(ai.like), dislike: n(ai.dislike), pensive: n(ai.pensive), mine: ai.mine || null } };
     if (s && s.verified) x.verified = s.verified;           // the verified diagnosis rides along (0.11.134)
-    x.comments += notes;
-    if (vote !== undefined) {
-      if (x.mine === 1) x.agree = Math.max(0, x.agree - 1);
-      if (x.mine === -1) x.disagree = Math.max(0, x.disagree - 1);
-      if (vote === 1) x.agree++;
-      if (vote === -1) x.disagree++;
-      x.mine = vote || null;
+    if (react !== undefined && (react || null) !== x.ai.mine) {
+      if (x.ai.mine) { x.ai[x.ai.mine] = Math.max(0, x.ai[x.ai.mine] - 1); x[x.ai.mine] = Math.max(0, x[x.ai.mine] - 1); }
+      if (react) { x.ai[react]++; x[react]++; }
+      x.ai.mine = react || null;
+    }
+    x.agree = x.ai.like; x.disagree = x.ai.dislike; x.mine = x.ai.mine === 'like' ? 1 : x.ai.mine === 'dislike' ? -1 : null;
+    return x;
+  }
+  // the reactions, the one place with emoji (owner 23 Oct 2026: "for general design and gui I prefer the minimalist
+  // icon, for the reactions the classic small emoji are better"); the line icons stay everywhere else
+  const DG_REACTS = [['like', '👍', 'Like'], ['dislike', '👎', 'Dislike'], ['pensive', '🤔', 'Not sure']];
+  // "3 comments · 👍 2 · 👎 1 · 🤔 1"; the zero parts left out; "No comment yet" when all are zero
+  function dgSocialText(s) {
+    if (!s) return '';
+    const n = v => Number(v) || 0, c = n(s.comments);
+    const r = { like: 'like' in s ? n(s.like) : n(s.agree), dislike: 'dislike' in s ? n(s.dislike) : n(s.disagree), pensive: n(s.pensive) };
+    const parts = [c ? `${c} comment${c === 1 ? '' : 's'}` : null, ...DG_REACTS.map(([k, e]) => (r[k] ? `${e} ${r[k]}` : null))].filter(Boolean);
+    return parts.length ? parts.join(' · ') : 'No comment yet';
+  }
+  // one comment's reactions as this phone will have them: the server's, with my own still in the outbox
+  function dgReactWith(s, pending) {
+    const x = { like: Number(s?.like) || 0, dislike: Number(s?.dislike) || 0, pensive: Number(s?.pensive) || 0, mine: s?.mine || null,
+                who: Array.isArray(s?.who) ? s.who : [] };
+    if (pending !== undefined && (pending || null) !== x.mine) {
+      if (x.mine) x[x.mine] = Math.max(0, x[x.mine] - 1);
+      if (pending) x[pending]++;
+      x.mine = pending || null;
     }
     return x;
   }
-  // "3 comments · Agree 2 · Disagree 1"; the zero parts left out; "No comment yet" when all are zero
-  function dgSocialText(s) {
-    if (!s) return '';
-    const c = Number(s.comments) || 0, a = Number(s.agree) || 0, d = Number(s.disagree) || 0;
-    const parts = [c ? `${c} comment${c === 1 ? '' : 's'}` : null, a ? `Agree ${a}` : null, d ? `Disagree ${d}` : null].filter(Boolean);
-    return parts.length ? parts.join(' · ') : 'No comment yet';
+  // my reaction on one comment still in the outbox: the last one queued (null takes it back); undefined when none
+  function dgPendReact(rows, target, tid) {
+    const r = (rows || []).filter(x => x.payload.view.kind === 'react' && !x.dead && x.payload.view.target === target
+                                       && (x.payload.view.target_id || null) === (tid || null))
+      .sort((a, b) => (a.at || 0) - (b.at || 0)).pop();
+    return r ? r.payload.view.reaction : undefined;
   }
-  // my vote pressed again takes it back
-  const dgNextVote = (mine, pressed) => (mine === pressed ? 0 : pressed);
+  // my reaction pressed again takes it back
+  const dgNextReaction = (mine, pressed) => (mine === pressed ? null : pressed);
+  // the first sentence of the AI's reading, for its one line
+  function dgFirstSentence(s) {
+    const t = String(s || '').replace(/\s+/g, ' ').trim(), m = t.match(/^.+?[.!?](?=\s|$)/);
+    const x = (m ? m[0] : t).trim();
+    return x.length > 160 ? x.slice(0, 157).trimEnd() + '…' : x;
+  }
   // the conversation in time order; an AI answer under the comment it answers (when that comment is in the thread)
   function dgThreadOrder(thread) {
     const items = (Array.isArray(thread) ? thread : []).map((x, i) => [x, i])
@@ -9840,7 +9882,7 @@ function sopOpen() {
     txt.append(el('div', 'fb-meta', [dgFeedWhen(p.taken_at), p.by ? firstName(p.by) : null, removing ? 'deleting — sending' : null].filter(Boolean).join(' · ')));
     const chips = dgChipRow(kind, p, it);
     if (chips) txt.append(chips);
-    const s = dgSocialWith(p.social, dgPendVote(mine), dgPendNotes(mine));
+    const s = dgSocialWith(p.social, dgPendReact(mine, 'ai', null), dgPendNotes(mine));
     const ver = dgVerifiedTag(s && s.verified);
     if (ver) txt.append(ver);
     const sl = dgSocialText(s);
@@ -10043,7 +10085,7 @@ function sopOpen() {
             g.append(img, el('b', null, dgItemTitle('trap', it, p)), el('div', 'fb-meta', [dgHm(p.taken_at), p.by ? firstName(p.by) : null].filter(Boolean).join(' · ')));
             const blocks = dgChipRow('trap', p, it);
             if (blocks) g.append(blocks);
-            const sl = dgSocialText(dgSocialWith(p.social, dgPendVote(mine), dgPendNotes(mine)));
+            const sl = dgSocialText(dgSocialWith(p.social, dgPendReact(mine, 'ai', null), dgPendNotes(mine)));
             if (sl) g.append(el('div', 'dg-social', sl));
             g.setAttribute('role', 'button'); g.tabIndex = 0;
             g.onclick = () => done({ post: p.id });
@@ -10095,7 +10137,6 @@ function sopOpen() {
                  ...('note' in edit ? { note: edit.note, note_level: edit.note_level } : {}), ...('total' in edit ? { total: edit.total, corrected: true } : {}) };
     return { it, removing, edit };
   }
-  const dgPendVote = mine => { const r = mine.filter(x => x.payload.view.kind === 'vote' && !x.dead).sort((a, b) => (a.at || 0) - (b.at || 0)).pop(); return r ? r.payload.view.vote : undefined; };
   const dgPendNotes = mine => mine.filter(x => x.payload.view.kind === 'note' && !x.dead).length;
   const dgPartWord = part => (PARTS.find(x => x[0] === part) || GROWTH_PARTS.find(x => x[0] === part) || [0, part])[1];
   const dgHm = iso => iso ? new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
@@ -10170,7 +10211,7 @@ function sopOpen() {
     txt.append(el('div', 'fb-meta', [dgHm(p.taken_at), p.by ? firstName(p.by) : null, removing ? 'deleting — sending' : Object.keys(edit).length ? 'change sending' : null].filter(Boolean).join(' · ')));
     const chips = dgChipRow(kind, p, it);
     if (chips) txt.append(chips);
-    const s = dgSocialWith(p.social, dgPendVote(mine), dgPendNotes(mine));
+    const s = dgSocialWith(p.social, dgPendReact(mine, 'ai', null), dgPendNotes(mine));
     const ver = dgVerifiedTag(s && s.verified);              // (0.11.134) the verified diagnosis, in short
     if (ver) txt.append(ver);
     const sl = dgSocialText(s);
@@ -10216,6 +10257,12 @@ function sopOpen() {
     dgCopies(id).forEach(x => { x.social = s; });
     if (DG.post && DG.post.id === id && DG.post.thread) DG.post.thread.social = s;
   }
+  // one comment's reactions as the server answered them: the AI's reading, the photographer's note, a comment, a chat message
+  function dgPatchReactions(T, target, tid, r) {
+    if (target === 'ai') T.ai_reactions = r;
+    else if (target === 'own') { if (T.own) T.own.reactions = r; }
+    else (T.thread || []).forEach(x => { if (x.id === tid && (target === 'note' ? x.type === 'note' : x.type !== 'note')) x.reactions = r; });
+  }
   async function dgOpenPost(id, from = 'zone') {
     const f = dgFindItem(id);
     if (!f) { showToast('This photo is not in the report any more', 'error'); return; }
@@ -10224,9 +10271,18 @@ function sopOpen() {
     DG.page = 'post';
     if (from !== 'feed') DG.unitKey = { farmId: f.farmId, unitId: f.unitId };
     const P = DG.post = { kind: f.kind, id, from, thread: DG.threads.get(id) || null, sig: '', stale: false, asking: new Set(), found: f };
+    // (0.11.142) when this post was last opened on this phone: the comments since are marked new
+    let seen = {};
+    try { seen = (await getKV('dg_seen')) || {}; } catch (e) { seen = {}; }
+    P.seenAt = seen[id] || null;
     await dgPaintPost();
     show('task', f.kind === 'trap' ? `Trap ${shortCode(f.p.code)}` : 'Photo', () => dgLeavePost());
     await dgReadThread();
+    if (DG.post === P && !P.stale && P.thread) {
+      seen[id] = new Date().toISOString();
+      const keep = Object.entries(seen).sort((a, b) => String(b[1]).localeCompare(String(a[1]))).slice(0, 300);   // the last 300 posts
+      setKV('dg_seen', Object.fromEntries(keep)).catch(() => {});
+    }
     if (DG.post === P && dgOpen() && !document.querySelector('.fb-sheet, .fb-cam, .fb-viewer')) { await dgPaintPost(); DG.lastSig = await dgPageSig(); }
   }
   // back from the post: to the zone where it was left, to the feed at its place and sort, or to the photos waiting for
@@ -10344,65 +10400,15 @@ function sopOpen() {
       }
       post.append(acts);
     }
-    // the AI's reading in full: the official note of the photo
+    // (0.11.142, FarmBox 0261) the post as a comment flow, as in a social app (owner 23 Oct 2026: "First comment by ai
+    // (initially summarized in one line and with the complete explanation under), second comment is the human note done
+    // by the user take the pic, other comments by users … every body can like, dislike, pensive each comment"): the AI's
+    // reading, the verified diagnosis when there is one, the note of who took the photo, then everybody's comments with
+    // the AI's answers under the comment they answer — each with its reactions
     const ai = T ? T.ai : dgAiDone(kind, p) ? (kind === 'trap' ? { species: p.species, total: p.ai_total, notes: p.ai_notes } : p.ai) : null;
-    const sec = el('div', 'dg-post-ai');
-    sec.append(el('div', 'fb-sec', 'The AI\'s reading'));
-    if (!ai) sec.append(el('div', 'fb-meta', 'Not read by the AI yet'));
-    else if (kind === 'trap') {
-      const sp = dgInsectsByGravity(Array.isArray(ai.species) ? ai.species : []);      // the pests first (0.11.137)
-      if (sp.length) {
-        const row = el('div', 'dg-tags');
-        sp.forEach(x => row.append(dgBlock(x.beneficial ? 'green' : 'yellow', dgG1Face(), `${x.common || x.name || 'insect'}${x.count != null ? ' ' + x.count : ''}`,
-                                           { title: x.name && x.common && x.name !== x.common ? x.name : '' })));
-        sec.append(row);
-      }
-      if (ai.total != null) sec.append(el('div', 'dg-ai-text', `About ${ai.total} insect${ai.total === 1 ? '' : 's'}.`));
-      if (ai.notes) { const n = el('div', 'dg-ai-text'); n.textContent = ai.notes; sec.append(n); }
-      if (!sp.length && ai.total == null && !ai.notes) sec.append(el('div', 'fb-meta', 'No insect named.'));
-    } else {
-      if (ai.summary) { const s = el('div', 'dg-ai-text'); s.textContent = ai.summary; sec.append(s); }
-      const fs = dgByGravity(Array.isArray(ai.findings) ? ai.findings : []).map(o => o.x);      // the most serious first (0.11.137)
-      if (!fs.length && ai.healthy !== false) sec.append(dgBlock('green', dgG1Face(), 'Healthy'));
-      fs.forEach(x => {
-        const r = el('div', 'dg-finding');
-        r.append(dgBlock(dgRisk(x.severity, x.kind), dgG1Face(), `${x.name || x.code}${x.severity != null && DG_SEV[x.severity] ? ' · ' + DG_SEV[x.severity] : ''}`));
-        if (x.evidence) { const e = el('span', 'fb-meta'); e.textContent = x.evidence; r.append(e); }
-        sec.append(r);
-      });
-      const rest = [ai.stage ? `Stage: ${ai.stage}.` : '', (ai.measures || []).length ? 'Sizes: ' + ai.measures.map(m => `${m.what} ${m.mm} mm`).join(', ') + '.' : '', ai.recommendation || ''].filter(Boolean).join(' ');
-      if (rest) { const s = el('div', 'dg-ai-text'); s.textContent = rest; sec.append(s); }
-      if (ai.quality && ai.quality !== 'ok') sec.append(el('div', 'fb-meta', 'The photo is ' + ai.quality));
-    }
-    // agree or disagree with it: one vote each, the same again takes it back
-    const social = dgSocialWith(T ? T.social : p.social, dgPendVote(mine), dgPendNotes(mine)) || { comments: 0, agree: 0, disagree: 0, mine: null };
-    if (ai && !removing) {
-      const vr = el('div', 'dg-vote');
-      const vb = (v, word, n) => {
-        const b = el('button', 'fb-btn', `${word} ${n}`); b.type = 'button';
-        b.setAttribute('aria-pressed', String(social.mine === v));
-        b.onclick = () => dgVote(kind, p, farmId, social.mine, v);
-        return b;
-      };
-      vr.append(vb(1, 'Agree', social.agree), vb(-1, 'Disagree', social.disagree));
-      sec.append(vr);
-      ((T && T.votes) || []).filter(v => v.vote === -1 && v.reason).forEach(v => {
-        const w = el('div', 'fb-meta dg-why'); w.textContent = `${firstName(v.by) || 'Somebody'} disagrees: ${v.reason}`; sec.append(w);
-      });
-    }
-    post.append(sec);
+    const social = dgSocialWith(T ? T.social : p.social, dgPendReact(mine, 'ai', null), dgPendNotes(mine)) || dgSocialWith({}, undefined, 0);
     const thread = T ? (T.thread || []) : (Array.isArray(p.notes) ? p.notes : []).map(n => ({ type: 'note', ...n }));
-    // (0.11.134) the verified diagnosis: the comment a manager or the agronomist marked, pinned under the AI's reading,
-    // in full when the conversation has it
     const V = social.verified && typeof social.verified === 'object' ? social.verified : null;
-    if (V) {
-      const full = thread.find(x => x.type === 'note' && x.id === V.id);
-      const vb = el('div', 'dg-post-verified' + (NOTE_LEVELS.some(([v]) => v === V.level) ? ' r-' + V.level : ''));
-      vb.append(el('div', 'fb-sec', 'Verified diagnosis'));
-      const w = el('div', 'dg-ai-text'); w.textContent = (full && (full.body || full.transcript)) || V.body || ''; vb.append(w);
-      vb.append(el('div', 'fb-meta', [V.by ? firstName(V.by) : null, V.verified_by ? 'verified by ' + firstName(V.verified_by) : 'verified'].filter(Boolean).join(' · ')));
-      post.append(vb);
-    }
     // who may verify (a manager or the agronomist) and who may open a case (everybody but workers and trainees): the
     // post's own answer when read, else the feed's
     const feedSays = flag => [...DG.feed.answers.values()].some(A => A && A.farm_id === farmId && A[flag]);
@@ -10416,43 +10422,145 @@ function sopOpen() {
       ca.append(oc, ac);
       post.append(ca);
     }
-    // the conversation, in time order: the comments, the AI's answers under the comment they answer
+    // the note of who took the photo: the thread's when read (with its reactions), else the photo's own; a change still
+    // sending wins
+    const own0 = T && T.own ? T.own : null;
+    const ownWords = String(('note' in edit ? it.note : own0 ? own0.body : it.note) || '').trim();
+    const own = ownWords ? { ...(own0 || { by: p.by, worker_id: p.worker_id, by_user: p.by_user, at: p.taken_at }), type: 'own', body: ownWords,
+                             level: 'note' in edit ? it.note_level : own0 ? own0.level : it.note_level } : null;
     const pendNotes = mine.filter(r => r.payload.view.kind === 'note');
-    const n = thread.length + pendNotes.filter(r => !r.dead).length;
+    const n = thread.length + (own ? 1 : 0) + pendNotes.filter(r => !r.dead).length;
     post.append(el('div', 'fb-sec dg-h', n ? `Comments · ${n}` : 'Comments'));
     if (!T || P.stale) post.append(el('div', 'fb-meta', navigator.onLine && session ? (T ? 'Could not be read again — as read before.' : 'Reading the comments…')
                                                                                   : 'No signal: the comments as read before.'));
     const list = el('div', 'dg-thread');
-    const ctx = { P, kind, p, farmId, D, pend, mayVerify, verifiedId: V ? V.id : null };
+    const ctx = { P, kind, p, farmId, D, pend, mayVerify, verifiedId: V ? V.id : null, removing };
+    list.append(dgAiMsg(kind, ai, T, social, ctx));
+    // (0.11.134) the verified diagnosis: the comment a manager or the agronomist marked, right under the AI's reading,
+    // in full when the conversation has it
+    if (V) {
+      const full = thread.find(x => x.type === 'note' && x.id === V.id);
+      const vb = el('div', 'dg-post-verified' + (NOTE_LEVELS.some(([v]) => v === V.level) ? ' r-' + V.level : ''));
+      vb.append(el('div', 'fb-sec', 'Verified diagnosis'));
+      const w = el('div', 'dg-ai-text'); w.textContent = (full && (full.body || full.transcript)) || V.body || ''; vb.append(w);
+      vb.append(el('div', 'fb-meta', [V.by ? firstName(V.by) : null, V.verified_by ? 'verified by ' + firstName(V.verified_by) : 'verified'].filter(Boolean).join(' · ')));
+      list.append(vb);
+    }
+    if (own) list.append(dgPostMsg(own, 0, ctx));
     dgThreadOrder(thread).forEach(({ item, depth }) => list.append(dgPostMsg(item, depth, ctx)));
     pendNotes.forEach(r => list.append(dgPendingMsg(r)));
-    if (!list.childNodes.length) list.append(el('div', 'fb-meta', 'No comment yet.'));
     post.append(list);
-    // a comment of my own: typed, or held to record; nothing goes to the AI unless asked under it
+    // a comment of my own, typed or held to record: posted, or posted and asked to the AI or someone of the team
     if (!removing) {
       const w = el('button', 'btn btn-block dg-write', '{i:message} Write a comment'); w.type = 'button';
-      w.onclick = () => dgNoteSheet(kind, p, farmId);
-      post.append(w, el('div', 'fb-meta dg-write-hint', 'Typed, or hold to record. Once it is posted you may ask the AI or someone of the team about it.'));
+      w.onclick = async () => {
+        const r = await dgNoteSheet(kind, p, farmId);
+        if (r && r.ai && DG.post === P) { await dgReadThread(); await dgAskAi(P, kind, p, r.ai); }
+        else if (r && r.ask != null) dgAskSheet(kind, p, farmId, r.ask);
+      };
+      post.append(w, el('div', 'fb-meta dg-write-hint', 'Typed, or hold to record. Post it, or post it and ask the AI (a short answer at once) or someone of the team.'));
     }
     box.append(post);
     dgSwap(box);
   }
-  // one message of the conversation: a comment, a question asked in Naked Heart's chat, or an AI answer
-  function dgPostMsg(n, depth, { P, kind, p, farmId, D, pend, mayVerify = false, verifiedId = null }) {
-    const isAi = n.type === 'ai';
+  // the AI's reading, first in the flow: one line — its findings by gravity and the first sentence of what it says — and
+  // the whole reading under "See the full reading"; reactions as on any comment (they replace Agree / Disagree)
+  function dgAiMsg(kind, ai, T, social, ctx) {
+    const { P, p } = ctx;
+    const m = el('div', 'dg-msg ai dg-ai-reading');
+    if (!ai) {
+      const b0 = dgBlock(null, dgG1Face(), 'Not read by the AI yet');
+      b0.lastChild.prepend(el('span', 'dg-msg-who', 'AI'));
+      m.append(b0);
+      return m;
+    }
+    const chip = dgAiChips(kind, kind === 'trap' ? { ai_status: 'done', species: ai.species } : { ai_status: 'done', ai })[0] || null;
+    const first = dgFirstSentence(kind === 'trap' ? ai.notes : ai.summary);
+    const line = [chip ? chip.text.replace(/^AI: /, '') : null, first].filter(Boolean).join(' — ');
+    const b = dgBlock(chip ? chip.level : null, dgG1Face(), line || (kind === 'trap' ? 'No insect named.' : 'Nothing it could name.'));
+    b.lastChild.prepend(el('span', 'dg-msg-who', 'AI · the reading'));
+    m.append(b);
+    // the whole reading, as it was the post's section until 0.11.141
+    const full = el('div', 'dg-ai-full'); full.hidden = !P.aiOpen;
+    if (kind === 'trap') {
+      const sp = dgInsectsByGravity(Array.isArray(ai.species) ? ai.species : []);      // the pests first (0.11.137)
+      if (sp.length) {
+        const row = el('div', 'dg-tags');
+        sp.forEach(x => row.append(dgBlock(x.beneficial ? 'green' : 'yellow', dgG1Face(), `${x.common || x.name || 'insect'}${x.count != null ? ' ' + x.count : ''}`,
+                                           { title: x.name && x.common && x.name !== x.common ? x.name : '' })));
+        full.append(row);
+      }
+      if (ai.total != null) full.append(el('div', 'dg-ai-text', `About ${ai.total} insect${ai.total === 1 ? '' : 's'}.`));
+      if (ai.notes) { const t = el('div', 'dg-ai-text'); t.textContent = ai.notes; full.append(t); }
+    } else {
+      if (ai.summary) { const s = el('div', 'dg-ai-text'); s.textContent = ai.summary; full.append(s); }
+      const fs = dgByGravity(Array.isArray(ai.findings) ? ai.findings : []).map(o => o.x);      // the most serious first (0.11.137)
+      if (!fs.length && ai.healthy !== false) full.append(dgBlock('green', dgG1Face(), 'Healthy'));
+      fs.forEach(x => {
+        const r = el('div', 'dg-finding');
+        r.append(dgBlock(dgRisk(x.severity, x.kind), dgG1Face(), `${x.name || x.code}${x.severity != null && DG_SEV[x.severity] ? ' · ' + DG_SEV[x.severity] : ''}`));
+        if (x.evidence) { const e = el('span', 'fb-meta'); e.textContent = x.evidence; r.append(e); }
+        full.append(r);
+      });
+      const rest = [ai.stage ? `Stage: ${ai.stage}.` : '', (ai.measures || []).length ? 'Sizes: ' + ai.measures.map(x => `${x.what} ${x.mm} mm`).join(', ') + '.' : '', ai.recommendation || ''].filter(Boolean).join(' ');
+      if (rest) { const s = el('div', 'dg-ai-text'); s.textContent = rest; full.append(s); }
+      if (ai.quality && ai.quality !== 'ok') full.append(el('div', 'fb-meta', 'The photo is ' + ai.quality));
+    }
+    const acts = el('div', 'dg-msg-acts');
+    acts.append(dgReactRow(ctx, 'ai', null, T && T.ai_reactions ? T.ai_reactions : social.ai));
+    if (full.childNodes.length) {
+      const tog = el('button', 'fb-link dg-ai-tog', P.aiOpen ? 'Hide the full reading' : 'See the full reading'); tog.type = 'button';
+      tog.onclick = () => { P.aiOpen = !P.aiOpen; full.hidden = !P.aiOpen; tog.textContent = P.aiOpen ? 'Hide the full reading' : 'See the full reading'; };
+      acts.append(tog);
+    }
+    m.append(acts, full);
+    return m;
+  }
+  // like, dislike, not sure under a comment: mine pressed, the same again takes it back; "Who" lists them
+  function dgReactRow(ctx, target, tid, server) {
+    const { kind, p, farmId, pend, D, removing } = ctx;
+    const r = dgReactWith(server, dgPendReact(pend.filter(x => x.payload.view.ref_id === p.id), target, tid));
+    const row = el('span', 'dg-react');
+    DG_REACTS.forEach(([k, emo, word]) => {
+      const b = document.createElement('button'); b.className = 'dg-rb' + (r.mine === k ? ' on' : ''); b.type = 'button';
+      b.textContent = r[k] ? `${emo} ${r[k]}` : emo;
+      b.setAttribute('aria-pressed', String(r.mine === k));
+      b.setAttribute('aria-label', word + (r[k] ? ' · ' + r[k] : ''));
+      b.disabled = !!removing || !D;
+      b.onclick = () => dgReact(kind, p, farmId, target, tid, r.mine, k);
+      row.append(b);
+    });
+    if (r.who.length) {
+      const w = el('button', 'fb-link dg-who', 'Who'); w.type = 'button';
+      w.onclick = () => dgSheet('Reactions', (card, done) => {
+        r.who.forEach(x => { const e = (DG_REACTS.find(([k]) => k === x.reaction) || [0, ''])[1]; card.append(el('div', 'dg-who-line', `${e}  ${firstName(x.by) || x.by || 'Somebody'}`)); });
+        const c = el('button', 'fb-btn', 'Close'); c.type = 'button'; c.onclick = () => done(null);
+        const a = el('div', 'fb-actions'); a.append(c); card.append(a);
+      });
+      row.append(w);
+    }
+    return row;
+  }
+  // one message of the flow: the note of who took the photo, a comment, a question asked to the AI (in Naked Heart's
+  // chat, or "More detail" here), or an AI answer — each with its reactions
+  function dgPostMsg(n, depth, ctx) {
+    const { P, kind, p, farmId, D, pend, mayVerify = false, verifiedId = null } = ctx;
+    const isAi = n.type === 'ai', isNote = n.type === 'note', isOwn = n.type === 'own';
     // the verified diagnosis (0.11.134): by the photo's counts when they say one, else by the comment itself
-    const verified = n.type === 'note' && !!n.id && (verifiedId ? n.id === verifiedId : !!n.verified_at);
-    const m = el('div', 'dg-msg' + (isAi ? ' ai' : '') + (depth ? ' reply' : '') + (verified ? ' verified' : ''));
-    const isNote = n.type === 'note';
+    const verified = isNote && !!n.id && (verifiedId ? n.id === verifiedId : !!n.verified_at);
+    const m = el('div', 'dg-msg' + (isAi ? ' ai' : '') + (isOwn ? ' own' : '') + (depth ? ' reply' : '') + (verified ? ' verified' : ''));
     const gone = isNote && pend.some(r => r.payload.view.kind === 'note-delete' && r.payload.view.note_id === n.id);
     const editedTo = isNote ? pend.filter(r => r.payload.view.kind === 'note-edit' && r.payload.view.note_id === n.id).pop() : null;
     const words = editedTo ? editedTo.payload.view.body : (n.body || n.transcript || '');
-    // a comment without a colour reads as yellow, as on Naked Heart; a question from its chat and an AI answer have none
-    const lv = isNote ? (NOTE_LEVELS.some(([v]) => v === n.level) ? n.level : 'yellow') : null;
+    // a comment or the photographer's note without a colour reads as yellow, as on Naked Heart; a question and an AI
+    // answer have none
+    const lv = isNote || isOwn ? (NOTE_LEVELS.some(([v]) => v === n.level) ? n.level : 'yellow') : null;
     const b = dgBlock(lv, dgFace(n.worker_id, n.by, isAi), words);
     const t = b.lastChild;
     const who = el('span', 'dg-msg-who');
-    who.textContent = [isAi ? 'AI' : (firstName(n.by) || 'Somebody'), dgWhen(n.at), n.type === 'question' ? 'asked in Naked Heart' : null].filter(Boolean).join(' · ');
+    who.textContent = [isAi ? 'AI' : (firstName(n.by) || 'Somebody'), isOwn ? 'took the photo' : null, dgWhen(n.at)].filter(Boolean).join(' · ');
+    // new since this post was last opened on this phone, not mine
+    if (P.seenAt && n.at && new Date(n.at) > new Date(P.seenAt) && !(D && D.me && n.by_user === D.me)) who.append(el('span', 'dg-new', ' · new'));
     t.prepend(who);
     if (n.audio_path) {
       const play = el('button', 'fb-link', '{i:play} Listen'); play.type = 'button';
@@ -10461,38 +10569,45 @@ function sopOpen() {
       if (!n.transcript && n.voice_status !== 'done' && n.voice_status !== 'failed') t.append(el('span', 'dg-sending', ' writing it down…'));
     }
     m.append(b);
-    if (!isNote) return m;
     const acts = el('div', 'dg-msg-acts');
-    if (verified) acts.append(el('span', 'dg-tagline dg-vtag', n.verified_by ? 'Verified by ' + firstName(n.verified_by) : 'Verified diagnosis'));
-    if (n.asked_ai) acts.append(el('span', 'dg-tagline', 'sent to the AI'));
-    if (gone) acts.append(el('span', 'dg-sending', 'deleting'));
-    else {
-      // a manager or the agronomist marks it as the photo's verified diagnosis, or takes that back
-      if (mayVerify && n.id) {
-        const v = el('button', 'fb-link', verified ? 'Unverify' : 'Verify'); v.type = 'button';
-        v.onclick = () => dgVerify(P, n, !verified);
-        acts.append(v);
-      }
-      // my comment, once posted: I decide whether the AI or somebody of the team should see it
-      if (n.id && D && D.me && n.by_user === D.me) {
-        if (P.asking.has(n.id)) acts.append(el('span', 'dg-sending', 'The AI is answering…'));
-        else if (!n.asked_ai) {
-          const a = el('button', 'fb-link', 'Ask the AI'); a.type = 'button';
-          if (!String(n.body || n.transcript || '').trim()) { a.disabled = true; a.title = 'Once the voice note is written down'; }
-          a.onclick = () => dgAskAi(P, kind, p, n);
-          acts.append(a);
+    if (!gone && (isOwn || n.id)) acts.append(dgReactRow(ctx, isOwn ? 'own' : isNote ? 'note' : 'chat', isOwn ? null : n.id, n.reactions));
+    // an AI answer is short by default: more on it on request
+    if (isAi && n.id) {
+      if (P.asking.has('more:' + n.id)) acts.append(el('span', 'dg-sending', 'The AI is answering…'));
+      else { const mo = el('button', 'fb-link', 'More detail'); mo.type = 'button'; mo.onclick = () => dgMoreDetail(P, kind, p, n); acts.append(mo); }
+    }
+    if (isNote) {
+      if (verified) acts.append(el('span', 'dg-tagline dg-vtag', n.verified_by ? 'Verified by ' + firstName(n.verified_by) : 'Verified diagnosis'));
+      if (n.asked_ai) acts.append(el('span', 'dg-tagline', 'sent to the AI'));
+      if (gone) acts.append(el('span', 'dg-sending', 'deleting'));
+      else {
+        // a manager or the agronomist marks it as the photo's verified diagnosis, or takes that back
+        if (mayVerify && n.id) {
+          const v = el('button', 'fb-link', verified ? 'Unverify' : 'Verify'); v.type = 'button';
+          v.onclick = () => dgVerify(P, n, !verified);
+          acts.append(v);
         }
-        const s = el('button', 'fb-link', 'Ask someone'); s.type = 'button';
-        s.onclick = () => dgAskSheet(kind, p, farmId, words);
-        acts.append(s);
-      }
-      if (dgNoteMayChange(n, D, todayISO())) {
-        const ch = el('button', 'fb-link', 'Change'); ch.type = 'button';
-        ch.onclick = () => dgNoteEdit(n, farmId);
-        const del = el('button', 'fb-link', 'Delete'); del.type = 'button';
-        del.onclick = () => { if (!confirm('Delete this comment?')) return;
-          dgQueue({ rpc: 'dg_delete_note', args: { p_id: n.id }, chain: 'dg:' + n.id, view: { kind: 'note-delete', farm_id: farmId, ref_id: p.id, note_id: n.id } }); };
-        acts.append(ch, del);
+        // my comment, once posted: I decide whether the AI or somebody of the team should see it
+        if (n.id && D && D.me && n.by_user === D.me) {
+          if (P.asking.has(n.id)) acts.append(el('span', 'dg-sending', 'The AI is answering…'));
+          else if (!n.asked_ai) {
+            const a = el('button', 'fb-link', 'Ask the AI'); a.type = 'button';
+            if (!String(n.body || n.transcript || '').trim()) { a.disabled = true; a.title = 'Once the voice note is written down'; }
+            a.onclick = () => dgAskAi(P, kind, p, n);
+            acts.append(a);
+          }
+          const s = el('button', 'fb-link', 'Ask someone'); s.type = 'button';
+          s.onclick = () => dgAskSheet(kind, p, farmId, words);
+          acts.append(s);
+        }
+        if (dgNoteMayChange(n, D, todayISO())) {
+          const ch = el('button', 'fb-link', 'Change'); ch.type = 'button';
+          ch.onclick = () => dgNoteEdit(n, farmId);
+          const del = el('button', 'fb-link', 'Delete'); del.type = 'button';
+          del.onclick = () => { if (!confirm('Delete this comment?')) return;
+            dgQueue({ rpc: 'dg_delete_note', args: { p_id: n.id }, chain: 'dg:' + n.id, view: { kind: 'note-delete', farm_id: farmId, ref_id: p.id, note_id: n.id } }); };
+          acts.append(ch, del);
+        }
       }
     }
     if (acts.childNodes.length) m.append(acts);
@@ -10509,29 +10624,40 @@ function sopOpen() {
     m.append(b);
     return m;
   }
-  // Agree / Disagree: the same again takes the vote back; Disagree asks why (optional). Through the outbox: a later vote
-  // replaces one still waiting — the earlier row is taken out, and a row already on its way goes first on the same chain
-  // (a row kept under one id and written over could be deleted by the pass that just sent the earlier vote)
-  async function dgVote(kind, p, farmId, mine, pressed) {
-    const vote = dgNextVote(mine, pressed);
-    let reason = null;
-    if (vote === -1) {
-      const r = await dgSheet('You disagree with the AI', (card, done) => {
-        const ta = el('textarea', 'fb-runnote'); ta.rows = 2; ta.placeholder = 'Why? (optional)';
-        const ok = el('button', 'fb-btn fb-btn-primary', 'Disagree'), no = el('button', 'fb-btn', 'Cancel'); ok.type = no.type = 'button';
-        ok.onclick = () => done({ why: ta.value.trim() }); no.onclick = () => done(null);
-        const acts = el('div', 'fb-actions'); acts.append(ok, no);
-        card.append(ta, acts);
-        setTimeout(() => ta.focus(), 50);
-      });
-      if (!r) return;
-      reason = r.why || null;
-    }
+  // a reaction: the same again takes it back. Through the outbox, on its own chain a comment: a later one replaces one
+  // still waiting — the earlier row is taken out, and a row already on its way goes first on the same chain (as the
+  // votes did, 0.11.133)
+  async function dgReact(kind, p, farmId, target, tid, mine, pressed) {
+    const reaction = dgNextReaction(mine, pressed);
+    const same = x => x.payload && x.payload.__dg && x.payload.rpc === 'dg_react' && x.payload.view && x.payload.view.ref_id === p.id
+                      && x.payload.view.target === target && (x.payload.view.target_id || null) === (tid || null);
+    try { for (const r of (await all('outbox')).filter(same)) await del('outbox', r.id); }
+    catch (e) { /* kept: both go, in order, and the later one stays */ }
+    await dgQueue({ rpc: 'dg_react', args: { p: { kind, ref_id: p.id, target, target_id: tid || null, reaction } },
+                    chain: 'dg:react:' + p.id + ':' + target + ':' + (tid || ''),
+                    view: { kind: 'react', farm_id: farmId, ref_id: p.id, target, target_id: tid || null, reaction } });
+  }
+  // more on a short AI answer: asked to the AI as a question of mine in the flow, the long answer under it
+  async function dgMoreDetail(P, kind, p, n) {
+    if (!navigator.onLine || !session) { showToast('Needs signal', 'error'); return; }
+    const key = 'more:' + n.id;
+    if (P.asking.has(key)) return;
+    P.asking.add(key);
+    if (DG.post === P) await dgPaintPost();
+    const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const cut = ctl ? setTimeout(() => ctl.abort(), 120000) : null;
+    const said = dgFirstSentence(n.body);
     try {
-      for (const r of (await all('outbox')).filter(x => x.payload && x.payload.__dg && x.payload.rpc === 'dg_vote' && x.payload.view && x.payload.view.ref_id === p.id)) await del('outbox', r.id);
-    } catch (e) { /* kept: both go, in order, and the later one stays */ }
-    await dgQueue({ rpc: 'dg_vote', args: { p: { kind, ref_id: p.id, vote, reason } }, chain: 'dg:vote:' + p.id,
-                    view: { kind: 'vote', farm_id: farmId, ref_id: p.id, vote } });
+      const r = await api('/functions/v1/photo-chat', { method: 'POST', body: JSON.stringify({ kind, id: p.id,
+        message: `More detail, please, on your answer${said ? ': "' + said + '"' : ''}` }), ...(ctl ? { signal: ctl.signal } : {}) });
+      if (r && r.error) throw new Error(r.error);
+    } catch (e) { showToast('The AI did not answer: ' + dgWhy(e), 'error'); }
+    finally { clearTimeout(cut); P.asking.delete(key); }
+    DG.feed.dirty = true;
+    if (DG.post !== P) return;
+    await dgReadThread();
+    if (DG.post === P && dgOpen() && !document.querySelector('.fb-sheet, .fb-cam, .fb-viewer')) await dgPaintPost();
+    dgSoon(300);
   }
   // a comment of mine sent to the AI, on my word only (photo-chat, a short answer kept under that comment)
   async function dgAskAi(P, kind, p, n) {
@@ -10694,9 +10820,11 @@ function sopOpen() {
     if (res && res.id && data && u.day === DG.day) { DG.thumbs.set(res.id, data); DG.asked.add(res.id); }
     // a vote answers with the photo's new counts: on its card and its post at once, before the report is read again
     // (0.11.134) on every copy read: the day's report and the feed's answers
-    if (u && u.rpc === 'dg_vote' && res && typeof res === 'object') {
+    if (u && (u.rpc === 'dg_vote' || u.rpc === 'dg_react') && res && typeof res === 'object') {
       const ref = u.args && u.args.p && u.args.p.ref_id;
       if (ref) dgPatchSocial(ref, res);
+      // (0.11.142) the comment's own reactions on the open post, before the conversation is read again
+      if (u.rpc === 'dg_react' && res.reactions && DG.post && DG.post.id === ref && DG.post.thread) dgPatchReactions(DG.post.thread, res.target, res.target_id, res.reactions);
     }
     if (u && u.__dg) DG.feed.dirty = true;         // the feed is read again when it is next on screen
     dgSoon();
@@ -11029,12 +11157,20 @@ function sopOpen() {
       const hold = el('button', 'btn btn-block dg-hold', '{i:mic} Hold to record');
       hold.type = 'button';
       const got = el('div', 'fb-meta');
-      const send = el('button', 'fb-btn fb-btn-primary', 'Send'), no = el('button', 'fb-btn', 'Cancel');
-      send.type = no.type = 'button';
+      // (0.11.142) posted, or posted and asked: the AI (a short answer at once, written words only) or someone of the
+      // team; an answer to an opinion asked of me is sent as it is
+      const send = el('button', 'fb-btn fb-btn-primary', requestId ? 'Send' : 'Post'), no = el('button', 'fb-btn', 'Cancel');
+      const sendAi = requestId ? null : el('button', 'fb-btn', 'Post + ask the AI');
+      const sendAsk = requestId ? null : el('button', 'fb-btn', 'Post + ask someone');
+      [send, no, sendAi, sendAsk].forEach(b => { if (b) b.type = 'button'; });
       const paint = () => {
         got.textContent = '';
         if (audio) { got.append(document.createTextNode(`Voice note · ${Math.round(audio.seconds)} s `)); const rm = el('button', 'fb-link', 'Remove'); rm.type = 'button'; rm.onclick = () => { audio = null; paint(); }; got.append(rm); }
-        send.disabled = !(String(o.note || '').trim() || audio);
+        const words = !!String(o.note || '').trim();
+        send.disabled = !(words || audio);
+        if (sendAsk) sendAsk.disabled = send.disabled;
+        // the AI reads words: a voice note alone is asked once it is written down, under the comment
+        if (sendAi) { sendAi.disabled = !words; sendAi.title = words ? '' : 'Write the comment: a voice note is asked once it is written down'; }
       };
       const stop = () => { try { if (rec && rec.state !== 'inactive') rec.stop(); } catch (e) { /* stopped */ } };
       const start = async () => {
@@ -11062,22 +11198,36 @@ function sopOpen() {
       hold.addEventListener('pointerdown', e => { e.preventDefault(); holding = true; start(); });
       ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => hold.addEventListener(ev, () => { holding = false; stop(); }));
       let sending = false;                          // one tap sends once
-      send.onclick = async () => {
+      const post = async mode => {
         if (sending) return;
-        sending = true; send.disabled = true;
+        sending = true; [send, sendAi, sendAsk].forEach(b => { if (b) b.disabled = true; });
         const body = String(o.note || '').trim(), cref = uuid();
         const ext = fbkExt(audio ? audio.type : '');
         const apath = audio ? `${farmId}/notes/dg-${cref}.${ext}` : null;
-        await dgQueue({ rpc: 'dg_add_note', args: { p: { kind, ref_id: p.id, body: body || null, level: noteLevelOf(o), audio_path: apath, client_ref: 'dg:' + cref,
-                                                          ...(requestId ? { request_id: requestId } : {}) } },
+        const args = { p: { kind, ref_id: p.id, body: body || null, level: noteLevelOf(o), audio_path: apath, client_ref: 'dg:' + cref,
+                            ...(requestId ? { request_id: requestId } : {}) } };
+        // asked to the AI: the comment goes straight to the server (the AI answers a comment that is there); without
+        // signal, or when that fails, it goes through the outbox as any comment and the AI is asked under it later —
+        // the same client_ref makes a second write harmless
+        if (mode === 'ai' && !audio) {
+          if (navigator.onLine && session) {
+            try { const res = await dgRpc('dg_add_note', args); if (res && res.id) { done({ ai: { id: res.id, body } }); return; } }
+            catch (e) { /* through the outbox below */ }
+          }
+          showToast('Posted. Ask the AI under it once there is signal');
+        }
+        await dgQueue({ rpc: 'dg_add_note', args,
                         // its own chain: one note refused does not hold the others on the same photo
                         uploads: audio ? [{ path: apath, blob: audio.blob, type: audio.type }] : [], voice: !!audio, chain: 'dg:note:' + cref,
                         view: { kind: 'note', farm_id: farmId, ref_id: p.id, body, level: noteLevelOf(o), audio: !!audio } })
-          .catch(e => { sending = false; send.disabled = false; throw e; });
-        done(true);
+          .catch(e => { sending = false; paint(); throw e; });
+        done(mode === 'ask' ? { ask: body } : true);
       };
+      send.onclick = () => post('post');
+      if (sendAi) sendAi.onclick = () => post('ai');
+      if (sendAsk) sendAsk.onclick = () => post('ask');
       no.onclick = () => { stop(); done(null); };
-      const acts = el('div', 'fb-actions'); acts.append(send, no);
+      const acts = el('div', 'fb-actions'); acts.append(...[send, sendAi, sendAsk, no].filter(Boolean));
       card.append(row, hold, got, acts);
       paint();
       setTimeout(() => ta.focus(), 50);
