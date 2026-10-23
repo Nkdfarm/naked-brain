@@ -1410,7 +1410,7 @@
   }
 
   // ─── VERSION CHECK ────────────────────────────────────────
-  const CURRENT_VERSION = '0.11.142';
+  const CURRENT_VERSION = '0.11.143';
   let updateAvailable = false;
 
   let lastSaid = null, notYetAt = 0;
@@ -1602,6 +1602,7 @@
   // Same idea as the console's Settings › Version log (release_note): one line per
   // release, what it changed, in plain words. Add the new release on top with each bump.
   const VERSION_LOG = [
+    ['0.11.143', '2026-10-23', 'The first three comments under each photo', 'Under each photo, on the zone cards, in the Feed and in a trap gallery, the start of its comments: the AI, then the note of who took the photo, then the first comments of the team, oldest first, three at most. Each in its colour with the face of who wrote it; the whole conversation opens with a tap.'],
     ['0.11.142', '2026-10-23', 'A photo\'s comments as a social flow, with reactions', 'Open a photo: its comments read like a social post. First the AI, in one line (its findings, the most serious first, and the first thing it says), with See the full reading under it; then the note of who took the photo; then everybody\'s comments, the AI\'s answers set in under the comment they answer. Under every comment three reactions, 👍 👎 🤔 (not sure): tap one, tap it again to take it back; Who shows who gave which. They replace Agree and Disagree. Writing a comment: Post, Post + ask the AI (a short answer comes at once; More detail under it asks for the long one) or Post + ask someone. Comments added since you last opened a photo say new. The line under each photo counts the comments and the reactions.'],
     ['0.11.141', '2026-10-23', 'No phone count of traps', 'The phone no longer counts traps at all. A trap card waits for the AI\'s count and says counting until then; if the AI could not count it, it says needs a count, and anyone who may change the reading types it on the photo\'s page. The phone still checks each photo at once (the whole card in it, not too much glare) and crops the card. The older scouting round no longer takes trap photos: its Traps tab opens Digital scouting on the zone.'],
     ['0.11.140', '2026-10-23', 'The trap photo is the card', 'A trap photo is now just the card: the phone crops it and sends only that, smaller and quicker to send, and it is what both apps show. The phone no longer shows a count of its own: the trap says counting until the AI has counted the card, then the AI\'s number. If the card is not fully in the photo, or too much of it cannot be read, the phone asks for a retake; if it still cannot find the card, you can keep the photo and type the count. A number you type yourself in I counted it myself always stands.'],
@@ -10189,6 +10190,9 @@ function sopOpen() {
     return b;
   }
   // under a picture: the AI's blocks (at most two) and the person's note, one under the other
+  // under a picture, the start of its comment flow (0.11.143, owner 23 Oct 2026: "rule is to show up to the 3 first
+  // comments"): the AI's comment, the note of who took the photo, then the team's first comments, three blocks at most
+  const DG_CARD_COMMENTS = 3;
   function dgChipRow(kind, p, it) {
     const row = el('div', 'dg-tags');
     dgAiChips(kind, p).forEach(x => row.append(dgBlock(x.level, dgG1Face(), x.text.replace(/^AI: /, ''), { clamp: true, title: x.title || x.text })));
@@ -10197,8 +10201,16 @@ function sopOpen() {
       const words = String(it.note).trim();
       row.append(dgBlock(lv, p.worker_id || p.by ? dgFace(p.worker_id, p.by) : null, words, { clamp: true, title: (p.by ? firstName(p.by) + ': ' : '') + words }));
     }
+    dgFirstComments(p, DG_CARD_COMMENTS - row.childNodes.length).forEach(n => {
+      const words = String(n.body || n.transcript || '').trim() || 'Voice note';
+      row.append(dgBlock(NOTE_LEVELS.some(([v]) => v === n.level) ? n.level : 'yellow', dgFace(n.worker_id, n.by), words,
+                         { clamp: true, title: (n.by ? firstName(n.by) + ': ' : '') + words }));
+    });
     return row.childNodes.length ? row : null;
   }
+  // the team's first comments of a photo, oldest first, as many as there is room for
+  const dgFirstComments = (p, room) => room > 0 && Array.isArray(p && p.notes)
+    ? p.notes.slice().sort((a, b) => (new Date(a.at).getTime() || 0) - (new Date(b.at).getTime() || 0)).slice(0, room) : [];
   function dgItemCard(kind, p, farmId, D, pend) {
     const mine = pend.filter(r => r.payload.view.ref_id === p.id);
     const { it, removing, edit } = dgEdited(p, mine);
