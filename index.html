@@ -1437,7 +1437,7 @@
   }
 
   // ─── VERSION CHECK ────────────────────────────────────────
-  const CURRENT_VERSION = '0.11.144';
+  const CURRENT_VERSION = '0.11.145';
   let updateAvailable = false;
 
   let lastSaid = null, notYetAt = 0;
@@ -1629,6 +1629,7 @@
   // Same idea as the console's Settings › Version log (release_note): one line per
   // release, what it changed, in plain words. Add the new release on top with each bump.
   const VERSION_LOG = [
+    ['0.11.145', '2026-10-29', 'A treatment says what to mix', 'Opening a treatment task now shows, under its title, what to mix: the rate, the quantity for the tables, the litres of water with the spray volume per hectare and the crop phase it was planned for, the strength per litre for a rate per hectare, and when the quantity was held to the label limit per hectare.'],
     ['0.11.144', '2026-10-29', 'Gallery: farm photos in one place', 'A new tab, Gallery, beside Tasks and Capture: take photos with the camera or choose them from the phone, several at once, tag them (label, equipment, pest, delivery, receipt, crop, other), add a short note and send. They are sent small and sharp, and wait on the phone when there is no signal. Under the buttons: your photos still waiting, then the latest photos of the farm; tap one to see it full size. The office picks them in Naked Heart.'],
     ['0.11.143', '2026-10-23', 'The first three comments under each photo', 'Under each photo, on the zone cards, in the Feed and in a trap gallery, the start of its comments: the AI, then the note of who took the photo, then the first comments of the team, oldest first, three at most. Each in its colour with the face of who wrote it; the whole conversation opens with a tap.'],
     ['0.11.142', '2026-10-23', 'A photo\'s comments as a social flow, with reactions', 'Open a photo: its comments read like a social post. First the AI, in one line (its findings, the most serious first, and the first thing it says), with See the full reading under it; then the note of who took the photo; then everybody\'s comments, the AI\'s answers set in under the comment they answer. Under every comment three reactions, 👍 👎 🤔 (not sure): tap one, tap it again to take it back; Who shows who gave which. They replace Agree and Disagree. Writing a comment: Post, Post + ask the AI (a short answer comes at once; More detail under it asks for the long one) or Post + ask someone. Comments added since you last opened a photo say new. The line under each photo counts the comments and the reactions.'],
@@ -12051,6 +12052,12 @@ function sopOpen() {
     head.append(el('p', 'fb-runfacts', [where, task.crop_name, respNames.length ? '{i:user} ' + respNames.join(' + ') : null,
       task.extraZone ? null : `about ${fmtMin(task.minutes)}`,
       sop?.safety_ppe ? 'PPE: ' + sop.safety_ppe : null, sop?.tools ? 'Tools: ' + sop.tools : null].filter(Boolean).join(' · ')));
+    // a treatment (0.11.145, migration 0269): what to mix, as Naked Heart planned it — the rate, the quantity, the water
+    // with its L/ha and the crop phase, the strength per litre, whether the label's limit per hectare held it
+    // (a release or a trap carries no water: its line says what is planned, not what to mix)
+    if (String(task.generation_key || '').startsWith('ipm:') && task.notes) {
+      head.append(el('p', 'fb-runfacts', (/ L of water/.test(task.notes) ? 'Mix: ' : 'Planned: ') + task.notes));
+    }
     // the scouting's how-to, folded under its title (0.11.74; it was the ? tab)
     if (isScouting(sop)) head.append(howItWorks());
     // a crop task's batches, folded under the facts (they were on the task page)
