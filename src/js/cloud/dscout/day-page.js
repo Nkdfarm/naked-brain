@@ -161,7 +161,7 @@
   async function dgPrune() {
     try {
       const keys = await tx('kv', 'readonly', s => s.getAllKeys());
-      const from = new Date(Date.now() - 8 * 864e5).toISOString().slice(0, 10);
+      const from = addDays(todayISO(), -8);   // the farm's day (0.11.146)
       const old = keys.filter(k => /^dg_cache:/.test(String(k)) && String(k).slice(-10) < from);
       if (old.length) await tx('kv', 'readwrite', s => old.forEach(k => s.delete(k)));
     } catch (e) { /* kept */ }
@@ -212,7 +212,7 @@
     const row = el('div', 'dg-days');
     const today = todayISO();
     for (let i = 0; i < 7; i++) {
-      const d = new Date(Date.now() - i * 864e5 - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+      const d = addDays(today, -i);            // the farm's days (0.11.146)
       const b = el('button', 'fb-btn dg-day' + (d === DG.day ? ' on' : ''), i === 0 ? 'Today' : i === 1 ? 'Yesterday'
         : new Date(d + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'short', day: 'numeric' }));
       b.type = 'button'; b.setAttribute('aria-pressed', String(d === DG.day));

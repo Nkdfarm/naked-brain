@@ -124,8 +124,10 @@
     const edited = !!R.edit && !R.resume;
     // an extra scouting: sent as it is — only a word about the sections left empty this time
     const empty = X ? SC_TABS.filter(([k]) => k !== 'trap' && !photos.some(p => p.section === k)).map(([, l]) => l.toLowerCase()) : [];
-    showToast(X ? 'Sent ✓ — added to today\'s report' + (sc.outcome === 'nok' ? ', the manager is told' : '') + (empty.length && empty.length < 2 ? ` · no ${empty.join(', no ')} this time` : '')
-      : edited ? 'Changes saved ✓' : sc.outcome === 'nok' ? 'Saved — not OK, the manager is told' : 'Scouting done ✓', sc.outcome === 'nok' ? 'error' : 'success');
+    const doneMsg = X ? 'Sent ✓ — added to today\'s report' + (sc.outcome === 'nok' ? ', the manager is told' : '') + (empty.length && empty.length < 2 ? ` · no ${empty.join(', no ')} this time` : '')
+      : edited ? 'Changes saved ✓' : sc.outcome === 'nok' ? 'Saved — not OK, the manager is told' : 'Scouting done ✓';
+    // without signal it waits in the outbox: say so, instead of claiming it was sent
+    showToast(navigator.onLine ? doneMsg : 'Saved on this phone — it sends when there is signal', sc.outcome === 'nok' ? 'error' : 'success');
     R.sentOk = true;
     if (run === R) backFromRun();        // back to the day's zones (0.11.67)
     } catch (e) {

@@ -45,8 +45,9 @@
   });
 
   const fmtDay = iso => {
-    const d = new Date(iso + 'T00:00:00'), t0 = new Date(); t0.setHours(0, 0, 0, 0);
-    const diff = Math.round((d - t0) / 86400000);
+    // Today / Tomorrow / Yesterday against the farm's day (0.11.146), not the phone's
+    const d = new Date(iso + 'T00:00:00');
+    const diff = Math.round((Date.parse(iso + 'T12:00:00Z') - Date.parse(farmDay() + 'T12:00:00Z')) / 86400000);
     if (diff === 0) return 'Today';
     if (diff === 1) return 'Tomorrow';
     if (diff === -1) return 'Yesterday';
@@ -60,7 +61,7 @@
   // where it is drawn (FarmBox 0080): an anytime task fills the morning while it has room, else the afternoon
   const BANDS = ['am', 'pm'];
   const bandOf = t => BANDS.includes(t.plan_slot) ? t.plan_slot : (slotOf(t) === 'pm' ? 'pm' : 'am');
-  const todayISO = () => new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+  const todayISO = () => farmDay();      // the farm's day (0.11.146; was the phone's)
 
   // ── grouped tasks (Phase A) ─────────────────────────────────────────────
   // The platform plans ONE task per crop × zone × date and lists the positions

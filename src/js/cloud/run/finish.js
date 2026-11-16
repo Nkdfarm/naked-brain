@@ -41,7 +41,7 @@
       }
       const rows = [...run.harvests.values()].filter(x => num(x.kg) > 0);
       const big = rows.find(x => num(x.kg) > 200);
-      if (big && !confirm(`${big.position_code}: ${big.kg} kg — is that right?`)) return;
+      if (big && !confirm(`${big.position_code}: ${big.kg} kg — is that right?`)) { $('runHint').textContent = 'Not sent — correct the kg, then tap Finish again.'; return; }
       const kg = Math.round(rows.reduce((a, x) => a + num(x.kg), 0) * 100) / 100;
       if (kg > 0) {
         run.steps.filter(s => (s.step_type === 'measure' || s.step_type === 'record') && !run.answers.has(s.seq)).forEach(s => {
@@ -69,16 +69,22 @@
       return;
     }
     // the places (0.11.59): one is done with the checklist; several still red are asked about
-    if (run.items && run.itemsAuto) run.items.forEach(st => { st.done = true; });
-    else if (run.items) {
+    // (the "one is done with the checklist" ticks are made below, once every question that can stop Finish was answered)
+    if (run.items && !run.itemsAuto) {
       const left = [...run.items.values()].filter(st => !st.done);
-      if (left.length && !confirm(`${left.length} place${left.length === 1 ? '' : 's'} still red — send ${left.length === 1 ? 'it' : 'them'} as not done?`)) return;
+      if (left.length && !confirm(`${left.length} place${left.length === 1 ? '' : 's'} still red — send ${left.length === 1 ? 'it' : 'them'} as not done?`)) {
+        $('runHint').textContent = 'Not sent — tick the places, then tap Finish again.';
+        return;
+      }
     }
     // still red (0.11.57): asked, then sent as not OK — the note says why, and the manager is told
     const runNote = String(document.getElementById('fb-runNote')?.value || '').trim();
     if (red.length) {
       const names = red.slice(0, 4).map(x => x.item ? zoneShort(x.item.label) : x.s.title).join(', ') + (red.length > 4 ? '…' : '');
-      if (!confirm(`${red.length} still red (${names}) — send ${red.length === 1 ? 'it' : 'them'} as not OK?`)) return;
+      if (!confirm(`${red.length} still red (${names}) — send ${red.length === 1 ? 'it' : 'them'} as not OK?`)) {
+        $('runHint').textContent = 'Not sent — answer the red steps, then tap Finish again.';
+        return;
+      }
       if (!runNote) {
         $('runHint').textContent = 'Say in the notes what is not OK.';
         showToast('Say in the notes what is not OK', 'error');
@@ -94,6 +100,7 @@
       document.getElementById('fb-runNote')?.focus();
       return;
     }
+    if (run.items && run.itemsAuto) run.items.forEach(st => { st.done = true; });   // a place is done with its checklist
     $('finish').disabled = true;
     $('runHint').textContent = 'Saving…';
     try {
@@ -152,8 +159,9 @@
     }));
     open.forEach(t => { t.status = 'done'; t.done_at = finished; });
     await putAll('tasks', open);
-    // the run first, then its full photos, keyed to sort right after it
-    await queue([...payloads, ...uploads.map((u, n) => ({ __upload: true, client_run_id: `${cid}~up-${String(n).padStart(3, '0')}`,
+    // the run first, then its full photos, keyed to sort right after it; the time in the id (0.11.146, as the scouting's
+    // Finish): an edit's photos under cid~up-000 replaced the first photo of the round still waiting for Wi-Fi
+    await queue([...payloads, ...uploads.map((u, n) => ({ __upload: true, client_run_id: `${cid}~up-${Date.now().toString(36)}-${String(n).padStart(3, '0')}`,
       run_client_id: cid, farm_id: run.task.farm_id || farm.id, kind: u.kind, ref: u.ref, blob: u.blob }))]);
     try { clearTimeout(draftTimer); await del('kv', runDraftKey(R.task)); } catch (e) { /* nothing to clear */ }
     if (R.traps) { try { await del('kv', trapDraftKey(R.task)); } catch (e) { /* nothing to clear */ } }
@@ -162,7 +170,9 @@
     addStop(R);
     const failed = steps.filter(s => s.result === 'nok').length;
     $('finish').disabled = false;
-    showToast(R.edit && !R.resume ? 'Changes saved ✓' : failed ? `Saved — ${failed} step${failed > 1 ? 's' : ''} not OK` : 'Checklist complete ✓',
+    // without signal the run waits in the outbox: say so, instead of claiming it was sent
+    const saved = navigator.onLine ? '' : 'Saved on this phone — it sends when there is signal';
+    showToast(saved || (R.edit && !R.resume ? 'Changes saved ✓' : failed ? `Saved — ${failed} step${failed > 1 ? 's' : ''} not OK` : 'Checklist complete ✓'),
               failed ? 'error' : 'success');
     if (run === R) showWeek();        // not when the person has already opened another task
     } catch (e) {

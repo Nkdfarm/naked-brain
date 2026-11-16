@@ -44,7 +44,7 @@
       --surface: #ffffff; --surface-2: #f8f8fa; --surface-raised: #ffffff; --surface-offset: #efeff3; --surface-dynamic: #e8e8ec; --glass: rgba(255,255,255,0.8);
       --border: rgba(17,17,20,0.09); --divider: rgba(17,17,20,0.07);
       --text: #16161a; --text-primary: #16161a; --text-muted: #5b5b66; --text-faint: #8a8a95; --text-inverse: #ffffff;
-      --primary: #788c5d; --primary-hover: #6a7d51; --primary-active: #5c6d45; --primary-highlight: rgba(120,140,93,0.12);
+      --primary: #5f7247; --primary-hover: #536540; --primary-active: #475836; --primary-highlight: rgba(95,114,71,0.12);   /* 5.3:1 on white (was #788c5d, 3.7:1) */
       --accent: #788c5d; --accent-soft: rgba(120,140,93,0.12); --coral: #e11d48; --coral-soft: rgba(225,29,72,0.10); --lavender-soft: rgba(37,99,235,0.10);
       --ink: #232328; --ink-text: #fafafa; --ink-muted: rgba(250,250,250,0.6);
       --success: #047857; --success-bg: rgba(5,150,105,0.11); --error: #e11d48; --error-bg: rgba(225,29,72,0.09); --warning: #b45309; --warning-bg: rgba(217,119,6,0.13);
@@ -112,14 +112,14 @@
     .logo-text { font-size: var(--text-lg); font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
     .logo-text span { color: var(--primary); }
     .header-actions { display: flex; align-items: center; gap: var(--space-2); }
-    .btn-icon { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: var(--radius-md); color: var(--text-muted); background: transparent; }
+    .btn-icon { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: var(--radius-md); color: var(--text-muted); background: transparent; }
     .btn-icon:hover { background: var(--surface-dynamic); color: var(--text); }
     .btn-icon:active { background: var(--surface-offset); }
 
     /* TABS */
     .tab-bar { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 var(--space-2); overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; flex-shrink: 0; }
     .tab-bar::-webkit-scrollbar { display: none; }
-    .tab-btn { flex: 1; min-width: 64px; padding: var(--space-3) var(--space-2); font-size: var(--text-sm); font-weight: 600; color: var(--text-muted); border-bottom: 2px solid transparent; white-space: nowrap; text-align: center; border-radius: 0; }
+    .tab-btn { flex: 1; min-width: 64px; min-height: 44px; padding: var(--space-3) var(--space-2); font-size: var(--text-sm); font-weight: 600; color: var(--text-muted); border-bottom: 2px solid transparent; white-space: nowrap; text-align: center; border-radius: 0; }
     .tab-btn:hover { color: var(--text); background: var(--surface-dynamic); }
     .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
 
@@ -154,7 +154,7 @@
     #gpsSaveBtn:disabled { opacity: .45; }
     .gps-saved { display: flex; align-items: center; gap: var(--space-2); }
     .gps-stamp { font-size: var(--text-xs); color: var(--text-muted); text-decoration: none; }
-    .gps-remove { min-height: 28px !important; padding: 0 var(--space-3) !important; }
+    .gps-remove { min-height: 44px !important; padding: 0 var(--space-3) !important; }
 
     /* EDITABLE BOX */
     .editable-box-wrap { margin-bottom: var(--space-4); }
@@ -358,7 +358,7 @@
 
     /* Tabs → pill chips: which Notion database this capture goes to */
     .tab-bar { background: transparent; border-bottom: none; padding: var(--space-2) var(--space-4); gap: var(--space-2); }
-    .tab-btn { flex: 0 0 auto; min-width: 0; min-height: 40px; padding: 0 var(--space-4); border-radius: var(--radius-full); border: 1px solid var(--border);
+    .tab-btn { flex: 0 0 auto; min-width: 0; min-height: 44px; padding: 0 var(--space-4); border-radius: var(--radius-full); border: 1px solid var(--border);
       background: var(--glass); color: var(--text); font-weight: 650; box-shadow: var(--shadow-sm); }
     .tab-btn:hover { background: var(--surface); color: var(--text); }
     .tab-btn.active { background: var(--primary); color: var(--text-inverse); border-color: transparent; }
@@ -1015,7 +1015,7 @@
     .fb-runtitle h1 { flex: 1; min-width: 0; margin: 0; }
     .fb-runtitle .fb-link { flex: none; }
     /* feedback on a task (0.11.85): the feedback button on a card, and its page */
-    .fb-fbk { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 40px; margin: -6px -8px -6px -6px;
+    .fb-fbk { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin: -8px -14px -8px -10px;
       border-radius: var(--radius-full); font-size: 18px; opacity: .75; }
     .fb-fbk:active { background: color-mix(in srgb, var(--text) 10%, transparent); }
     #viewFarmbox select.fb-fbk-step { width: 100%; max-width: none; min-height: 44px; margin-bottom: var(--space-3); }
@@ -1048,7 +1048,7 @@
     .fb-step h4 { margin:4px 0 6px; font-size: var(--text-base); line-height:1.35; }
     .fb-inst { font-size: var(--text-sm); color: var(--text-muted); margin-bottom: var(--space-3); }
     .fb-actions { display:flex; gap: var(--space-2); flex-wrap:wrap; }
-    .fb-btn { font:inherit; font-size: var(--text-sm); font-weight:600; padding:8px 14px; min-height:40px;
+    .fb-btn { font:inherit; font-size: var(--text-sm); font-weight:600; padding:8px 14px; min-height:44px;
       border-radius: var(--radius-full); border:1px solid var(--border); background: var(--surface-offset);
       color: var(--text); cursor:pointer; }
     .fb-btn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color:#0d2b27; }
@@ -1089,7 +1089,7 @@
     .fb-step-head { display:flex; align-items:flex-start; justify-content:space-between; gap: var(--space-2); }
     .fb-step-head h4 { flex:1; }
     .fb-link { font:inherit; font-size: var(--text-xs); font-weight:700; color: var(--accent-text, var(--primary));
-      background:none; border:0; padding:8px 4px 8px 10px; cursor:pointer; white-space:nowrap; min-height:40px; }   /* gloves: 40 px (0.11.55) */
+      background:none; border:0; padding:8px 4px 8px 10px; cursor:pointer; white-space:nowrap; min-height:44px; }   /* gloves: 44 px */
     .fb-link[aria-expanded="true"]::after { content: ' ▴'; }
     .fb-link[aria-expanded="false"]::after { content: ' ▾'; }
     .fb-detail { display:none; margin-bottom: var(--space-3); }
@@ -1172,7 +1172,7 @@
     .fb-foot-bad { color: var(--error, #c0392b); cursor: pointer; text-decoration: underline; }
     .fb-sc-tab[aria-pressed="true"] .fb-sc-sub { color: inherit; }
     .fb-sc-tab.off { border-style: dashed; color: var(--text-muted); }
-    .fb-sc-help { flex: 0 0 auto; min-width: 44px; font-size: var(--text-base); }
+    .fb-sc-help { flex: 0 0 auto; min-width: 44px; min-height: 44px; font-size: var(--text-base); }
     .fb-tl-zone { margin: var(--space-3) 0 4px; font-size: var(--text-xs); font-weight: 700; color: var(--text-muted); text-transform: none; }
     .fb-tl-item { border-bottom: 1px solid var(--border); }
     .fb-tl-line { display: flex; align-items: stretch; }
@@ -1212,6 +1212,7 @@
     /* a picture's ✕, in its top right corner (0.11.86) */
     .fb-pic { position: relative; flex: none; line-height: 0; }
     .fb-trap-side .fb-pic { width: 100%; }
+    .fb-pic-x::after { content: ''; position: absolute; inset: -9px; }      /* the ✕ looks 26 px, the tap is 44 px */
     .fb-pic-x { position: absolute; top: 4px; right: 4px; width: 26px; height: 26px; padding: 0; border-radius: 50%; display: grid; place-items: center;
       font: 800 13px/1 inherit; color: #fff; background: rgba(0,0,0,.62); border: 1.5px solid rgba(255,255,255,.75); cursor: pointer; }
     .fb-pic-x:active { background: var(--danger, #d64545); }
@@ -1239,7 +1240,8 @@
     .fb-sc-v.nok { background: var(--coral, #d9534f); }
     .fb-sc-v.ok { background: var(--success, #2e7d32); color: #fff; }
     .fb-sc-tabs .fb-sc-tab { flex: 1 1 0; min-width: 0; padding: 8px 4px; }
-    .fb-sc-tabs .fb-sc-help { flex: 0 0 32px; min-width: 32px; padding: 8px 0; }
+    .fb-sc-tabs .fb-sc-help { flex: 0 0 32px; min-width: 32px; padding: 8px 0; position: relative; }
+    .fb-sc-tabs .fb-sc-help::after { content: ''; position: absolute; inset: 0 -6px; }   /* 44 px to tap, 32 px to see */
     .fb-sc-tabs .fb-sc-name { white-space: nowrap; gap: 4px; }
     .fb-sc-tabs .fb-sc-sub { white-space: nowrap; }
     @media (max-width: 420px) { .fb-sc-tabs .fb-sc-v { width: 10px; height: 10px; font-size: 8px; } }
@@ -1310,7 +1312,7 @@
       background: linear-gradient(rgba(0,0,0,.6), transparent); color: #fff; pointer-events: none; }
     .fb-viewer-head .fb-meta { color: #ddd; }
     .fb-viewer-bar { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; padding: 10px 10px 20px; background: #000; }
-    .fb-viewer-bar .fb-btn { min-height: 40px; padding: 6px 12px; font-size: var(--text-sm); white-space: nowrap; }
+    .fb-viewer-bar .fb-btn { min-height: 44px; padding: 6px 12px; font-size: var(--text-sm); white-space: nowrap; }
     .fb-sc-card .fb-shot img, .fb-trap-side img { cursor: zoom-in; }
     .fb-btn.fb-auto { border-style: dashed; }
     .fb-measure-bar { flex-wrap: wrap; gap: 8px; justify-content: center; }
@@ -1448,7 +1450,14 @@
       return txt.includes("CURRENT_VERSION = '" + v + "'");
     } catch (_) { return false; }
   }
-  async function checkForUpdates() {
+  // one check at a time (0.11.146, review of 16 Nov): on waking, the screen coming back and the signal coming back ask
+  // together, and the second saw the first one's number as "said twice" at once
+  let checkingNow = null;
+  function checkForUpdates() {
+    checkingNow = checkingNow || checkUpdateOnce().finally(() => { checkingNow = null; });
+    return checkingNow;
+  }
+  async function checkUpdateOnce() {
     try {
       const res = await fetch('./version.json?t=' + Date.now());
       if (!res.ok) return;
@@ -1509,6 +1518,8 @@
       if (tb && tb.style.display && tb.style.display !== 'none') return false;
     } catch (_) {}
     try { if (submitting || mediaFiles.length) return false; } catch (_) {}   // names of a later script: not there yet = nothing held
+    // the outbox being sent, or Force send running (0.11.146): a reload cut the upload, and it went up again under a new name
+    try { if (typeof window.fbSending === 'function' && window.fbSending()) return false; } catch (_) {}
     return true;
   }
   function autoUpdate(v) {
@@ -2116,10 +2127,10 @@ document.addEventListener('DOMContentLoaded', () => {
      Off by default; Settings → Data source turns it on. -->
 <section class="app-view" id="viewFarmbox" aria-label="Tasks">
   <div class="sop-bar">
-    <button id="fb-back" class="btn-icon hidden" aria-label="Back">←</button>
+    <button id="fb-back" class="btn-icon hidden" aria-label="Back" title="Back">←</button>
     <div id="fb-title" class="hdr-title">Tasks</div>
     <span id="fb-net" class="net-pill hidden">Offline</span>
-    <button id="fb-sendall" class="btn-icon fb-sendall" aria-label="Force send: everything on this phone, as it stands" title="Force send: everything on this phone, as it stands"><i data-ic="upload"></i> Force send</button>
+    <button id="fb-sendall" class="btn-icon fb-sendall" aria-label="Send everything now: everything on this phone, as it stands" title="Send everything now: everything on this phone, as it stands"><i data-ic="upload"></i> Send all</button>
     <button id="fb-scan" class="btn-icon" aria-label="Scan a batch label" title="Scan a batch label"><i data-ic="qr"></i></button>
     <button id="fb-sync" class="btn-icon" aria-label="Sync now" title="Sync now">⟳</button>
   </div>
@@ -2167,11 +2178,11 @@ document.addEventListener('DOMContentLoaded', () => {
 <!-- SOP: procedures, checklists, editor and import (SoP module script at the end) -->
 <section class="app-view" id="viewSop" aria-label="Tasks">
   <div class="sop-bar">
-    <button id="sop-backBtn" class="btn-icon hidden" aria-label="Back">←</button>
+    <button id="sop-backBtn" class="btn-icon hidden" aria-label="Back" title="Back">←</button>
     <div id="sop-hdrTitle" class="hdr-title"></div>
     <span id="sop-netPill" class="net-pill hidden">Offline</span>
     <button id="sop-syncBtn" class="btn-icon hidden" aria-label="Upload pending runs" title="Upload pending runs"><i data-ic="upload"></i></button>
-    <button id="sop-menuBtn" class="btn-icon" aria-label="SoP menu">⋯</button>
+    <button id="sop-menuBtn" class="btn-icon" aria-label="SoP menu" title="SoP menu">⋯</button>
   </div>
   <div id="sop-view" class="sop-main"></div>
 </section>
@@ -2391,7 +2402,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <!-- SETTINGS PAGE: appearance is open to everyone; the Notion configuration needs the PIN -->
 <div id="settingsPage" class="hidden" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
   <div class="settings-head">
-    <button class="btn-icon" id="settingsBack" aria-label="Back">
+    <button class="btn-icon" id="settingsBack" aria-label="Back" title="Back">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
     <span style="font-weight:700">Settings</span>
@@ -2705,17 +2716,9 @@ let noteStartTime = new Date();
 // first gets something (updateSubmitBtn); a draft that comes back keeps the start it had (restoreDraft).
 let noteStarted = false;
 
-function renderNoteStamp() {
-  const d = noteStartTime;
-  const dateStr = d.toLocaleDateString(undefined, { weekday:'short', day:'2-digit', month:'short', year:'numeric' });
-  const timeStr = d.toLocaleTimeString(undefined, { hour:'2-digit', minute:'2-digit' });
-  // The date/author line was removed from the capture box (0.9.13); keep this
-  // safe in case it comes back.
-  const dateEl = document.getElementById('noteDate');
-  if (dateEl) dateEl.textContent = `${dateStr} · ${timeStr}`;
-  const authorEl = document.getElementById('noteAuthorStamp');
-  if (authorEl) authorEl.textContent = document.getElementById('authorName')?.value.trim() || '';
-}
+// The date/author stamp line was removed from the capture box (0.9.13); nothing is drawn any more. The function
+// stays because several places call it.
+function renderNoteStamp() {}
 
 // ─── GPS LOCATION ────────────────────────────────────────────
 // Added on demand with "Add location" (never automatic): the live precision
@@ -3094,12 +3097,16 @@ setAppMode(new URLSearchParams(location.search).get('action') === 'record' ? 'ca
 
 // ─── TOAST ───────────────────────────────────────────────────
 let toastTimer;
+let toastErrUntil = 0;   // an error stays up ~7 s and is not replaced by an info toast meanwhile
 function showToast(msg, type = 'info') {
   const t = document.getElementById('toast');
+  if (type === 'info' && Date.now() < toastErrUntil) return;
   t.textContent = msg;
   t.className = `toast ${type} show`;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+  const ms = type === 'error' ? 7000 : 3500;
+  toastErrUntil = type === 'error' ? Date.now() + ms : 0;
+  toastTimer = setTimeout(() => t.classList.remove('show'), ms);
 }
 
 // ─── RECORDING ───────────────────────────────────────────────
@@ -4668,7 +4675,6 @@ document.getElementById('videoSummaryVideoInput').addEventListener('change', asy
   // ── Transcription for the first file (reuses shared audio extraction) ──
   if (files.length > 0) {
     const file = files[0];
-    const mb = (file.size / 1024 / 1024);
     const bar    = document.getElementById('videoTranscribingBar');
     const status = document.getElementById('videoTranscribingStatus');
     bar.style.display = 'flex';
@@ -5251,12 +5257,6 @@ async function getDbProps(dbId) {
     try { dbPropsWhy = failureReason(e); } catch (_) { dbPropsWhy = ''; }
     return {};
   }
-}
-
-async function getTitlePropName(dbId) {
-  const props = await getDbProps(dbId);
-  const entry = Object.entries(props).find(([, v]) => v.type === 'title');
-  return entry ? entry[0] : 'Title';
 }
 
 // Cache the workspace member list (rarely changes) to resolve author names to Notion user IDs.
@@ -6480,7 +6480,12 @@ async function showRun(id) {
 function requestAuthor() {
   openAuthorGate(false);
   return new Promise(resolve => {
-    const poll = setInterval(() => { const n = getAuthor(); if (n) { clearInterval(poll); resolve(n); } }, 300);
+    // stops when the name is saved, or when the name dialog is closed with no name (then null: the caller goes back)
+    const poll = setInterval(() => {
+      const n = getAuthor();
+      const gate = document.getElementById('authorGate');
+      if (n || !gate || gate.classList.contains('hidden')) { clearInterval(poll); resolve(n || null); }
+    }, 300);
   });
 }
 
@@ -7355,30 +7360,55 @@ function sopOpen() {
   const STORES = ['kv', 'tasks', 'sops', 'versions', 'steps', 'outbox', 'positions', 'traps', 'task_workers', 'workers'];
   let dbp;
   function db() {
-    return dbp || (dbp = new Promise((res, rej) => {
+    if (dbp) return dbp;
+    const p = dbp = new Promise((res, rej) => {
       const r = indexedDB.open('farmbox', 4);
       r.onupgradeneeded = () => STORES.forEach(s => {
         if (!r.result.objectStoreNames.contains(s)) r.result.createObjectStore(s, { keyPath: 'id' });
       });
       r.onsuccess = () => {
+        const d = r.result;
         // another tab upgrading later: let go of this connection, reopen on demand
-        r.result.onversionchange = () => { r.result.close(); dbp = null; };
-        res(r.result);
+        d.onversionchange = () => { d.close(); if (dbp === p) dbp = null; };
+        // 0.11.146: closed by the browser (an iPhone after the app was in the background): reopened at the next use
+        d.onclose = () => { if (dbp === p) dbp = null; };
+        res(d);
       };
-      r.onerror = () => { dbp = null; rej(r.error); };
-      r.onblocked = () => { dbp = null; rej(new Error('Close the other Naked Brain tab and reload')); };
-    }));
-  }
-  async function tx(store, mode, fn) {
-    const d = await db();
-    return new Promise((res, rej) => {
-      const t = d.transaction(store, mode), s = t.objectStore(store);
-      const out = fn(s);
-      t.oncomplete = () => res(out && out.result !== undefined ? out.result : out);
-      t.onerror = () => rej(t.error);
-      t.onabort = () => rej(t.error || new Error('the phone refused to save (storage full?)'));
+      r.onerror = () => { if (dbp === p) dbp = null; rej(r.error); };
+      r.onblocked = () => { if (dbp === p) dbp = null; rej(new Error('Close the other Naked Brain tab and reload')); };
     });
+    return p;
   }
+  // 0.11.146 (review of 16 Nov): WebKit drops the connection after the app was in the background ("Connection to
+  // Indexed Database server lost"), and every save failed until a reload — Finish said "Could not save". Such a
+  // failure opens the database again and tries once more; nothing was written by the failed try.
+  const idbLost = e => !!e && (e.name === 'InvalidStateError' || e.name === 'UnknownError'
+    || /connection.*(lost|clos)|database.*clos/i.test(String(e.message || '')));
+  async function tx(store, mode, fn, again = true) {
+    const p = db(), d = await p;
+    try {
+      return await new Promise((res, rej) => {
+        const t = d.transaction(store, mode), s = t.objectStore(store);
+        const out = fn(s);
+        t.oncomplete = () => res(out && out.result !== undefined ? out.result : out);
+        t.onerror = () => rej(t.error);
+        t.onabort = () => rej(t.error || Object.assign(new Error('the phone refused to save (storage full?)'), { noError: true }));
+      });
+    } catch (e) {
+      // an abort with no reason, or a plain AbortError, after the browser closed the connection (onclose let it go) is
+      // the same lost connection
+      const closedUnder = dbp !== p && !!e && (e.noError || e.name === 'AbortError');
+      if (!again || !(idbLost(e) || closedUnder)) throw e;
+      if (dbp === p) { dbp = null; try { d.close(); } catch (x) { /* gone already */ } }
+      return tx(store, mode, fn, false);
+    }
+  }
+  // and when the app comes back on screen, a connection the browser closed meanwhile is let go before anything uses it
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden || !dbp) return;
+    const p = dbp;
+    p.then(d => { try { d.transaction('kv', 'readonly'); } catch (e) { if (idbLost(e) && dbp === p) dbp = null; } }, () => {});
+  });
   const putAll = (store, rows) => rows && rows.length
     ? tx(store, 'readwrite', s => rows.forEach(r => s.put(r))) : Promise.resolve();
   const all = store => tx(store, 'readonly', s => s.getAll());
@@ -7492,13 +7522,40 @@ function sopOpen() {
     return d;
   }
   let authWanted = false;    // the session was refused while something else was on screen: the form shows with the list
+  // 0.11.146 (review of 16 Nov): the session as this phone's storage holds it now — another window of the app (the
+  // installed one and a browser tab) may have refreshed it meanwhile, and the token kept here is then the used one
+  const storedSession = () => { try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch (e) { return null; } };
+  addEventListener('storage', e => {
+    if (e.key !== SESSION_KEY) return;
+    try { session = JSON.parse(e.newValue || 'null'); } catch (x) { return; }
+    try { paintAccount(); } catch (x) { /* drawn at the next screen */ }
+  });
   let refreshing = null;
   function refresh() {
     refreshing = refreshing || doRefresh().finally(() => { refreshing = null; });
     return refreshing;
   }
   async function doRefresh() {
+    // another window refreshed already: its new token is taken, not the used one sent again (which signs out)
+    const st = storedSession();
+    if (st?.refresh_token && st.refresh_token !== session?.refresh_token) {
+      session = st;
+      if (!session.expires_at || Date.now() < session.expires_at) return true;
+    }
     if (!session?.refresh_token) return false;
+    try { return await refreshOnce(); }
+    catch (e) {
+      // the connection dropped before the answer (not the time limit, not a status): tried once more in two seconds,
+      // inside the server's reuse interval — a lost answer had already used the token, and the next try much later
+      // was refused and signed the person out
+      if (/^\d{3} |no answer in time/.test(String((e && e.message) || ''))) throw e;
+      await new Promise(res => setTimeout(res, 2000));
+      return refreshOnce();
+    }
+  }
+  async function refreshOnce() {
+    if (!session?.refresh_token) return false;
+    const sent = session.refresh_token;
     // the same time limit as api() — 45 s for the request and its small answer: a refresh that never answered held
     // every call waiting on it. Cut, it is a network failure like any other: the session is kept (only the server's
     // no ends it, below), and the callers get an error with no status, as when the connection drops.
@@ -7507,11 +7564,15 @@ function sopOpen() {
     try {
       const r = await fetch(`${URL_BASE}/auth/v1/token?grant_type=refresh_token`, {
         method: 'POST', headers: { apikey: ANON, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refresh_token: session.refresh_token }),
+        body: JSON.stringify({ refresh_token: sent }),
         ...(ctl ? { signal: ctl.signal } : {})
       });
       // only a refused token ends the session (0.11.55): a 5xx or 429 is the server's trouble, not the worker's
       if (r.status === 400 || r.status === 401 || r.status === 403) {
+        // 0.11.146: refused because another window used it first — its newer session is in storage: taken, kept signed in.
+        // The session is ended only while storage still holds the refused token.
+        const now = storedSession();
+        if (now?.refresh_token && now.refresh_token !== sent) { session = now; try { paintAccount(); } catch (e) { /* later */ } return true; }
         saveSession(null);
         // said, and back to the sign-in form, as Naked Heart does: the list used to stay on screen with nothing sent and
         // not a word. Never over an open checklist or task page — there the form comes with the list (showWeek).
@@ -7567,11 +7628,15 @@ function sopOpen() {
       // first whole sync on a weak link must not be cut and start again from nothing. It is one limit for the whole
       // body, not one that starts again with every piece.
       if (own) { clearTimeout(limit); limit = setTimeout(cut, Math.max(1800000, Math.round((Number(r.headers.get('content-length')) || 0) / 2))); }
-      if (r.status === 401 && retry) {
+      // 0.11.146 (review of 16 Nov): Storage says an expired token with a 400 or a 403 ("jwt expired"), not a 401 — a
+      // phone whose clock runs behind sent one, and its photos were set aside for good. Refreshed and tried once too.
+      const storageNo = retry && (r.status === 400 || r.status === 403) && path.startsWith('/storage/');
+      if ((r.status === 401 || storageNo) && retry) {
         // the token is tried again below. What the server said is a few words: five seconds for them, no more — read
         // under the body's long limit, a 401 that stopped coming held the retry, the flush and the sync with it
         if (own) { clearTimeout(limit); limit = setTimeout(cut, 5000); }
         try { said401 = await r.text(); } catch (e) { /* the status says enough */ }
+        if (r.status !== 401 && !/jwt expired|exp" claim|exp claim|token is expired|invalid jwt/i.test(said401)) throw new Error(`${r.status} ${said401.slice(0, 160)}`);
       } else {
         if (!r.ok) throw new Error(`${r.status} ${(await r.text()).slice(0, 160)}`);
         return r.status === 204 ? null : await r.json();
@@ -7587,6 +7652,7 @@ function sopOpen() {
 
   // ── sync ────────────────────────────────────────────────────────────────
   let farm = null, syncing = false;
+  let cursorGen = 0;                       // raised by a flush that clears the cursor (a report set aside), 0.11.146
   // the feedback button on every task (0.11.85, FarmBox 0189): on while the farm has the feedback switched on; kept for offline days
   let FEEDBACK_ON = null;
   async function feedbackOn() {
@@ -7604,18 +7670,42 @@ function sopOpen() {
     await setKV('farm', farm);
     return farm;
   }
+  // the farm's own day (0.11.146, review of 16 Nov): "today" was the phone's day, and a phone set to UTC or abroad filed
+  // the work of 00:00–02:00 on yesterday. farmDay(date or ms, default now) is YYYY-MM-DD in farm.timezone
+  // (Johannesburg when the farm is not read yet); addDays moves such a day by n days.
+  let dayFmt = null, dayFmtTz = null;
+  function farmDay(at) {
+    const t = at == null ? new Date() : at instanceof Date ? at : new Date(at);
+    const tz = (farm && farm.timezone) || 'Africa/Johannesburg';
+    try {
+      if (!dayFmt || dayFmtTz !== tz) { dayFmt = new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }); dayFmtTz = tz; }
+      const p = {}; dayFmt.formatToParts(t).forEach(x => { p[x.type] = x.value; });
+      if (p.year && p.month && p.day) return `${p.year}-${p.month}-${p.day}`;
+    } catch (e) { dayFmt = null; /* an unknown zone: the phone's day, as before */ }
+    return new Date(t - t.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+  }
+  const addDays = (day, n) => { const t = new Date(day + 'T12:00:00Z'); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10); };
 
   // what kind of failure it was, for words a worker can use: 'net' = no connection or no answer ("Failed to fetch",
   // "Load failed" on an iPhone, the time limit of api()), 'busy' = the server's own trouble, 'out' = the session ended
   const errKind = e => { const m = String((e && e.message) || e || '');
     return /Failed to fetch|Load failed|NetworkError|network error|no answer in time/i.test(m) ? 'net' : /^5\d\d /.test(m) ? 'busy' : m === 'signed out' ? 'out' : ''; };
+  // the tasks this phone has closed and whose report, tick or cancel is still in the outbox
+  const unsentTasks = async () => new Set((await all('outbox')).filter(r => !r.dead && r.payload && r.payload.task_id
+    && (r.payload.__tick || r.payload.__skip || (!r.payload.__timer && !r.payload.__upload && !r.payload.__clock
+        && !r.payload.__feedback && !r.payload.__ghnote && r.payload.status === 'completed'))).map(r => r.payload.task_id));
   async function sync(full, quiet) {
     if (syncing || !session) return;
     syncing = true; $('sync').classList.add('spin');
     try {
       await pickFarm();
       const timesBefore = quiet ? JSON.stringify((await getKV('task_times')) || []) : null;
+      const gen = cursorGen;
       const since = full ? null : await getKV('cursor');
+      // read before the call too (0.11.146): the outbox is sent beside the sync now, and a report that went up while
+      // the server answered is no longer in the outbox after it
+      let unsentBefore = new Set();
+      try { unsentBefore = await unsentTasks(); } catch (e) { /* read again below */ }
       const d = await api('/rest/v1/rpc/sync_since', {
         method: 'POST',
         body: JSON.stringify({ p_farm: farm.id, p_since: since || '-infinity' })
@@ -7626,9 +7716,7 @@ function sopOpen() {
       // and never over a task the server cancelled. Anything unexpected here: the server's rows as they came, as before.
       let fromServer = d.tasks;
       try {
-        const unsent = new Set((await all('outbox')).filter(r => !r.dead && r.payload && r.payload.task_id
-          && (r.payload.__tick || r.payload.__skip || (!r.payload.__timer && !r.payload.__upload && !r.payload.__clock
-              && !r.payload.__feedback && !r.payload.__ghnote && r.payload.status === 'completed'))).map(r => r.payload.task_id));
+        const unsent = new Set([...unsentBefore, ...(await unsentTasks())]);
         if (unsent.size && Array.isArray(d.tasks)) {
           const shut = st => st === 'done' || st === 'skipped';
           const had = new Map((await all('tasks')).map(t => [t.id, t]));
@@ -7717,8 +7805,8 @@ function sopOpen() {
       // The server only sends tasks from a week back: anything older on the
       // phone can never be updated again (a cancellation would not arrive), so
       // it goes — done or not. The outbox keeps what is still to upload.
-      const keepFrom = new Date(Date.now() - 7 * 86400000 - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
-      const todayIs = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+      // the farm's day, not the phone's (0.11.146)
+      const todayIs = farmDay(), keepFrom = addDays(todayIs, -7);
       const stale = (await all('tasks')).filter(t => t.planned_date && (t.planned_date < keepFrom
         || (t.local && t.planned_date < todayIs && String(t.generation_key || '').startsWith('extra:scouting:'))));
       for (const t of stale) await del('tasks', t.id);
@@ -7727,7 +7815,8 @@ function sopOpen() {
         for (const p of (await all('positions')).filter(p => gone.has(p.task_id))) await del('positions', p.id);
         for (const x of (await all('task_workers')).filter(x => gone.has(x.task_id))) await del('task_workers', x.id);
       }
-      await setKV('cursor', d.cursor);
+      // a flush that set a report aside meanwhile cleared the cursor for a whole read: that is not undone here (0.11.146)
+      if (gen === cursorGen) await setKV('cursor', d.cursor);
       await setKV('synced_at', Date.now());
       // Digital scouting (0.11.132): today's zone counters for the scouting task cards; a task of mine whose zone has
       // every minimum is ticked done here, on my own phone
@@ -7736,7 +7825,9 @@ function sopOpen() {
       liveOpen();
       // the reports kept for adding offline go after eight days
       for (const r of (await all('kv')).filter(r => String(r.id).startsWith('sent:') && (r.v?.kept || 0) < Date.now() - 8 * 86400000)) await del('kv', r.id);
-      await flush();
+      // not waited for (0.11.146, review of 16 Nov): a flush with full photos runs for minutes, and every sync meanwhile
+      // did nothing — the minute's, the live "moved", the ⟳ tap. flush() is one pass at a time by itself.
+      flush().catch(e => console.warn('flush:', e));
       // a sync never pulls anybody out of a task or a checklist they have open (0.11.39)
       // the minute's quiet sync (0.11.84) redraws the day only when a task, a name or somebody's timer moved
       const moved = !quiet || dgMoved || (d.tasks || []).length > 0 || (d.deleted || []).length > 0
@@ -7814,12 +7905,57 @@ function sopOpen() {
 
   // ── the outbox: nothing a worker records is ever lost ───────────────────
   let outboxDirty = false;                 // something was queued since the running pass read the outbox (doFlush)
+  // the photos of a row as plain bytes on an iPhone (a Blob in the browser's database is the weak spot there after a
+  // kill, 0.11.99); 0.11.146: the step photos, trap photos and the items of a feedback or a note too, not only the
+  // photo rows — unBlob() gives them back when they are sent
+  // one photo at a time, and one the phone cannot read stays as it is: Finish still saves the report (the send says
+  // what was lost), it used to say "Could not save" with nothing queued
+  const packSafe = async (b, type) => {
+    if (!(b instanceof Blob)) return b;
+    try { return type ? { __ab: await b.arrayBuffer(), type } : await packBlob(b); } catch (e) { return b; }
+  };
+  async function packRow(u) {
+    if (!IS_IOS || !u) return;
+    if (u.__upload) u.blob = await packSafe(u.blob);
+    if (u.__dg) for (const x of (u.uploads || [])) x.blob = await packSafe(x.blob);
+    if (u.__gallery) { u.blob = await packSafe(u.blob); u.thumb = await packSafe(u.thumb); }
+    if (Array.isArray(u.steps) && u.steps.some(s => Array.isArray(s.media_blobs))) {
+      const steps = [];
+      for (const s of u.steps) {
+        if (!Array.isArray(s.media_blobs)) { steps.push(s); continue; }
+        const mb = [];
+        for (const b of s.media_blobs) mb.push(await packSafe(b));
+        steps.push({ ...s, media_blobs: mb });
+      }
+      u.steps = steps;
+    }
+    if (Array.isArray(u.traps) && u.traps.some(t => t.photo_blob instanceof Blob)) {
+      const traps = [];
+      for (const t of u.traps) traps.push(t.photo_blob instanceof Blob ? { ...t, photo_blob: await packSafe(t.photo_blob) } : t);
+      u.traps = traps;
+    }
+    // a video stays a Blob: tens of megabytes read into memory at once is what closes the app on an iPhone
+    if ((u.__feedback || u.__ghnote) && Array.isArray(u.items)) {
+      const items = [];
+      for (const x of u.items) items.push(x && x.kind !== 'video' && x.blob instanceof Blob
+        ? { ...x, blob: await packSafe(x.blob, x.blob.type || (x.kind === 'audio' || u.__ghnote ? 'audio/webm' : 'image/jpeg')) } : x);
+      u.items = items;
+    }
+  }
+  // every row written to the outbox goes through here: its photos packed, and a revision of its own (0.11.146, review
+  // of 16 Nov) — Finish after Force send or Hand over, or an edit, writes a newer row under the same id while the older
+  // one is being sent, and the pass deleted the newer one as sent or wrote the older one back over it. A pass now
+  // writes back or deletes only the row it read (sameRow, in the flush).
+  let revN = 0;
+  async function queueRows(rows) {
+    for (const r of rows) await packRow(r.payload);
+    const t = Date.now().toString(36);
+    await putAll('outbox', rows.map(r => ({ ...r, rev: `${t}-${++revN}` })));
+    outboxDirty = true;
+  }
   async function queue(payloads) {
     const list = Array.isArray(payloads) ? payloads : [payloads];
-    if (IS_IOS) for (const u of list) if (u.__upload && u.blob instanceof Blob) u.blob = await packBlob(u.blob);
-    if (IS_IOS) for (const u of list) if (u.__dg) for (const x of (u.uploads || [])) if (x.blob instanceof Blob) x.blob = await packBlob(x.blob);
-    if (IS_IOS) for (const u of list) if (u.__gallery) { if (u.blob instanceof Blob) u.blob = await packBlob(u.blob); if (u.thumb instanceof Blob) u.thumb = await packBlob(u.thumb); }
-    await putAll('outbox', list.map((payload, i) => ({ id: payload.client_run_id, payload, tries: 0, at: Date.now() + i })));
+    await queueRows(list.map((payload, i) => ({ id: payload.client_run_id, payload, tries: 0, at: Date.now() + i })));
     list.forEach(p => { if (!p.__timer && !p.__upload && !p.__tick && !p.__skip && !p.__clock && !p.__feedback && !p.__ghnote && !p.__gallery) keepSent(p); });
     // done, not done, or a checklist sent: that task's timer stops (the server stops its own with the task)
     list.forEach(p => { if (p.task_id && (p.__tick || p.__skip || (!p.__timer && !p.__upload && p.status === 'completed'))) timerCloseLocal(p.task_id); });
@@ -7872,6 +8008,31 @@ function sopOpen() {
     flushing = flushing || doFlush().finally(() => { flushing = null; sendClientLog().catch(() => {}); });
     return flushing;
   }
+  // the update by itself waits while something is being sent (0.11.146): a reload cut an upload, and it went up again
+  // under a new name, leaving the first file in no report
+  window.fbSending = () => !!flushing || !!$('sendall')?.disabled;
+  // 0.11.146 (review of 16 Nov): a pass writes back or deletes a row only while the outbox still holds the one it read
+  // — a newer row under the same id (Finish after Force send or Hand over, an edit) has another revision and goes in
+  // the next pass. Rows from before 0.11.146 have no revision: their time tells them apart.
+  const sameRow = (a, b) => !!a && !!b && (a.rev || null) === (b.rev || null) && (a.at || 0) === (b.at || 0);
+  const newerRow = () => { outboxDirty = true; const e = new Error('a newer copy of it is waiting on this phone'); e.superseded = true; return e; };
+  async function outboxKeep(row) {
+    let ok = false;
+    await tx('outbox', 'readwrite', s => { const q = s.get(row.id); q.onsuccess = () => { ok = sameRow(q.result, row); if (ok) s.put(row); }; });
+    if (!ok) throw newerRow();
+  }
+  async function outboxDone(row) {
+    let ok = false;
+    await tx('outbox', 'readwrite', s => { const q = s.get(row.id); q.onsuccess = () => { ok = !q.result || sameRow(q.result, row); if (ok && q.result) s.delete(row.id); }; });
+    if (!ok) outboxDirty = true;
+  }
+  // a photo kept on the phone that can no longer be read (an iPhone after a kill) failed like a lost connection at every
+  // pass, and the report it rides in never went (0.11.146): tried here once, and said
+  async function readable(b) {
+    try { const piece = b.slice(0, 1); if (typeof piece.arrayBuffer !== 'function') return true; await piece.arrayBuffer(); return true; }
+    catch (e) { return false; }
+  }
+  const PHOTO_GONE = '410 the photo is no longer on this phone';
   // a row the server refuses for good (a task deleted by a reschedule, a bad value) is set aside, not retried for ever
   // in front of everything else: 4xx other than 401/408/429. Network trouble, 5xx and 429 keep the order and wait.
   const refusedForGood = e => { const m = /^(\d{3}) /.exec(String(e?.message || '')); const st = m ? Number(m[1]) : 0;
@@ -7946,13 +8107,14 @@ function sopOpen() {
           // notes' own folder — noted on the row as it lands, so a failure half-way re-sends none twice — then the note
           const u = row.payload;
           for (let i = 0; i < (u.items || []).length; i++) {
-            const x = u.items[i];
-            if (!(x.blob instanceof Blob) || x.path) continue;
-            const type = (x.blob.type || '').split(';')[0] || 'audio/webm';
+            const x = u.items[i], b = unBlob(x.blob);
+            if (!(b instanceof Blob) || x.path) continue;
+            if (!(await readable(b))) { clientNote('photo_lost', `note ${u.client_run_id}: recording ${i} unreadable, sent without it`); delete x.blob; await outboxKeep(row); continue; }
+            const type = (b.type || '').split(';')[0] || 'audio/webm';
             const path = `${u.farm_id || farm.id}/notes/${u.client_run_id}/${i}-${Date.now()}.${fbkExt(type)}`;
-            await api('/storage/v1/object/evidence/' + path, { method: 'POST', headers: { 'Content-Type': type }, body: x.blob });
-            x.path = path; x.bytes = x.blob.size; delete x.blob;
-            await putAll('outbox', [row]);
+            await api('/storage/v1/object/evidence/' + path, { method: 'POST', headers: { 'Content-Type': type }, body: b });
+            x.path = path; x.bytes = b.size; delete x.blob;
+            await outboxKeep(row);
           }
           await api('/rest/v1/rpc/submit_scout_note', { method: 'POST', body: JSON.stringify({ p: {
             farm_id: u.farm_id || farm.id, client_id: u.client_run_id, day: u.day, text: u.text, task_id: u.scout_task_id || null,
@@ -7963,15 +8125,16 @@ function sopOpen() {
           // a feedback on a task (0.11.85, FarmBox 0189): its voice notes, photos and video go to the evidence bucket —
           // each noted on the row as it lands, so a failure half-way re-sends none twice — then the feedback itself
           const u = row.payload;
-          if ((u.items || []).some(x => x.kind === 'video' && x.blob instanceof Blob) && !uploadAllowed()) continue;   // a video waits for Wi-Fi
+          if ((u.items || []).some(x => x.kind === 'video' && unBlob(x.blob) instanceof Blob) && !uploadAllowed()) continue;   // a video waits for Wi-Fi
           for (let i = 0; i < (u.items || []).length; i++) {
-            const x = u.items[i];
-            if (!(x.blob instanceof Blob) || x.path) continue;
-            const type = (x.blob.type || '').split(';')[0] || { audio: 'audio/webm', photo: 'image/jpeg', video: 'video/mp4' }[x.kind];
+            const x = u.items[i], b = unBlob(x.blob);
+            if (!(b instanceof Blob) || x.path) continue;
+            if (!(await readable(b))) { clientNote('photo_lost', `feedback ${u.client_run_id}: ${x.kind} ${i} unreadable, sent without it`); delete x.blob; await outboxKeep(row); continue; }
+            const type = (b.type || '').split(';')[0] || { audio: 'audio/webm', photo: 'image/jpeg', video: 'video/mp4' }[x.kind];
             const path = `${u.farm_id || farm.id}/feedback/${u.client_run_id}/${i}-${Date.now()}.${fbkExt(type)}`;
-            await api('/storage/v1/object/evidence/' + path, { method: 'POST', headers: { 'Content-Type': type }, body: x.blob });
-            x.path = path; x.bytes = x.blob.size; delete x.blob;
-            await putAll('outbox', [row]);
+            await api('/storage/v1/object/evidence/' + path, { method: 'POST', headers: { 'Content-Type': type }, body: b });
+            x.path = path; x.bytes = b.size; delete x.blob;
+            await outboxKeep(row);
           }
           await api('/rest/v1/rpc/submit_feedback', { method: 'POST', body: JSON.stringify({ p: {
             farm_id: u.farm_id || farm.id, client_id: u.client_run_id, task_id: u.task_id, task_title: u.task_title,
@@ -7987,12 +8150,12 @@ function sopOpen() {
           for (const x of (u.uploads || [])) {
             if (x.done) continue;
             const blob = unBlob(x.blob);
-            if (blob instanceof Blob) {
-              try { await api('/storage/v1/object/evidence/' + x.path, { method: 'POST', headers: { 'Content-Type': x.type || blob.type || 'image/jpeg' }, body: blob }); }
-              catch (e) { if (!/Duplicate|already exists/i.test(String(e.message || e))) throw e; }
-            }
+            // its file is gone from the phone (0.11.146): set aside and listed, not marked as sent with no file behind it
+            if (!(blob instanceof Blob) || !(await readable(blob))) throw new Error(PHOTO_GONE);
+            try { await api('/storage/v1/object/evidence/' + x.path, { method: 'POST', headers: { 'Content-Type': x.type || blob.type || 'image/jpeg' }, body: blob }); }
+            catch (e) { if (!/Duplicate|already exists/i.test(String(e.message || e))) throw e; }
             x.done = true; x.blob = null;
-            try { await putAll('outbox', [row]); } catch (e) { /* not noted: a resend meets "Duplicate", which is taken as done */ }
+            try { await outboxKeep(row); } catch (e) { if (e.superseded) throw e; /* not noted: a resend meets "Duplicate", which is taken as done */ }
           }
           const call = () => u.fn ? api('/functions/v1/' + u.fn, { method: 'POST', body: JSON.stringify(u.args || {}) })
                                   : api('/rest/v1/rpc/' + u.rpc, { method: 'POST', body: JSON.stringify(u.args || {}) });
@@ -8002,7 +8165,7 @@ function sopOpen() {
             if (u.rpc === 'dg_read_trap' && u.args?.p?.replace_id && refusedForGood(e)) {
               // the earlier photo could not be replaced (not this person's, or gone): the new one is kept beside it
               delete u.args.p.replace_id;
-              try { await putAll('outbox', [row]); } catch (e2) { /* sent below all the same */ }
+              try { await outboxKeep(row); } catch (e2) { if (e2.superseded) throw e2; /* sent below all the same */ }
               res = await call();
             } else if (dgGoneAlready(u, e)) res = null;    // the item it was about is gone meanwhile: nothing left to do
             else throw e;
@@ -8028,38 +8191,43 @@ function sopOpen() {
           // shows in Naked Heart's unfiled list, where it can be deleted — then the photo goes up afresh, as before.
           const age = Date.now() - (u.path_at || 0);
           const landed = typeof u.path === 'string' && !!u.path && age >= 0 && age < 15 * 60000;
-          if (blob instanceof Blob || landed) {
-            if (!landed) {
-              const path = `${u.farm_id || farm.id}/${u.run_client_id}/${u.kind === 'trap' ? 'trap' : 'scout'}-${String(u.ref).replace(/[^A-Za-z0-9]/g, '')}-${Date.now()}.jpg`;
-              await api('/storage/v1/object/evidence/' + path, { method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: blob });
-              u.path = path; u.path_at = Date.now();
-              try { await putAll('outbox', [row]); } catch (e) { /* not noted: it goes up again next time, as before */ }
-            }
-            await api('/rest/v1/rpc/attach_photo', { method: 'POST',
-              body: JSON.stringify({ p_kind: u.kind, p_run_client_id: u.run_client_id, p_ref: u.ref, p_path: u.path }) });
+          // no file on the phone and none landed (0.11.146): set aside and listed — it was deleted as sent, with nothing
+          // uploaded. A file that landed earlier is still attached when the phone's copy is gone.
+          const hasFile = blob instanceof Blob && await readable(blob);
+          if (!landed && !hasFile && !(typeof u.path === 'string' && u.path)) throw new Error(PHOTO_GONE);
+          if (!landed && hasFile) {
+            const path = `${u.farm_id || farm.id}/${u.run_client_id}/${u.kind === 'trap' ? 'trap' : 'scout'}-${String(u.ref).replace(/[^A-Za-z0-9]/g, '')}-${Date.now()}.jpg`;
+            await api('/storage/v1/object/evidence/' + path, { method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: blob });
+            u.path = path; u.path_at = Date.now();
+            try { await outboxKeep(row); } catch (e) { if (e.superseded) throw e; /* not noted: it goes up again next time, as before */ }
           }
+          await api('/rest/v1/rpc/attach_photo', { method: 'POST',
+            body: JSON.stringify({ p_kind: u.kind, p_run_client_id: u.run_client_id, p_ref: u.ref, p_path: u.path }) });
         }
         else {
           // step photos kept with the run (0.11.55): each goes up, is noted on its step and taken off the row at once,
           // so a failure half-way re-sends none twice
           for (const st of (row.payload.steps || [])) {
             while (Array.isArray(st.media_blobs) && st.media_blobs.length) {
-              const b = st.media_blobs[0];
-              if (b instanceof Blob) {
+              const b = unBlob(st.media_blobs[0]);
+              if (b instanceof Blob && await readable(b)) {
                 const path = `${row.payload.farm_id || farm.id}/${row.payload.client_run_id}/s${st.seq}${st.item_id ? '-' + String(st.item_id).slice(0, 8) : ''}-${Date.now()}.jpg`;
                 await api('/storage/v1/object/evidence/' + path, { method: 'POST', headers: { 'Content-Type': b.type || 'image/jpeg' }, body: b });
                 (st.media = st.media || []).push({ path, kind: 'photo' });
-              }
+              } else clientNote('photo_lost', `report ${row.payload.client_run_id}: a photo of step ${st.seq} could not be read, sent without it`);
               st.media_blobs.shift();
-              await putAll('outbox', [row]);
+              await outboxKeep(row);
             }
             delete st.media_blobs;
           }
           // trap photos that never reached the bucket go first (the run waits if they cannot)
           for (const t of (row.payload.traps || [])) {
-            if (t.photo_blob instanceof Blob && !t.photo_path) {
-              t.photo_path = await uploadTrapPhoto(row.payload.client_run_id, t.code, t.photo_blob, row.payload.farm_id);
-              await putAll('outbox', [row]);
+            const pb = unBlob(t.photo_blob);
+            if (pb instanceof Blob && !t.photo_path) {
+              if (await readable(pb)) t.photo_path = await uploadTrapPhoto(row.payload.client_run_id, t.code, pb, row.payload.farm_id);
+              else clientNote('photo_lost', `report ${row.payload.client_run_id}: the photo of trap ${t.code} could not be read, sent without it`);
+              delete t.photo_blob;
+              await outboxKeep(row);
             }
             delete t.photo_blob;
           }
@@ -8076,20 +8244,20 @@ function sopOpen() {
             clientNote('task_gone', row.payload.task_id);
           }
         }
-        await del('outbox', row.id);
+        await outboxDone(row);             // only the row that was sent: a newer one under its id stays for the next pass
         if (!isUp(row) && !row.payload.__clock && !row.payload.__feedback) told++;
       } catch (e) {
+        if (e && e.superseded) continue;   // a newer row took its place while it was sent: that one goes in the next pass
         const dead = refusedForGood(e);
         if (dead || row.tries === 2) clientNote(dead ? 'refused' : 'retry', `${row.payload.__upload ? 'photo' : row.payload.__gallery ? 'gallery' : row.payload.__timer ? 'timer' : 'report'}: ${String(e.message || e).slice(0, 200)}`);
-        // a digital scouting row taken back while it was being sent (a vote changed meanwhile) is not written back:
-        // it would come back beside the newer one
-        // nor a gallery photo discarded while it was being sent
-        const gone = row.payload && (row.payload.__dg || row.payload.__gallery) && !(await tx('outbox', 'readonly', s => s.get(row.id)).catch(() => true));
-        if (gone) continue;
-        await putAll('outbox', [{ ...row, tries: row.tries + 1, error: String(e.message || e).slice(0, 160), dead }]);
+        // a row taken back while it was being sent (a digital scouting vote changed meanwhile, a gallery photo
+        // discarded, Remove from this phone) is not written back: it would come back beside the newer one; nor is the
+        // older row written over a newer one under the same id (0.11.146)
+        try { await outboxKeep({ ...row, tries: row.tries + 1, error: String(e.message || e).slice(0, 160), dead }); }
+        catch (e2) { if (e2.superseded) continue; throw e2; }
         // set aside, and it closed a task: the sync kept that task closed while the report waited. The next sync reads
         // everything again, so the card shows what the server holds instead of "done" for ever.
-        if (dead && row.payload && row.payload.task_id) { try { await setKV('cursor', null); } catch (e2) { /* the next full sync does it */ } }
+        if (dead && row.payload && row.payload.task_id) { cursorGen++; try { await setKV('cursor', null); } catch (e2) { /* the next full sync does it */ } }
         failedNow.add(row.id);
         if (!isUp(row)) held.add(chainOf(row));   // its photos and its later timer events wait for it; everything else goes on
         if (!navigator.onLine) break;             // the connection went: no point in trying the rest
@@ -8146,8 +8314,9 @@ function sopOpen() {
   });
 
   const fmtDay = iso => {
-    const d = new Date(iso + 'T00:00:00'), t0 = new Date(); t0.setHours(0, 0, 0, 0);
-    const diff = Math.round((d - t0) / 86400000);
+    // Today / Tomorrow / Yesterday against the farm's day (0.11.146), not the phone's
+    const d = new Date(iso + 'T00:00:00');
+    const diff = Math.round((Date.parse(iso + 'T12:00:00Z') - Date.parse(farmDay() + 'T12:00:00Z')) / 86400000);
     if (diff === 0) return 'Today';
     if (diff === 1) return 'Tomorrow';
     if (diff === -1) return 'Yesterday';
@@ -8161,7 +8330,7 @@ function sopOpen() {
   // where it is drawn (FarmBox 0080): an anytime task fills the morning while it has room, else the afternoon
   const BANDS = ['am', 'pm'];
   const bandOf = t => BANDS.includes(t.plan_slot) ? t.plan_slot : (slotOf(t) === 'pm' ? 'pm' : 'am');
-  const todayISO = () => new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+  const todayISO = () => farmDay();      // the farm's day (0.11.146; was the phone's)
 
   // ── grouped tasks (Phase A) ─────────────────────────────────────────────
   // The platform plans ONE task per crop × zone × date and lists the positions
@@ -8395,6 +8564,7 @@ function sopOpen() {
   }
   // a running timer ticks where it shows (the cards, the checklist) without redrawing the page
   setInterval(() => {
+    if (document.hidden) return;                       // nothing to tick while the page is hidden; the next second after it shows catches up
     document.querySelectorAll('[data-timer-ids]').forEach(c => {
       const ids = c.dataset.timerIds.split(',');
       const m = ids.reduce((a, id) => a + taskMinutes(id), 0);
@@ -8510,7 +8680,6 @@ function sopOpen() {
             g.quantity && !isPosUnit(g.unit) && !['system', 'area'].includes(String(g.unit || '').toLowerCase()) ? fmtQty(g.quantity, g.unit) : null,
             g.extra || g.extraZone ? null : fmtMin(g.minutes)].filter(Boolean);       // an extra scouting has no planned time
   };
-  const groupMeta = g => [g.zone_name || g.area, ...qtyBits(g)].filter(Boolean).join(' · ');
   // the zones (or bays) a task visits, when its places are zones: "Zones 1 · 2 · 3 · 4.1 · 4.2" (0.11.60)
   const zonesLine = g => {
     const it = (g.positions || []).filter(p => p.kind && p.kind !== 'position');
@@ -8534,7 +8703,7 @@ function sopOpen() {
         const k = x => x.planned_date + BANDS.indexOf(bandOf(x)) + (slotOf(x) === 'any' ? '1' : '0') + (x.due_time || '99:99:99') + (x.title || '');
         return k(a) < k(b) ? -1 : k(a) > k(b) ? 1 : 0;
       });
-    const today = todayISO(), horizon = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
+    const today = todayISO(), horizon = addDays(today, 7);   // the farm's days (0.11.146; the horizon was UTC's)
     // whose tasks: everyone, nobody yet, or one person — the person signed in by default (FarmBox 0086)
     // … but for somebody off the task pages (FarmBox 0229, 0.11.123): they see every task and can do any, and are no name in this list
     const workers = (await all('workers')).filter(w => w.active !== false && !w.off_tasks)
@@ -8584,7 +8753,7 @@ function sopOpen() {
       xb.onclick = () => openDigital({});
       whoBox.after(xb);
     }
-    const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+    const weekAgo = addDays(today, -7);
     const past = groups.filter(t => t.planned_date < today && t.planned_date >= weekAgo && mine(t));
     const week = groups.filter(t => t.planned_date >= today && t.planned_date <= horizon && mine(t));
     await refreshSW();   // what a swipe needs to know about each card (0.11.27)
@@ -9078,7 +9247,14 @@ function sopOpen() {
 
   // a tap on a task (0.11.60): straight into its checklist (the timer starts); a task with no checklist asks
   // "mark it done?"; a done one opens what was sent to edit it; a "not done" one opens to be done after all
+  // one opening at a time: a double tap started the timer and the run twice (review 16 Nov 2026)
+  let openingTask = false;
   async function openTask(key, fromHub = null) {
+    if (openingTask) return;
+    openingTask = true;
+    try { return await openTaskNow(key, fromHub); } finally { openingTask = false; }
+  }
+  async function openTaskNow(key, fromHub = null) {
     const groups = await loadGroups();
     const t = findGroup(groups, key);
     if (!t) return;
@@ -9110,7 +9286,7 @@ function sopOpen() {
           const by = uniq([...doneBy(t), ...peopleOn(t, b => num(b.minutes) >= 1)]);
           showToast(`${t.area || 'This zone'} was scouted${by.length ? ' by ' + names(by) : ''} — what you add goes in as extra`, 'info');
           nudged.add(xk); extraPick = false;
-          return openTask(xk, fromHub || hubOf(groups, t.key)?.key || null);
+          return openTaskNow(xk, fromHub || hubOf(groups, t.key)?.key || null);
         }
       }
       if (hasChecklist) return editTask(t, sop);
@@ -9130,7 +9306,7 @@ function sopOpen() {
       const same = groups.flatMap(g => g.hub ? g.zones : [g]).find(g => g.key !== t.key && g.planned_date === todayISO()
         && g.sop_id === t.sop_id && (g.area || '') === (t.area || '') && (g.farm_id || '') === (t.farm_id || '') && !isClosed(g.status));
       if (same && confirm(`This is the task for ${when}.\n\nToday's "${t.title}"${t.area ? ' · ' + t.area : ''} is still open — do today's instead?`))
-        return openTask(same.key, fromHub);
+        return openTaskNow(same.key, fromHub);
       if (!confirm(`This task is for ${when}, not today.\n\nDo it now anyway? What you record counts for today in the report.`)) return;
     }
     // somebody else has this task running (0.11.84): two people sending the same task makes two reports
@@ -9213,14 +9389,6 @@ function sopOpen() {
     return { t, items };
   }
   let extraPick = false;      // a zone was opened from the both-units list: Finish and Back come back to it
-  async function startExtra() {
-    const X = await extraUnits();
-    if (!X) return;
-    // two units (0.11.97): one Extra scouting over both — the zones of each under its unit, a unit's task made at its first zone
-    if (X.byFarm.size > 1) return openExtraPick(X);
-    const made = await ensureExtra([...X.byFarm.keys()][0], X);
-    return made ? openTask('srv:' + made.t.id) : null;
-  }
   async function openExtraPick(X0 = null) {
     const X = X0 || await extraUnits();
     if (!X) { extraPick = false; return showWeek(); }
@@ -9338,7 +9506,6 @@ function sopOpen() {
       return { key: k, label, done, target, ok: done >= target };
     }).filter(c => c.target > 0 || c.done > 0);
   }
-  const dgCounterText = u => dgCounters(u).map(c => c.target > 0 ? `${c.label} ${c.done}/${c.target}` : `${c.label} ${c.done}`).join(' · ');
   // a trap's sides, each red until photographed today, green after, grey when the trap is not read today with why: a
   // two-sided card ('both') by its yellow and its blue side, any other card by one photo (as dg_day counts them)
   function dgTrapDots(t) {
@@ -9382,8 +9549,8 @@ function sopOpen() {
   // who may change or delete an item: its writer on its own day while that day is today, a manager always (the server
   // checks the same: app.may_remove_photo)
   const dgMayChange = (item, D) => !!D && (!!D.may_change_all || (!!D.is_today && !!item && !!D.me && item.by_user === D.me));
-  // a note: its writer until the end of the note's own day (the phone's day), a manager always
-  const dgDayOf = iso => { const d = new Date(iso); return isNaN(d) ? '' : new Date(d - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); };
+  // a note: its writer until the end of the note's own day (the farm's day since 0.11.146, was the phone's), a manager always
+  const dgDayOf = iso => { const d = new Date(iso); return isNaN(d) ? '' : farmDay(d); };
   const dgNoteMayChange = (n, D, today) => !!D && (!!D.may_change_all || (!!n && !!D.me && n.by_user === D.me && dgDayOf(n.at) === today));
   // where a photo lands in the evidence bucket: by day, so a save that fails still shows in Unfiled photos
   const dgPath = (farmId, day, kind, id) => `${farmId}/dg-${String(day).replace(/-/g, '')}/${kind}-${id}.jpg`;
@@ -9693,7 +9860,7 @@ function sopOpen() {
   async function dgPrune() {
     try {
       const keys = await tx('kv', 'readonly', s => s.getAllKeys());
-      const from = new Date(Date.now() - 8 * 864e5).toISOString().slice(0, 10);
+      const from = addDays(todayISO(), -8);   // the farm's day (0.11.146)
       const old = keys.filter(k => /^dg_cache:/.test(String(k)) && String(k).slice(-10) < from);
       if (old.length) await tx('kv', 'readwrite', s => old.forEach(k => s.delete(k)));
     } catch (e) { /* kept */ }
@@ -9744,7 +9911,7 @@ function sopOpen() {
     const row = el('div', 'dg-days');
     const today = todayISO();
     for (let i = 0; i < 7; i++) {
-      const d = new Date(Date.now() - i * 864e5 - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+      const d = addDays(today, -i);            // the farm's days (0.11.146)
       const b = el('button', 'fb-btn dg-day' + (d === DG.day ? ' on' : ''), i === 0 ? 'Today' : i === 1 ? 'Yesterday'
         : new Date(d + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'short', day: 'numeric' }));
       b.type = 'button'; b.setAttribute('aria-pressed', String(d === DG.day));
@@ -11972,7 +12139,7 @@ function sopOpen() {
     // 0.11.91: a report still on this phone is not on the server yet — editing now would make a second report
     if (!d || !d.run) {
       const waiting = (await all('outbox')).some(r => r.payload && t.members.some(m => m.id === r.payload.task_id) && !r.payload.__timer && !r.payload.__upload && !r.payload.__feedback);
-      if (waiting) { showToast('The report of this task is still waiting to be sent — press Force send, then open it again', 'error'); return; }
+      if (waiting) { showToast('The report of this task is still waiting to be sent — press Send everything now, then open it again', 'error'); return; }
     }
     // everybody may add to a done task (FarmBox 0201): photos, notes, answers — nothing already sent is removed;
     // changing or removing what was sent stays with the task's people, the Admin and the managers
@@ -12496,20 +12663,6 @@ function sopOpen() {
   };
   const posWords = code => { const p = parsePos(code); return p ? `${p.n} · row ${p.row}${p.m != null ? ` · ${p.m} m` : ''}` : ''; };
   const placed = p => !!parsePos(p.pos_code) || !!p.gps;
-
-  // the GPS, when the phone has already been allowed to give it (asked with the button otherwise)
-  function getGps(timeout = 8000) {
-    return new Promise(res => {
-      if (!navigator.geolocation) return res(null);
-      navigator.geolocation.getCurrentPosition(
-        g => res({ lat: Math.round(g.coords.latitude * 1e6) / 1e6, lng: Math.round(g.coords.longitude * 1e6) / 1e6, acc: Math.round(g.coords.accuracy) }),
-        () => res(null), { enableHighAccuracy: true, timeout, maximumAge: 30000 });
-    });
-  }
-  async function gpsAllowed() {
-    try { return (await navigator.permissions?.query({ name: 'geolocation' }))?.state === 'granted'; } catch (e) { return false; }
-  }
-
   // ── the scale card (0.11.69): a printed marker whose black square is exactly 50 mm ──
   // The magenta square was found by its colour, which printers and greenhouse light change, and the card had
   // two squares close together (owner: "not square detection, wrong size"). The card is now an ArUco marker
@@ -13746,12 +13899,6 @@ function sopOpen() {
       const pc = parseTrapCode(p.code || '');
       return pc.ok ? `${pc.n} · row ${pc.row} · ${pc.metres} m` : '';
     };
-    // a card of a known size and colour counts better: count again once the trap is known
-    function recount(p, canvas) {
-      const t = trapById.get(p.trap_id);
-      if (!t || !canvas || p.corrected) return;
-      try { const r = countInsects(canvas, t); Object.assign(p, { counts: r.counts, total: r.total, algo_total: r.total, confidence: r.confidence }); } catch (e) {}
-    }
 
     // The colour: new insects A DAY since the photo before (FarmBox 0147) — the same rule as the server:
     // after Replaced, or when the count falls hard (under 60 % and at least 3 fewer: a new card went up),
@@ -15348,8 +15495,10 @@ function sopOpen() {
     const edited = !!R.edit && !R.resume;
     // an extra scouting: sent as it is — only a word about the sections left empty this time
     const empty = X ? SC_TABS.filter(([k]) => k !== 'trap' && !photos.some(p => p.section === k)).map(([, l]) => l.toLowerCase()) : [];
-    showToast(X ? 'Sent ✓ — added to today\'s report' + (sc.outcome === 'nok' ? ', the manager is told' : '') + (empty.length && empty.length < 2 ? ` · no ${empty.join(', no ')} this time` : '')
-      : edited ? 'Changes saved ✓' : sc.outcome === 'nok' ? 'Saved — not OK, the manager is told' : 'Scouting done ✓', sc.outcome === 'nok' ? 'error' : 'success');
+    const doneMsg = X ? 'Sent ✓ — added to today\'s report' + (sc.outcome === 'nok' ? ', the manager is told' : '') + (empty.length && empty.length < 2 ? ` · no ${empty.join(', no ')} this time` : '')
+      : edited ? 'Changes saved ✓' : sc.outcome === 'nok' ? 'Saved — not OK, the manager is told' : 'Scouting done ✓';
+    // without signal it waits in the outbox: say so, instead of claiming it was sent
+    showToast(navigator.onLine ? doneMsg : 'Saved on this phone — it sends when there is signal', sc.outcome === 'nok' ? 'error' : 'success');
     R.sentOk = true;
     if (run === R) backFromRun();        // back to the day's zones (0.11.67)
     } catch (e) {
@@ -15399,23 +15548,6 @@ function sopOpen() {
     all.onclick = () => { run.items.forEach(st => { st.done = true; }); row.querySelectorAll('.fb-zchip').forEach(b => { b.classList.add('on'); b.setAttribute('aria-pressed', 'true'); }); };
     card.append(row, all);
     return card;
-  }
-  function itemBlock(task) {
-    run.items = new Map();
-    const box = el('div', 'fb-harv');
-    box.append(el('div', 'fb-sec', `Items · ${task.positions.filter(isItem).length}`));
-    task.positions.filter(isItem).forEach(p => {
-      const st = { id: p.id, done: !!p.done_at, note: p.result?.note || '' };
-      run.items.set(p.id, st);
-      const row = el('div', 'fb-harv-row');
-      row.append(el('span', 'fb-pos-name', p.label || 'Item'));
-      const b = el('button', 'fb-btn', 'Done');
-      b.setAttribute('aria-pressed', String(st.done));
-      b.onclick = () => { st.done = !st.done; b.setAttribute('aria-pressed', String(st.done)); };
-      row.append(b);
-      box.append(row);
-    });
-    return box;
   }
 
   // the batches added by their code (0.11.128): their names kept on this phone, for a task opened again — what the
@@ -16176,55 +16308,6 @@ function sopOpen() {
   // autocorrelations are added, so a slant or an offset between strips costs nothing. Across and down
   // are measured apart and averaged (a slanted photo shortens one); no grid found → the card's length.
   const GRID_MM = 23, GRID_ROWS = 7;      // FarmLab's Insect Science cards: 4 × 7 squares of 23 mm
-  function gridScale(d, W, H, x0, y0, bw, bh, isCard) {
-    const guess = Math.max(bw, bh) / 250;                          // px/mm if the card were 25 cm: bounds only
-    const thin = Math.max(2, Math.round(1.2 * guess)), long = Math.max(8, Math.round(5 * guess));
-    const dark = new Uint8Array(bw * bh);
-    for (let y = 0; y < bh; y++) for (let x = 0; x < bw; x++) {
-      const i = ((y + y0) * W + x + x0) * 4, lum = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-      if (lum < 125 && !isCard(i)) dark[y * bw + x] = 1;
-    }
-    const hr = new Uint16Array(bw * bh), vr = new Uint16Array(bw * bh);
-    for (let y = 0; y < bh; y++) { let s = -1; for (let x = 0; x <= bw; x++) { const on = x < bw && dark[y * bw + x]; if (on && s < 0) s = x; if (!on && s >= 0) { for (let k = s; k < x; k++) hr[y * bw + k] = x - s; s = -1; } } }
-    for (let x = 0; x < bw; x++) { let s = -1; for (let y = 0; y <= bh; y++) { const on = y < bh && dark[y * bw + x]; if (on && s < 0) s = y; if (!on && s >= 0) { for (let k = s; k < y; k++) vr[k * bw + x] = y - s; s = -1; } } }
-    const lo = Math.max(6, Math.floor(GRID_MM * guess * 0.45)), hi = Math.ceil(GRID_MM * guess * 2.2);
-    // the spacing of lines along one direction: autocorrelation per strip, added up
-    const spacing = across => {
-      const len = across ? bw : bh, other = across ? bh : bw;
-      const strip = Math.max(12, Math.round(GRID_MM * guess * 0.8));
-      const maxLag = Math.min(hi, Math.floor(len / 2));
-      if (maxLag <= lo) return null;
-      const ac = new Float64Array(maxLag + 1);
-      for (let s0 = 0; s0 + strip <= other; s0 += strip) {
-        const prof = new Float64Array(len);
-        for (let t = s0; t < s0 + strip; t++) for (let k = 0; k < len; k++) {
-          const i = across ? t * bw + k : k * bw + t;
-          // a vertical line (across: its pixels run down) or a horizontal one
-          if (dark[i] && (across ? (vr[i] >= long && hr[i] <= thin) : (hr[i] >= long && vr[i] <= thin))) prof[k]++;
-        }
-        let m = 0; for (let k = 0; k < len; k++) m += prof[k]; m /= len;
-        let e = 0; for (let k = 0; k < len; k++) { prof[k] -= m; e += prof[k] * prof[k]; }
-        if (e <= 0) continue;
-        for (let l = 0; l <= maxLag; l++) { let c = 0; for (let k = 0; k + l < len; k++) c += prof[k] * prof[k + l]; ac[l] += c / e; }
-      }
-      if (!(ac[0] > 0)) return null;
-      const n = l => ac[l] / ac[0];
-      let best = -1, bestV = 0;
-      for (let l = lo; l < maxLag; l++) if (n(l) > n(l - 1) && n(l) >= n(l + 1) && n(l) > bestV) { best = l; bestV = n(l); }
-      if (best < 0 || bestV < 0.2) return null;
-      // the fundamental: the shortest peak nearly as strong (twice the spacing peaks too)
-      for (let l = lo; l < best; l++) if (n(l) > n(l - 1) && n(l) >= n(l + 1) && n(l) >= 0.8 * bestV) { best = l; bestV = n(l); break; }
-      const a = n(best - 1), b = n(best), c = n(best + 1), den = a - 2 * b + c;
-      return { px: best + (den < 0 ? 0.5 * (a - c) / den : 0), strength: bestV };
-    };
-    const X = spacing(true), Y = spacing(false);
-    if (!X && !Y) return null;
-    let px;
-    if (X && Y) px = Math.abs(X.px - Y.px) / Math.min(X.px, Y.px) <= 0.25 ? (X.px + Y.px) / 2 : (X.strength >= Y.strength ? X.px : Y.px);
-    else px = (X || Y).px;
-    return { ppm: px / GRID_MM, across: X?.px ?? null, down: Y?.px ?? null };
-  }
-
   // ── counting insects on a sticky trap (blobs-v3, 0.11.70) ────────────────
   // The check of 30 Sept 2026 (owner: "check if the current algorithm counting is correct"): on FarmLab's cards the
   // old count took the printed header — logo, "STICKY TRAP", the phone number, a punched hole — for 17–35 insects,
@@ -16731,7 +16814,7 @@ function sopOpen() {
       }
       const rows = [...run.harvests.values()].filter(x => num(x.kg) > 0);
       const big = rows.find(x => num(x.kg) > 200);
-      if (big && !confirm(`${big.position_code}: ${big.kg} kg — is that right?`)) return;
+      if (big && !confirm(`${big.position_code}: ${big.kg} kg — is that right?`)) { $('runHint').textContent = 'Not sent — correct the kg, then tap Finish again.'; return; }
       const kg = Math.round(rows.reduce((a, x) => a + num(x.kg), 0) * 100) / 100;
       if (kg > 0) {
         run.steps.filter(s => (s.step_type === 'measure' || s.step_type === 'record') && !run.answers.has(s.seq)).forEach(s => {
@@ -16759,16 +16842,22 @@ function sopOpen() {
       return;
     }
     // the places (0.11.59): one is done with the checklist; several still red are asked about
-    if (run.items && run.itemsAuto) run.items.forEach(st => { st.done = true; });
-    else if (run.items) {
+    // (the "one is done with the checklist" ticks are made below, once every question that can stop Finish was answered)
+    if (run.items && !run.itemsAuto) {
       const left = [...run.items.values()].filter(st => !st.done);
-      if (left.length && !confirm(`${left.length} place${left.length === 1 ? '' : 's'} still red — send ${left.length === 1 ? 'it' : 'them'} as not done?`)) return;
+      if (left.length && !confirm(`${left.length} place${left.length === 1 ? '' : 's'} still red — send ${left.length === 1 ? 'it' : 'them'} as not done?`)) {
+        $('runHint').textContent = 'Not sent — tick the places, then tap Finish again.';
+        return;
+      }
     }
     // still red (0.11.57): asked, then sent as not OK — the note says why, and the manager is told
     const runNote = String(document.getElementById('fb-runNote')?.value || '').trim();
     if (red.length) {
       const names = red.slice(0, 4).map(x => x.item ? zoneShort(x.item.label) : x.s.title).join(', ') + (red.length > 4 ? '…' : '');
-      if (!confirm(`${red.length} still red (${names}) — send ${red.length === 1 ? 'it' : 'them'} as not OK?`)) return;
+      if (!confirm(`${red.length} still red (${names}) — send ${red.length === 1 ? 'it' : 'them'} as not OK?`)) {
+        $('runHint').textContent = 'Not sent — answer the red steps, then tap Finish again.';
+        return;
+      }
       if (!runNote) {
         $('runHint').textContent = 'Say in the notes what is not OK.';
         showToast('Say in the notes what is not OK', 'error');
@@ -16784,6 +16873,7 @@ function sopOpen() {
       document.getElementById('fb-runNote')?.focus();
       return;
     }
+    if (run.items && run.itemsAuto) run.items.forEach(st => { st.done = true; });   // a place is done with its checklist
     $('finish').disabled = true;
     $('runHint').textContent = 'Saving…';
     try {
@@ -16842,8 +16932,9 @@ function sopOpen() {
     }));
     open.forEach(t => { t.status = 'done'; t.done_at = finished; });
     await putAll('tasks', open);
-    // the run first, then its full photos, keyed to sort right after it
-    await queue([...payloads, ...uploads.map((u, n) => ({ __upload: true, client_run_id: `${cid}~up-${String(n).padStart(3, '0')}`,
+    // the run first, then its full photos, keyed to sort right after it; the time in the id (0.11.146, as the scouting's
+    // Finish): an edit's photos under cid~up-000 replaced the first photo of the round still waiting for Wi-Fi
+    await queue([...payloads, ...uploads.map((u, n) => ({ __upload: true, client_run_id: `${cid}~up-${Date.now().toString(36)}-${String(n).padStart(3, '0')}`,
       run_client_id: cid, farm_id: run.task.farm_id || farm.id, kind: u.kind, ref: u.ref, blob: u.blob }))]);
     try { clearTimeout(draftTimer); await del('kv', runDraftKey(R.task)); } catch (e) { /* nothing to clear */ }
     if (R.traps) { try { await del('kv', trapDraftKey(R.task)); } catch (e) { /* nothing to clear */ } }
@@ -16852,7 +16943,9 @@ function sopOpen() {
     addStop(R);
     const failed = steps.filter(s => s.result === 'nok').length;
     $('finish').disabled = false;
-    showToast(R.edit && !R.resume ? 'Changes saved ✓' : failed ? `Saved — ${failed} step${failed > 1 ? 's' : ''} not OK` : 'Checklist complete ✓',
+    // without signal the run waits in the outbox: say so, instead of claiming it was sent
+    const saved = navigator.onLine ? '' : 'Saved on this phone — it sends when there is signal';
+    showToast(saved || (R.edit && !R.resume ? 'Changes saved ✓' : failed ? `Saved — ${failed} step${failed > 1 ? 's' : ''} not OK` : 'Checklist complete ✓'),
               failed ? 'error' : 'success');
     if (run === R) showWeek();        // not when the person has already opened another task
     } catch (e) {
@@ -16878,8 +16971,8 @@ function sopOpen() {
     return new Promise(resolve => {
       const sheet = el('div', 'fb-sheet');
       const box = el('div', 'fb-sheet-card');
-      box.append(el('h3', null, 'Force send?'));
-      box.append(el('p', null, 'The normal way to send is Finish inside a task. Force send is for clearing this phone: it sends everything it still holds, as it stands, even if it is not complete.'));
+      box.append(el('h3', null, 'Send everything now?'));
+      box.append(el('p', null, 'The normal way to send is Finish inside a task. Send everything now is for clearing this phone: it sends everything it still holds, as it stands, even if it is not complete.'));
       const ul = el('ul', 'fb-sendlist');
       ['Growth photos without the scale card go with no sizes.',
        'Checklists not finished go half-done; their tasks stay open.',
@@ -16887,7 +16980,7 @@ function sopOpen() {
        'What cannot be sent at all is listed after, and you may remove it from this phone.'].forEach(t => ul.append(el('li', null, t)));
       const done = v => { sheet.remove(); resolve(v); };
       const no = el('button', 'fb-btn', 'Cancel'); no.type = 'button'; no.onclick = () => done(false);
-      const yes = el('button', 'fb-btn fb-btn-primary', 'Force send'); yes.type = 'button'; yes.onclick = () => done(true);
+      const yes = el('button', 'fb-btn fb-btn-primary', 'Send everything now'); yes.type = 'button'; yes.onclick = () => done(true);
       const acts = el('div', 'fb-actions'); acts.append(no, yes);
       box.append(ul, acts);
       sheet.append(box);
@@ -16900,7 +16993,7 @@ function sopOpen() {
     if (!session) { showToast('Sign in first', 'error'); return; }
     if (!navigator.onLine) { showToast('Sending needs a connection', 'error'); return; }
     const openRun = document.getElementById('fb-run');
-    if (openRun && !openRun.classList.contains('hidden')) { showToast('Finish this task or go back first, then Force send', 'error'); return; }
+    if (openRun && !openRun.classList.contains('hidden')) { showToast('Finish this task or go back first, then Send everything now', 'error'); return; }
     if (!await askForce()) return;
     btn.disabled = true; nbLabel(btn, '{i:upload} Sending…');
     const lines = [];
@@ -16972,7 +17065,8 @@ function sopOpen() {
             // the full photos follow through the outbox; the draft keeps what it sent and the run it went to
             const ups = [...sides.filter(([, , S]) => !S.photo_path).map(([q, k, S]) => ({ kind: 'trap', ref: `${q.code}:${k}`, blob: S.full })),
                          ...go.filter(q => !q.photo_path).map(q => ({ kind: 'observation', ref: q.ref, blob: q.full }))];
-            await putAll('outbox', ups.map((u, n) => ({ id: `${cid}~up-${Date.now().toString(36)}-s${String(n).padStart(3, '0')}`, tries: 0, at: Date.now() + n,
+            // through queueRows (0.11.146): packed on an iPhone, with a revision, as Finish's rows
+            await queueRows(ups.map((u, n) => ({ id: `${cid}~up-${Date.now().toString(36)}-s${String(n).padStart(3, '0')}`, tries: 0, at: Date.now() + n,
               payload: { __upload: true, client_run_id: `${cid}~up-s${n}`, run_client_id: cid, farm_id: payload.farm_id, kind: u.kind, ref: u.ref, blob: u.blob } })));
             go.forEach(q => { q.sent = true; });
             sides.forEach(([, , S]) => { S.sent = true; });
@@ -17029,7 +17123,7 @@ function sopOpen() {
             status: done ? 'completed' : 'partial', started_at: d?.run?.started_at || at, finished_at: d?.run?.finished_at || now,
             steps, notes: draft.runNote || null };
           // through the outbox: its photos go up first, then the run (the same road as Finish)
-          await putAll('outbox', [{ id: cid, payload, tries: 0, at: Date.now() }]);
+          await queueRows([{ id: cid, payload, tries: 0, at: Date.now() }]);
           await setKV(row.id, { ...draft, cid, sentSaved: draft.saved });
           say(`${name}: ${steps.length} answer${steps.length === 1 ? '' : 's'} sent as ${steps.length === 1 ? 'it stands' : 'they stand'}${done ? '' : ' — not finished: Finish still closes the task'}.`);
         } catch (e) { say(`${name}: not sent — ${String(e.message || e).replace(/^\d+ /, '').slice(0, 110)}`, true); }
@@ -17057,7 +17151,7 @@ function sopOpen() {
           const g = groups.find(x => String(x.key || x.id) === key);
           const me = await getKV('me');
           const id = 'fbk-' + (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2));
-          await putAll('outbox', [{ id, tries: 0, at: Date.now(), payload: { __feedback: true, client_run_id: id, farm_id: g?.farm_id || farm?.id,
+          await queueRows([{ id, tries: 0, at: Date.now(), payload: { __feedback: true, client_run_id: id, farm_id: g?.farm_id || farm?.id,
             task_id: g?.members?.[0]?.id || null, task_title: g?.title || null, sop_id: g?.sop_id || null, sop_version_id: g?.sop_version_id || null,
             step_seq: draft.step ? Number(draft.step) : null, note: text || null,
             author: (await all('workers')).find(w => w.id === me)?.name || session?.user?.email || null,
@@ -17075,7 +17169,7 @@ function sopOpen() {
         try {
           const me = await getKV('me');
           const id = ghNoteId();
-          await putAll('outbox', [{ id, tries: 0, at: Date.now(), payload: { __ghnote: true, client_run_id: id, farm_id: farmId || farm?.id, day: day || todayISO(),
+          await queueRows([{ id, tries: 0, at: Date.now(), payload: { __ghnote: true, client_run_id: id, farm_id: farmId || farm?.id, day: day || todayISO(),
             text: text || null, scout_task_id: null, extra: false,
             author: (await all('workers')).find(w => w.id === me)?.name || session?.user?.email || null,
             app: 'brain', app_version: typeof CURRENT_VERSION !== 'undefined' ? CURRENT_VERSION : null,
@@ -17094,14 +17188,15 @@ function sopOpen() {
       if (went > 0) say(`${went} item${went === 1 ? '' : 's'} went up (reports and their full photos).`);
       // what the server answered and said no to (set aside, or an error with a status) cannot go by trying again: it is
       // offered for removal. What never reached the server (no signal, a time-out) waits for the next Send.
-      const said = r => r.dead || /^\d{3} /.test(String(r.error || ''));
+      // 0.11.146: only a refusal for good — a 5xx, 429 or 401 last time is the server's trouble or a sign-in, and goes later
+      const said = r => r.dead || refusedForGood({ message: r.error });
       const refused = after.filter(said), left = after.filter(r => !said(r));
-      if (left.length) say(`${left.length} still waiting for a connection — press Force send again.`, true);
-      refused.forEach(r => cant(`Refused by the server: ${String(r.error || 'no reason given').replace(/^\d+ /, '').slice(0, 140)}`, () => del('outbox', r.id)));
+      if (left.length) say(`${left.length} still waiting for a connection — press Send everything now again.`, true);
+      refused.forEach(r => cant(`${/^410 /.test(String(r.error || '')) ? 'Cannot be sent' : 'Refused by the server'}: ${String(r.error || 'no reason given').replace(/^\d+ /, '').slice(0, 140)}`, () => del('outbox', r.id)));
       if (!lines.length) say('Nothing was waiting on this phone: everything had already been sent.');
       sync(false, true).catch(() => {});
     } catch (e) { say('Send stopped: ' + String(e.message || e).slice(0, 140), true); }
-    btn.disabled = false; nbLabel(btn, '{i:upload} Force send');
+    btn.disabled = false; nbLabel(btn, '{i:upload} Send all');
     paintFoot();
     const sheet = el('div', 'fb-sheet');
     const box = el('div', 'fb-sheet-card');
@@ -17435,7 +17530,9 @@ function sopOpen() {
     }
   }
   // the last first page, kept for the days without signal
-  async function glFromCache(fm) {
+  async function glFromCache(fm, more) {
+    // More pressed with no signal: the pages already loaded stay on screen (the kept first page would drop them)
+    if (more && GL.rows.length) { GL.err = 'No signal — more photos load when it is back'; return; }
     GL.live = false; GL.rows = []; GL.more = false;
     try { const c = await getKV('gallery_list'); if (c && c.farm === fm.id && Array.isArray(c.photos)) GL.rows = c.photos; } catch (e) { /* none kept */ }
   }
@@ -17447,14 +17544,14 @@ function sopOpen() {
       if (navigator.onLine && !farm) { try { await pickFarm(); } catch (e) { /* the kept farm below */ } }
       const fm = farm || await getKV('farm');
       if (!fm) { GL.err = 'Open Tasks once while online, so the app knows your farm'; return; }
-      if (!navigator.onLine) { await glFromCache(fm); return; }
+      if (!navigator.onLine) { await glFromCache(fm, more); return; }
       const p = { limit: GL_PAGE };
       if (more && GL.rows.length) p.before = GL.rows[GL.rows.length - 1].created_at;
       let r;
       try { r = await api('/rest/v1/rpc/farm_photos', { method: 'POST', body: JSON.stringify({ p_farm: fm.id, p }) }); }
       catch (e) {
         if (glMissing(e)) { GL.off = true; GL.rows = []; return; }                                // a database before 0265
-        if (errKind(e) === 'net') { await glFromCache(fm); return; }
+        if (errKind(e) === 'net') { await glFromCache(fm, more); return; }
         GL.err = 'The gallery could not be loaded — ' + glErrText(e && e.message); return;
       }
       GL.off = false; GL.live = true; GL.at = Date.now();
@@ -17823,7 +17920,7 @@ if (document.body.classList.contains('mode-sop') && !document.body.classList.con
 <script>
 // 0.11.116 — Naked Brain moved to https://brain.nkd.farm/ (5 Oct 2026). A new address is a new app to the phone: what
 // still waits here (reports, photos, drafts) cannot be reached from there. So the copy still served at the old
-// github.io address says it on every screen: empty this phone with Force send, then open the new address.
+// github.io address says it on every screen: empty this phone with Send everything now, then open the new address.
 (function () {
   if (!/(^|\.)github\.io$/i.test(location.hostname)) return;
   var bar = document.createElement('div');

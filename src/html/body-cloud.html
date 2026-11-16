@@ -3,10 +3,10 @@
      Off by default; Settings → Data source turns it on. -->
 <section class="app-view" id="viewFarmbox" aria-label="Tasks">
   <div class="sop-bar">
-    <button id="fb-back" class="btn-icon hidden" aria-label="Back">←</button>
+    <button id="fb-back" class="btn-icon hidden" aria-label="Back" title="Back">←</button>
     <div id="fb-title" class="hdr-title">Tasks</div>
     <span id="fb-net" class="net-pill hidden">Offline</span>
-    <button id="fb-sendall" class="btn-icon fb-sendall" aria-label="Force send: everything on this phone, as it stands" title="Force send: everything on this phone, as it stands"><i data-ic="upload"></i> Force send</button>
+    <button id="fb-sendall" class="btn-icon fb-sendall" aria-label="Send everything now: everything on this phone, as it stands" title="Send everything now: everything on this phone, as it stands"><i data-ic="upload"></i> Send all</button>
     <button id="fb-scan" class="btn-icon" aria-label="Scan a batch label" title="Scan a batch label"><i data-ic="qr"></i></button>
     <button id="fb-sync" class="btn-icon" aria-label="Sync now" title="Sync now">⟳</button>
   </div>
@@ -54,11 +54,11 @@
 <!-- SOP: procedures, checklists, editor and import (SoP module script at the end) -->
 <section class="app-view" id="viewSop" aria-label="Tasks">
   <div class="sop-bar">
-    <button id="sop-backBtn" class="btn-icon hidden" aria-label="Back">←</button>
+    <button id="sop-backBtn" class="btn-icon hidden" aria-label="Back" title="Back">←</button>
     <div id="sop-hdrTitle" class="hdr-title"></div>
     <span id="sop-netPill" class="net-pill hidden">Offline</span>
     <button id="sop-syncBtn" class="btn-icon hidden" aria-label="Upload pending runs" title="Upload pending runs"><i data-ic="upload"></i></button>
-    <button id="sop-menuBtn" class="btn-icon" aria-label="SoP menu">⋯</button>
+    <button id="sop-menuBtn" class="btn-icon" aria-label="SoP menu" title="SoP menu">⋯</button>
   </div>
   <div id="sop-view" class="sop-main"></div>
 </section>

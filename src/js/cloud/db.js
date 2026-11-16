@@ -21,30 +21,55 @@
   const STORES = ['kv', 'tasks', 'sops', 'versions', 'steps', 'outbox', 'positions', 'traps', 'task_workers', 'workers'];
   let dbp;
   function db() {
-    return dbp || (dbp = new Promise((res, rej) => {
+    if (dbp) return dbp;
+    const p = dbp = new Promise((res, rej) => {
       const r = indexedDB.open('farmbox', 4);
       r.onupgradeneeded = () => STORES.forEach(s => {
         if (!r.result.objectStoreNames.contains(s)) r.result.createObjectStore(s, { keyPath: 'id' });
       });
       r.onsuccess = () => {
+        const d = r.result;
         // another tab upgrading later: let go of this connection, reopen on demand
-        r.result.onversionchange = () => { r.result.close(); dbp = null; };
-        res(r.result);
+        d.onversionchange = () => { d.close(); if (dbp === p) dbp = null; };
+        // 0.11.146: closed by the browser (an iPhone after the app was in the background): reopened at the next use
+        d.onclose = () => { if (dbp === p) dbp = null; };
+        res(d);
       };
-      r.onerror = () => { dbp = null; rej(r.error); };
-      r.onblocked = () => { dbp = null; rej(new Error('Close the other Naked Brain tab and reload')); };
-    }));
-  }
-  async function tx(store, mode, fn) {
-    const d = await db();
-    return new Promise((res, rej) => {
-      const t = d.transaction(store, mode), s = t.objectStore(store);
-      const out = fn(s);
-      t.oncomplete = () => res(out && out.result !== undefined ? out.result : out);
-      t.onerror = () => rej(t.error);
-      t.onabort = () => rej(t.error || new Error('the phone refused to save (storage full?)'));
+      r.onerror = () => { if (dbp === p) dbp = null; rej(r.error); };
+      r.onblocked = () => { if (dbp === p) dbp = null; rej(new Error('Close the other Naked Brain tab and reload')); };
     });
+    return p;
   }
+  // 0.11.146 (review of 16 Nov): WebKit drops the connection after the app was in the background ("Connection to
+  // Indexed Database server lost"), and every save failed until a reload — Finish said "Could not save". Such a
+  // failure opens the database again and tries once more; nothing was written by the failed try.
+  const idbLost = e => !!e && (e.name === 'InvalidStateError' || e.name === 'UnknownError'
+    || /connection.*(lost|clos)|database.*clos/i.test(String(e.message || '')));
+  async function tx(store, mode, fn, again = true) {
+    const p = db(), d = await p;
+    try {
+      return await new Promise((res, rej) => {
+        const t = d.transaction(store, mode), s = t.objectStore(store);
+        const out = fn(s);
+        t.oncomplete = () => res(out && out.result !== undefined ? out.result : out);
+        t.onerror = () => rej(t.error);
+        t.onabort = () => rej(t.error || Object.assign(new Error('the phone refused to save (storage full?)'), { noError: true }));
+      });
+    } catch (e) {
+      // an abort with no reason, or a plain AbortError, after the browser closed the connection (onclose let it go) is
+      // the same lost connection
+      const closedUnder = dbp !== p && !!e && (e.noError || e.name === 'AbortError');
+      if (!again || !(idbLost(e) || closedUnder)) throw e;
+      if (dbp === p) { dbp = null; try { d.close(); } catch (x) { /* gone already */ } }
+      return tx(store, mode, fn, false);
+    }
+  }
+  // and when the app comes back on screen, a connection the browser closed meanwhile is let go before anything uses it
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden || !dbp) return;
+    const p = dbp;
+    p.then(d => { try { d.transaction('kv', 'readonly'); } catch (e) { if (idbLost(e) && dbp === p) dbp = null; } }, () => {});
+  });
   const putAll = (store, rows) => rows && rows.length
     ? tx(store, 'readwrite', s => rows.forEach(r => s.put(r))) : Promise.resolve();
   const all = store => tx(store, 'readonly', s => s.getAll());

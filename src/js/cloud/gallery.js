@@ -275,7 +275,9 @@
     }
   }
   // the last first page, kept for the days without signal
-  async function glFromCache(fm) {
+  async function glFromCache(fm, more) {
+    // More pressed with no signal: the pages already loaded stay on screen (the kept first page would drop them)
+    if (more && GL.rows.length) { GL.err = 'No signal — more photos load when it is back'; return; }
     GL.live = false; GL.rows = []; GL.more = false;
     try { const c = await getKV('gallery_list'); if (c && c.farm === fm.id && Array.isArray(c.photos)) GL.rows = c.photos; } catch (e) { /* none kept */ }
   }
@@ -287,14 +289,14 @@
       if (navigator.onLine && !farm) { try { await pickFarm(); } catch (e) { /* the kept farm below */ } }
       const fm = farm || await getKV('farm');
       if (!fm) { GL.err = 'Open Tasks once while online, so the app knows your farm'; return; }
-      if (!navigator.onLine) { await glFromCache(fm); return; }
+      if (!navigator.onLine) { await glFromCache(fm, more); return; }
       const p = { limit: GL_PAGE };
       if (more && GL.rows.length) p.before = GL.rows[GL.rows.length - 1].created_at;
       let r;
       try { r = await api('/rest/v1/rpc/farm_photos', { method: 'POST', body: JSON.stringify({ p_farm: fm.id, p }) }); }
       catch (e) {
         if (glMissing(e)) { GL.off = true; GL.rows = []; return; }                                // a database before 0265
-        if (errKind(e) === 'net') { await glFromCache(fm); return; }
+        if (errKind(e) === 'net') { await glFromCache(fm, more); return; }
         GL.err = 'The gallery could not be loaded — ' + glErrText(e && e.message); return;
       }
       GL.off = false; GL.live = true; GL.at = Date.now();

@@ -1,7 +1,7 @@
 //! Naked Brain - the bar shown on the old github.io address. Edit here, then run: python build.py
 // 0.11.116 — Naked Brain moved to https://brain.nkd.farm/ (5 Oct 2026). A new address is a new app to the phone: what
 // still waits here (reports, photos, drafts) cannot be reached from there. So the copy still served at the old
-// github.io address says it on every screen: empty this phone with Force send, then open the new address.
+// github.io address says it on every screen: empty this phone with Send everything now, then open the new address.
 (function () {
   if (!/(^|\.)github\.io$/i.test(location.hostname)) return;
   var bar = document.createElement('div');

@@ -1,6 +1,7 @@
 //! Naked Brain - the cloud closure (FarmBox Tasks on Supabase): opened in js/cloud/db.js, closed in js/cloud/lot-scan.js; shares session, farm, run, DG, TIMERS, show(), $() and el() with every js/cloud/* file -- sync, live updates, the outbox. Edit here, then run: python build.py
   // ── sync ────────────────────────────────────────────────────────────────
   let farm = null, syncing = false;
+  let cursorGen = 0;                       // raised by a flush that clears the cursor (a report set aside), 0.11.146
   // the feedback button on every task (0.11.85, FarmBox 0189): on while the farm has the feedback switched on; kept for offline days
   let FEEDBACK_ON = null;
   async function feedbackOn() {
@@ -18,18 +19,42 @@
     await setKV('farm', farm);
     return farm;
   }
+  // the farm's own day (0.11.146, review of 16 Nov): "today" was the phone's day, and a phone set to UTC or abroad filed
+  // the work of 00:00–02:00 on yesterday. farmDay(date or ms, default now) is YYYY-MM-DD in farm.timezone
+  // (Johannesburg when the farm is not read yet); addDays moves such a day by n days.
+  let dayFmt = null, dayFmtTz = null;
+  function farmDay(at) {
+    const t = at == null ? new Date() : at instanceof Date ? at : new Date(at);
+    const tz = (farm && farm.timezone) || 'Africa/Johannesburg';
+    try {
+      if (!dayFmt || dayFmtTz !== tz) { dayFmt = new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }); dayFmtTz = tz; }
+      const p = {}; dayFmt.formatToParts(t).forEach(x => { p[x.type] = x.value; });
+      if (p.year && p.month && p.day) return `${p.year}-${p.month}-${p.day}`;
+    } catch (e) { dayFmt = null; /* an unknown zone: the phone's day, as before */ }
+    return new Date(t - t.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+  }
+  const addDays = (day, n) => { const t = new Date(day + 'T12:00:00Z'); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10); };
 
   // what kind of failure it was, for words a worker can use: 'net' = no connection or no answer ("Failed to fetch",
   // "Load failed" on an iPhone, the time limit of api()), 'busy' = the server's own trouble, 'out' = the session ended
   const errKind = e => { const m = String((e && e.message) || e || '');
     return /Failed to fetch|Load failed|NetworkError|network error|no answer in time/i.test(m) ? 'net' : /^5\d\d /.test(m) ? 'busy' : m === 'signed out' ? 'out' : ''; };
+  // the tasks this phone has closed and whose report, tick or cancel is still in the outbox
+  const unsentTasks = async () => new Set((await all('outbox')).filter(r => !r.dead && r.payload && r.payload.task_id
+    && (r.payload.__tick || r.payload.__skip || (!r.payload.__timer && !r.payload.__upload && !r.payload.__clock
+        && !r.payload.__feedback && !r.payload.__ghnote && r.payload.status === 'completed'))).map(r => r.payload.task_id));
   async function sync(full, quiet) {
     if (syncing || !session) return;
     syncing = true; $('sync').classList.add('spin');
     try {
       await pickFarm();
       const timesBefore = quiet ? JSON.stringify((await getKV('task_times')) || []) : null;
+      const gen = cursorGen;
       const since = full ? null : await getKV('cursor');
+      // read before the call too (0.11.146): the outbox is sent beside the sync now, and a report that went up while
+      // the server answered is no longer in the outbox after it
+      let unsentBefore = new Set();
+      try { unsentBefore = await unsentTasks(); } catch (e) { /* read again below */ }
       const d = await api('/rest/v1/rpc/sync_since', {
         method: 'POST',
         body: JSON.stringify({ p_farm: farm.id, p_since: since || '-infinity' })
@@ -40,9 +65,7 @@
       // and never over a task the server cancelled. Anything unexpected here: the server's rows as they came, as before.
       let fromServer = d.tasks;
       try {
-        const unsent = new Set((await all('outbox')).filter(r => !r.dead && r.payload && r.payload.task_id
-          && (r.payload.__tick || r.payload.__skip || (!r.payload.__timer && !r.payload.__upload && !r.payload.__clock
-              && !r.payload.__feedback && !r.payload.__ghnote && r.payload.status === 'completed'))).map(r => r.payload.task_id));
+        const unsent = new Set([...unsentBefore, ...(await unsentTasks())]);
         if (unsent.size && Array.isArray(d.tasks)) {
           const shut = st => st === 'done' || st === 'skipped';
           const had = new Map((await all('tasks')).map(t => [t.id, t]));
@@ -131,8 +154,8 @@
       // The server only sends tasks from a week back: anything older on the
       // phone can never be updated again (a cancellation would not arrive), so
       // it goes — done or not. The outbox keeps what is still to upload.
-      const keepFrom = new Date(Date.now() - 7 * 86400000 - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
-      const todayIs = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+      // the farm's day, not the phone's (0.11.146)
+      const todayIs = farmDay(), keepFrom = addDays(todayIs, -7);
       const stale = (await all('tasks')).filter(t => t.planned_date && (t.planned_date < keepFrom
         || (t.local && t.planned_date < todayIs && String(t.generation_key || '').startsWith('extra:scouting:'))));
       for (const t of stale) await del('tasks', t.id);
@@ -141,7 +164,8 @@
         for (const p of (await all('positions')).filter(p => gone.has(p.task_id))) await del('positions', p.id);
         for (const x of (await all('task_workers')).filter(x => gone.has(x.task_id))) await del('task_workers', x.id);
       }
-      await setKV('cursor', d.cursor);
+      // a flush that set a report aside meanwhile cleared the cursor for a whole read: that is not undone here (0.11.146)
+      if (gen === cursorGen) await setKV('cursor', d.cursor);
       await setKV('synced_at', Date.now());
       // Digital scouting (0.11.132): today's zone counters for the scouting task cards; a task of mine whose zone has
       // every minimum is ticked done here, on my own phone
@@ -150,7 +174,9 @@
       liveOpen();
       // the reports kept for adding offline go after eight days
       for (const r of (await all('kv')).filter(r => String(r.id).startsWith('sent:') && (r.v?.kept || 0) < Date.now() - 8 * 86400000)) await del('kv', r.id);
-      await flush();
+      // not waited for (0.11.146, review of 16 Nov): a flush with full photos runs for minutes, and every sync meanwhile
+      // did nothing — the minute's, the live "moved", the ⟳ tap. flush() is one pass at a time by itself.
+      flush().catch(e => console.warn('flush:', e));
       // a sync never pulls anybody out of a task or a checklist they have open (0.11.39)
       // the minute's quiet sync (0.11.84) redraws the day only when a task, a name or somebody's timer moved
       const moved = !quiet || dgMoved || (d.tasks || []).length > 0 || (d.deleted || []).length > 0
@@ -228,12 +254,57 @@
 
   // ── the outbox: nothing a worker records is ever lost ───────────────────
   let outboxDirty = false;                 // something was queued since the running pass read the outbox (doFlush)
+  // the photos of a row as plain bytes on an iPhone (a Blob in the browser's database is the weak spot there after a
+  // kill, 0.11.99); 0.11.146: the step photos, trap photos and the items of a feedback or a note too, not only the
+  // photo rows — unBlob() gives them back when they are sent
+  // one photo at a time, and one the phone cannot read stays as it is: Finish still saves the report (the send says
+  // what was lost), it used to say "Could not save" with nothing queued
+  const packSafe = async (b, type) => {
+    if (!(b instanceof Blob)) return b;
+    try { return type ? { __ab: await b.arrayBuffer(), type } : await packBlob(b); } catch (e) { return b; }
+  };
+  async function packRow(u) {
+    if (!IS_IOS || !u) return;
+    if (u.__upload) u.blob = await packSafe(u.blob);
+    if (u.__dg) for (const x of (u.uploads || [])) x.blob = await packSafe(x.blob);
+    if (u.__gallery) { u.blob = await packSafe(u.blob); u.thumb = await packSafe(u.thumb); }
+    if (Array.isArray(u.steps) && u.steps.some(s => Array.isArray(s.media_blobs))) {
+      const steps = [];
+      for (const s of u.steps) {
+        if (!Array.isArray(s.media_blobs)) { steps.push(s); continue; }
+        const mb = [];
+        for (const b of s.media_blobs) mb.push(await packSafe(b));
+        steps.push({ ...s, media_blobs: mb });
+      }
+      u.steps = steps;
+    }
+    if (Array.isArray(u.traps) && u.traps.some(t => t.photo_blob instanceof Blob)) {
+      const traps = [];
+      for (const t of u.traps) traps.push(t.photo_blob instanceof Blob ? { ...t, photo_blob: await packSafe(t.photo_blob) } : t);
+      u.traps = traps;
+    }
+    // a video stays a Blob: tens of megabytes read into memory at once is what closes the app on an iPhone
+    if ((u.__feedback || u.__ghnote) && Array.isArray(u.items)) {
+      const items = [];
+      for (const x of u.items) items.push(x && x.kind !== 'video' && x.blob instanceof Blob
+        ? { ...x, blob: await packSafe(x.blob, x.blob.type || (x.kind === 'audio' || u.__ghnote ? 'audio/webm' : 'image/jpeg')) } : x);
+      u.items = items;
+    }
+  }
+  // every row written to the outbox goes through here: its photos packed, and a revision of its own (0.11.146, review
+  // of 16 Nov) — Finish after Force send or Hand over, or an edit, writes a newer row under the same id while the older
+  // one is being sent, and the pass deleted the newer one as sent or wrote the older one back over it. A pass now
+  // writes back or deletes only the row it read (sameRow, in the flush).
+  let revN = 0;
+  async function queueRows(rows) {
+    for (const r of rows) await packRow(r.payload);
+    const t = Date.now().toString(36);
+    await putAll('outbox', rows.map(r => ({ ...r, rev: `${t}-${++revN}` })));
+    outboxDirty = true;
+  }
   async function queue(payloads) {
     const list = Array.isArray(payloads) ? payloads : [payloads];
-    if (IS_IOS) for (const u of list) if (u.__upload && u.blob instanceof Blob) u.blob = await packBlob(u.blob);
-    if (IS_IOS) for (const u of list) if (u.__dg) for (const x of (u.uploads || [])) if (x.blob instanceof Blob) x.blob = await packBlob(x.blob);
-    if (IS_IOS) for (const u of list) if (u.__gallery) { if (u.blob instanceof Blob) u.blob = await packBlob(u.blob); if (u.thumb instanceof Blob) u.thumb = await packBlob(u.thumb); }
-    await putAll('outbox', list.map((payload, i) => ({ id: payload.client_run_id, payload, tries: 0, at: Date.now() + i })));
+    await queueRows(list.map((payload, i) => ({ id: payload.client_run_id, payload, tries: 0, at: Date.now() + i })));
     list.forEach(p => { if (!p.__timer && !p.__upload && !p.__tick && !p.__skip && !p.__clock && !p.__feedback && !p.__ghnote && !p.__gallery) keepSent(p); });
     // done, not done, or a checklist sent: that task's timer stops (the server stops its own with the task)
     list.forEach(p => { if (p.task_id && (p.__tick || p.__skip || (!p.__timer && !p.__upload && p.status === 'completed'))) timerCloseLocal(p.task_id); });

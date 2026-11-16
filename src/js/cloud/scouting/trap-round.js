@@ -107,17 +107,3 @@
   };
   const posWords = code => { const p = parsePos(code); return p ? `${p.n} · row ${p.row}${p.m != null ? ` · ${p.m} m` : ''}` : ''; };
   const placed = p => !!parsePos(p.pos_code) || !!p.gps;
-
-  // the GPS, when the phone has already been allowed to give it (asked with the button otherwise)
-  function getGps(timeout = 8000) {
-    return new Promise(res => {
-      if (!navigator.geolocation) return res(null);
-      navigator.geolocation.getCurrentPosition(
-        g => res({ lat: Math.round(g.coords.latitude * 1e6) / 1e6, lng: Math.round(g.coords.longitude * 1e6) / 1e6, acc: Math.round(g.coords.accuracy) }),
-        () => res(null), { enableHighAccuracy: true, timeout, maximumAge: 30000 });
-    });
-  }
-  async function gpsAllowed() {
-    try { return (await navigator.permissions?.query({ name: 'geolocation' }))?.state === 'granted'; } catch (e) { return false; }
-  }
-

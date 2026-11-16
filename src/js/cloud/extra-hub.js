@@ -44,14 +44,6 @@
     return { t, items };
   }
   let extraPick = false;      // a zone was opened from the both-units list: Finish and Back come back to it
-  async function startExtra() {
-    const X = await extraUnits();
-    if (!X) return;
-    // two units (0.11.97): one Extra scouting over both — the zones of each under its unit, a unit's task made at its first zone
-    if (X.byFarm.size > 1) return openExtraPick(X);
-    const made = await ensureExtra([...X.byFarm.keys()][0], X);
-    return made ? openTask('srv:' + made.t.id) : null;
-  }
   async function openExtraPick(X0 = null) {
     const X = X0 || await extraUnits();
     if (!X) { extraPick = false; return showWeek(); }

@@ -51,11 +51,15 @@ setAppMode(new URLSearchParams(location.search).get('action') === 'record' ? 'ca
 
 // ─── TOAST ───────────────────────────────────────────────────
 let toastTimer;
+let toastErrUntil = 0;   // an error stays up ~7 s and is not replaced by an info toast meanwhile
 function showToast(msg, type = 'info') {
   const t = document.getElementById('toast');
+  if (type === 'info' && Date.now() < toastErrUntil) return;
   t.textContent = msg;
   t.className = `toast ${type} show`;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+  const ms = type === 'error' ? 7000 : 3500;
+  toastErrUntil = type === 'error' ? Date.now() + ms : 0;
+  toastTimer = setTimeout(() => t.classList.remove('show'), ms);
 }
 

@@ -213,6 +213,7 @@
   }
   // a running timer ticks where it shows (the cards, the checklist) without redrawing the page
   setInterval(() => {
+    if (document.hidden) return;                       // nothing to tick while the page is hidden; the next second after it shows catches up
     document.querySelectorAll('[data-timer-ids]').forEach(c => {
       const ids = c.dataset.timerIds.split(',');
       const m = ids.reduce((a, id) => a + taskMinutes(id), 0);
@@ -328,7 +329,6 @@
             g.quantity && !isPosUnit(g.unit) && !['system', 'area'].includes(String(g.unit || '').toLowerCase()) ? fmtQty(g.quantity, g.unit) : null,
             g.extra || g.extraZone ? null : fmtMin(g.minutes)].filter(Boolean);       // an extra scouting has no planned time
   };
-  const groupMeta = g => [g.zone_name || g.area, ...qtyBits(g)].filter(Boolean).join(' · ');
   // the zones (or bays) a task visits, when its places are zones: "Zones 1 · 2 · 3 · 4.1 · 4.2" (0.11.60)
   const zonesLine = g => {
     const it = (g.positions || []).filter(p => p.kind && p.kind !== 'position');
@@ -352,7 +352,7 @@
         const k = x => x.planned_date + BANDS.indexOf(bandOf(x)) + (slotOf(x) === 'any' ? '1' : '0') + (x.due_time || '99:99:99') + (x.title || '');
         return k(a) < k(b) ? -1 : k(a) > k(b) ? 1 : 0;
       });
-    const today = todayISO(), horizon = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
+    const today = todayISO(), horizon = addDays(today, 7);   // the farm's days (0.11.146; the horizon was UTC's)
     // whose tasks: everyone, nobody yet, or one person — the person signed in by default (FarmBox 0086)
     // … but for somebody off the task pages (FarmBox 0229, 0.11.123): they see every task and can do any, and are no name in this list
     const workers = (await all('workers')).filter(w => w.active !== false && !w.off_tasks)
@@ -402,7 +402,7 @@
       xb.onclick = () => openDigital({});
       whoBox.after(xb);
     }
-    const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+    const weekAgo = addDays(today, -7);
     const past = groups.filter(t => t.planned_date < today && t.planned_date >= weekAgo && mine(t));
     const week = groups.filter(t => t.planned_date >= today && t.planned_date <= horizon && mine(t));
     await refreshSW();   // what a swipe needs to know about each card (0.11.27)

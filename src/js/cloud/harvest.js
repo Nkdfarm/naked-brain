@@ -39,23 +39,6 @@
     card.append(row, all);
     return card;
   }
-  function itemBlock(task) {
-    run.items = new Map();
-    const box = el('div', 'fb-harv');
-    box.append(el('div', 'fb-sec', `Items · ${task.positions.filter(isItem).length}`));
-    task.positions.filter(isItem).forEach(p => {
-      const st = { id: p.id, done: !!p.done_at, note: p.result?.note || '' };
-      run.items.set(p.id, st);
-      const row = el('div', 'fb-harv-row');
-      row.append(el('span', 'fb-pos-name', p.label || 'Item'));
-      const b = el('button', 'fb-btn', 'Done');
-      b.setAttribute('aria-pressed', String(st.done));
-      b.onclick = () => { st.done = !st.done; b.setAttribute('aria-pressed', String(st.done)); };
-      row.append(b);
-      box.append(row);
-    });
-    return box;
-  }
 
   // the batches added by their code (0.11.128): their names kept on this phone, for a task opened again — what the
   // server sends back of a run is only { plan_id, kg }

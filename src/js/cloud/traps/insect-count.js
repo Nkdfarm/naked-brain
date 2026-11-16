@@ -8,55 +8,6 @@
   // autocorrelations are added, so a slant or an offset between strips costs nothing. Across and down
   // are measured apart and averaged (a slanted photo shortens one); no grid found → the card's length.
   const GRID_MM = 23, GRID_ROWS = 7;      // FarmLab's Insect Science cards: 4 × 7 squares of 23 mm
-  function gridScale(d, W, H, x0, y0, bw, bh, isCard) {
-    const guess = Math.max(bw, bh) / 250;                          // px/mm if the card were 25 cm: bounds only
-    const thin = Math.max(2, Math.round(1.2 * guess)), long = Math.max(8, Math.round(5 * guess));
-    const dark = new Uint8Array(bw * bh);
-    for (let y = 0; y < bh; y++) for (let x = 0; x < bw; x++) {
-      const i = ((y + y0) * W + x + x0) * 4, lum = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-      if (lum < 125 && !isCard(i)) dark[y * bw + x] = 1;
-    }
-    const hr = new Uint16Array(bw * bh), vr = new Uint16Array(bw * bh);
-    for (let y = 0; y < bh; y++) { let s = -1; for (let x = 0; x <= bw; x++) { const on = x < bw && dark[y * bw + x]; if (on && s < 0) s = x; if (!on && s >= 0) { for (let k = s; k < x; k++) hr[y * bw + k] = x - s; s = -1; } } }
-    for (let x = 0; x < bw; x++) { let s = -1; for (let y = 0; y <= bh; y++) { const on = y < bh && dark[y * bw + x]; if (on && s < 0) s = y; if (!on && s >= 0) { for (let k = s; k < y; k++) vr[k * bw + x] = y - s; s = -1; } } }
-    const lo = Math.max(6, Math.floor(GRID_MM * guess * 0.45)), hi = Math.ceil(GRID_MM * guess * 2.2);
-    // the spacing of lines along one direction: autocorrelation per strip, added up
-    const spacing = across => {
-      const len = across ? bw : bh, other = across ? bh : bw;
-      const strip = Math.max(12, Math.round(GRID_MM * guess * 0.8));
-      const maxLag = Math.min(hi, Math.floor(len / 2));
-      if (maxLag <= lo) return null;
-      const ac = new Float64Array(maxLag + 1);
-      for (let s0 = 0; s0 + strip <= other; s0 += strip) {
-        const prof = new Float64Array(len);
-        for (let t = s0; t < s0 + strip; t++) for (let k = 0; k < len; k++) {
-          const i = across ? t * bw + k : k * bw + t;
-          // a vertical line (across: its pixels run down) or a horizontal one
-          if (dark[i] && (across ? (vr[i] >= long && hr[i] <= thin) : (hr[i] >= long && vr[i] <= thin))) prof[k]++;
-        }
-        let m = 0; for (let k = 0; k < len; k++) m += prof[k]; m /= len;
-        let e = 0; for (let k = 0; k < len; k++) { prof[k] -= m; e += prof[k] * prof[k]; }
-        if (e <= 0) continue;
-        for (let l = 0; l <= maxLag; l++) { let c = 0; for (let k = 0; k + l < len; k++) c += prof[k] * prof[k + l]; ac[l] += c / e; }
-      }
-      if (!(ac[0] > 0)) return null;
-      const n = l => ac[l] / ac[0];
-      let best = -1, bestV = 0;
-      for (let l = lo; l < maxLag; l++) if (n(l) > n(l - 1) && n(l) >= n(l + 1) && n(l) > bestV) { best = l; bestV = n(l); }
-      if (best < 0 || bestV < 0.2) return null;
-      // the fundamental: the shortest peak nearly as strong (twice the spacing peaks too)
-      for (let l = lo; l < best; l++) if (n(l) > n(l - 1) && n(l) >= n(l + 1) && n(l) >= 0.8 * bestV) { best = l; bestV = n(l); break; }
-      const a = n(best - 1), b = n(best), c = n(best + 1), den = a - 2 * b + c;
-      return { px: best + (den < 0 ? 0.5 * (a - c) / den : 0), strength: bestV };
-    };
-    const X = spacing(true), Y = spacing(false);
-    if (!X && !Y) return null;
-    let px;
-    if (X && Y) px = Math.abs(X.px - Y.px) / Math.min(X.px, Y.px) <= 0.25 ? (X.px + Y.px) / 2 : (X.strength >= Y.strength ? X.px : Y.px);
-    else px = (X || Y).px;
-    return { ppm: px / GRID_MM, across: X?.px ?? null, down: Y?.px ?? null };
-  }
-
   // ── counting insects on a sticky trap (blobs-v3, 0.11.70) ────────────────
   // The check of 30 Sept 2026 (owner: "check if the current algorithm counting is correct"): on FarmLab's cards the
   // old count took the printed header — logo, "STICKY TRAP", the phone number, a punched hole — for 17–35 insects,

@@ -19,13 +19,40 @@
     return d;
   }
   let authWanted = false;    // the session was refused while something else was on screen: the form shows with the list
+  // 0.11.146 (review of 16 Nov): the session as this phone's storage holds it now — another window of the app (the
+  // installed one and a browser tab) may have refreshed it meanwhile, and the token kept here is then the used one
+  const storedSession = () => { try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch (e) { return null; } };
+  addEventListener('storage', e => {
+    if (e.key !== SESSION_KEY) return;
+    try { session = JSON.parse(e.newValue || 'null'); } catch (x) { return; }
+    try { paintAccount(); } catch (x) { /* drawn at the next screen */ }
+  });
   let refreshing = null;
   function refresh() {
     refreshing = refreshing || doRefresh().finally(() => { refreshing = null; });
     return refreshing;
   }
   async function doRefresh() {
+    // another window refreshed already: its new token is taken, not the used one sent again (which signs out)
+    const st = storedSession();
+    if (st?.refresh_token && st.refresh_token !== session?.refresh_token) {
+      session = st;
+      if (!session.expires_at || Date.now() < session.expires_at) return true;
+    }
     if (!session?.refresh_token) return false;
+    try { return await refreshOnce(); }
+    catch (e) {
+      // the connection dropped before the answer (not the time limit, not a status): tried once more in two seconds,
+      // inside the server's reuse interval — a lost answer had already used the token, and the next try much later
+      // was refused and signed the person out
+      if (/^\d{3} |no answer in time/.test(String((e && e.message) || ''))) throw e;
+      await new Promise(res => setTimeout(res, 2000));
+      return refreshOnce();
+    }
+  }
+  async function refreshOnce() {
+    if (!session?.refresh_token) return false;
+    const sent = session.refresh_token;
     // the same time limit as api() — 45 s for the request and its small answer: a refresh that never answered held
     // every call waiting on it. Cut, it is a network failure like any other: the session is kept (only the server's
     // no ends it, below), and the callers get an error with no status, as when the connection drops.
@@ -34,11 +61,15 @@
     try {
       const r = await fetch(`${URL_BASE}/auth/v1/token?grant_type=refresh_token`, {
         method: 'POST', headers: { apikey: ANON, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refresh_token: session.refresh_token }),
+        body: JSON.stringify({ refresh_token: sent }),
         ...(ctl ? { signal: ctl.signal } : {})
       });
       // only a refused token ends the session (0.11.55): a 5xx or 429 is the server's trouble, not the worker's
       if (r.status === 400 || r.status === 401 || r.status === 403) {
+        // 0.11.146: refused because another window used it first — its newer session is in storage: taken, kept signed in.
+        // The session is ended only while storage still holds the refused token.
+        const now = storedSession();
+        if (now?.refresh_token && now.refresh_token !== sent) { session = now; try { paintAccount(); } catch (e) { /* later */ } return true; }
         saveSession(null);
         // said, and back to the sign-in form, as Naked Heart does: the list used to stay on screen with nothing sent and
         // not a word. Never over an open checklist or task page — there the form comes with the list (showWeek).
@@ -94,11 +125,15 @@
       // first whole sync on a weak link must not be cut and start again from nothing. It is one limit for the whole
       // body, not one that starts again with every piece.
       if (own) { clearTimeout(limit); limit = setTimeout(cut, Math.max(1800000, Math.round((Number(r.headers.get('content-length')) || 0) / 2))); }
-      if (r.status === 401 && retry) {
+      // 0.11.146 (review of 16 Nov): Storage says an expired token with a 400 or a 403 ("jwt expired"), not a 401 — a
+      // phone whose clock runs behind sent one, and its photos were set aside for good. Refreshed and tried once too.
+      const storageNo = retry && (r.status === 400 || r.status === 403) && path.startsWith('/storage/');
+      if ((r.status === 401 || storageNo) && retry) {
         // the token is tried again below. What the server said is a few words: five seconds for them, no more — read
         // under the body's long limit, a 401 that stopped coming held the retry, the flush and the sync with it
         if (own) { clearTimeout(limit); limit = setTimeout(cut, 5000); }
         try { said401 = await r.text(); } catch (e) { /* the status says enough */ }
+        if (r.status !== 401 && !/jwt expired|exp" claim|exp claim|token is expired|invalid jwt/i.test(said401)) throw new Error(`${r.status} ${said401.slice(0, 160)}`);
       } else {
         if (!r.ok) throw new Error(`${r.status} ${(await r.text()).slice(0, 160)}`);
         return r.status === 204 ? null : await r.json();

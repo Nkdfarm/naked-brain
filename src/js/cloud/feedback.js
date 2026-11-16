@@ -335,7 +335,7 @@
     // 0.11.91: a report still on this phone is not on the server yet — editing now would make a second report
     if (!d || !d.run) {
       const waiting = (await all('outbox')).some(r => r.payload && t.members.some(m => m.id === r.payload.task_id) && !r.payload.__timer && !r.payload.__upload && !r.payload.__feedback);
-      if (waiting) { showToast('The report of this task is still waiting to be sent — press Force send, then open it again', 'error'); return; }
+      if (waiting) { showToast('The report of this task is still waiting to be sent — press Send everything now, then open it again', 'error'); return; }
     }
     // everybody may add to a done task (FarmBox 0201): photos, notes, answers — nothing already sent is removed;
     // changing or removing what was sent stays with the task's people, the Admin and the managers

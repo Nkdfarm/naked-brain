@@ -36,6 +36,31 @@
     flushing = flushing || doFlush().finally(() => { flushing = null; sendClientLog().catch(() => {}); });
     return flushing;
   }
+  // the update by itself waits while something is being sent (0.11.146): a reload cut an upload, and it went up again
+  // under a new name, leaving the first file in no report
+  window.fbSending = () => !!flushing || !!$('sendall')?.disabled;
+  // 0.11.146 (review of 16 Nov): a pass writes back or deletes a row only while the outbox still holds the one it read
+  // — a newer row under the same id (Finish after Force send or Hand over, an edit) has another revision and goes in
+  // the next pass. Rows from before 0.11.146 have no revision: their time tells them apart.
+  const sameRow = (a, b) => !!a && !!b && (a.rev || null) === (b.rev || null) && (a.at || 0) === (b.at || 0);
+  const newerRow = () => { outboxDirty = true; const e = new Error('a newer copy of it is waiting on this phone'); e.superseded = true; return e; };
+  async function outboxKeep(row) {
+    let ok = false;
+    await tx('outbox', 'readwrite', s => { const q = s.get(row.id); q.onsuccess = () => { ok = sameRow(q.result, row); if (ok) s.put(row); }; });
+    if (!ok) throw newerRow();
+  }
+  async function outboxDone(row) {
+    let ok = false;
+    await tx('outbox', 'readwrite', s => { const q = s.get(row.id); q.onsuccess = () => { ok = !q.result || sameRow(q.result, row); if (ok && q.result) s.delete(row.id); }; });
+    if (!ok) outboxDirty = true;
+  }
+  // a photo kept on the phone that can no longer be read (an iPhone after a kill) failed like a lost connection at every
+  // pass, and the report it rides in never went (0.11.146): tried here once, and said
+  async function readable(b) {
+    try { const piece = b.slice(0, 1); if (typeof piece.arrayBuffer !== 'function') return true; await piece.arrayBuffer(); return true; }
+    catch (e) { return false; }
+  }
+  const PHOTO_GONE = '410 the photo is no longer on this phone';
   // a row the server refuses for good (a task deleted by a reschedule, a bad value) is set aside, not retried for ever
   // in front of everything else: 4xx other than 401/408/429. Network trouble, 5xx and 429 keep the order and wait.
   const refusedForGood = e => { const m = /^(\d{3}) /.exec(String(e?.message || '')); const st = m ? Number(m[1]) : 0;
@@ -110,13 +135,14 @@
           // notes' own folder — noted on the row as it lands, so a failure half-way re-sends none twice — then the note
           const u = row.payload;
           for (let i = 0; i < (u.items || []).length; i++) {
-            const x = u.items[i];
-            if (!(x.blob instanceof Blob) || x.path) continue;
-            const type = (x.blob.type || '').split(';')[0] || 'audio/webm';
+            const x = u.items[i], b = unBlob(x.blob);
+            if (!(b instanceof Blob) || x.path) continue;
+            if (!(await readable(b))) { clientNote('photo_lost', `note ${u.client_run_id}: recording ${i} unreadable, sent without it`); delete x.blob; await outboxKeep(row); continue; }
+            const type = (b.type || '').split(';')[0] || 'audio/webm';
             const path = `${u.farm_id || farm.id}/notes/${u.client_run_id}/${i}-${Date.now()}.${fbkExt(type)}`;
-            await api('/storage/v1/object/evidence/' + path, { method: 'POST', headers: { 'Content-Type': type }, body: x.blob });
-            x.path = path; x.bytes = x.blob.size; delete x.blob;
-            await putAll('outbox', [row]);
+            await api('/storage/v1/object/evidence/' + path, { method: 'POST', headers: { 'Content-Type': type }, body: b });
+            x.path = path; x.bytes = b.size; delete x.blob;
+            await outboxKeep(row);
           }
           await api('/rest/v1/rpc/submit_scout_note', { method: 'POST', body: JSON.stringify({ p: {
             farm_id: u.farm_id || farm.id, client_id: u.client_run_id, day: u.day, text: u.text, task_id: u.scout_task_id || null,
@@ -127,15 +153,16 @@
           // a feedback on a task (0.11.85, FarmBox 0189): its voice notes, photos and video go to the evidence bucket —
           // each noted on the row as it lands, so a failure half-way re-sends none twice — then the feedback itself
           const u = row.payload;
-          if ((u.items || []).some(x => x.kind === 'video' && x.blob instanceof Blob) && !uploadAllowed()) continue;   // a video waits for Wi-Fi
+          if ((u.items || []).some(x => x.kind === 'video' && unBlob(x.blob) instanceof Blob) && !uploadAllowed()) continue;   // a video waits for Wi-Fi
           for (let i = 0; i < (u.items || []).length; i++) {
-            const x = u.items[i];
-            if (!(x.blob instanceof Blob) || x.path) continue;
-            const type = (x.blob.type || '').split(';')[0] || { audio: 'audio/webm', photo: 'image/jpeg', video: 'video/mp4' }[x.kind];
+            const x = u.items[i], b = unBlob(x.blob);
+            if (!(b instanceof Blob) || x.path) continue;
+            if (!(await readable(b))) { clientNote('photo_lost', `feedback ${u.client_run_id}: ${x.kind} ${i} unreadable, sent without it`); delete x.blob; await outboxKeep(row); continue; }
+            const type = (b.type || '').split(';')[0] || { audio: 'audio/webm', photo: 'image/jpeg', video: 'video/mp4' }[x.kind];
             const path = `${u.farm_id || farm.id}/feedback/${u.client_run_id}/${i}-${Date.now()}.${fbkExt(type)}`;
-            await api('/storage/v1/object/evidence/' + path, { method: 'POST', headers: { 'Content-Type': type }, body: x.blob });
-            x.path = path; x.bytes = x.blob.size; delete x.blob;
-            await putAll('outbox', [row]);
+            await api('/storage/v1/object/evidence/' + path, { method: 'POST', headers: { 'Content-Type': type }, body: b });
+            x.path = path; x.bytes = b.size; delete x.blob;
+            await outboxKeep(row);
           }
           await api('/rest/v1/rpc/submit_feedback', { method: 'POST', body: JSON.stringify({ p: {
             farm_id: u.farm_id || farm.id, client_id: u.client_run_id, task_id: u.task_id, task_title: u.task_title,
@@ -151,12 +178,12 @@
           for (const x of (u.uploads || [])) {
             if (x.done) continue;
             const blob = unBlob(x.blob);
-            if (blob instanceof Blob) {
-              try { await api('/storage/v1/object/evidence/' + x.path, { method: 'POST', headers: { 'Content-Type': x.type || blob.type || 'image/jpeg' }, body: blob }); }
-              catch (e) { if (!/Duplicate|already exists/i.test(String(e.message || e))) throw e; }
-            }
+            // its file is gone from the phone (0.11.146): set aside and listed, not marked as sent with no file behind it
+            if (!(blob instanceof Blob) || !(await readable(blob))) throw new Error(PHOTO_GONE);
+            try { await api('/storage/v1/object/evidence/' + x.path, { method: 'POST', headers: { 'Content-Type': x.type || blob.type || 'image/jpeg' }, body: blob }); }
+            catch (e) { if (!/Duplicate|already exists/i.test(String(e.message || e))) throw e; }
             x.done = true; x.blob = null;
-            try { await putAll('outbox', [row]); } catch (e) { /* not noted: a resend meets "Duplicate", which is taken as done */ }
+            try { await outboxKeep(row); } catch (e) { if (e.superseded) throw e; /* not noted: a resend meets "Duplicate", which is taken as done */ }
           }
           const call = () => u.fn ? api('/functions/v1/' + u.fn, { method: 'POST', body: JSON.stringify(u.args || {}) })
                                   : api('/rest/v1/rpc/' + u.rpc, { method: 'POST', body: JSON.stringify(u.args || {}) });
@@ -166,7 +193,7 @@
             if (u.rpc === 'dg_read_trap' && u.args?.p?.replace_id && refusedForGood(e)) {
               // the earlier photo could not be replaced (not this person's, or gone): the new one is kept beside it
               delete u.args.p.replace_id;
-              try { await putAll('outbox', [row]); } catch (e2) { /* sent below all the same */ }
+              try { await outboxKeep(row); } catch (e2) { if (e2.superseded) throw e2; /* sent below all the same */ }
               res = await call();
             } else if (dgGoneAlready(u, e)) res = null;    // the item it was about is gone meanwhile: nothing left to do
             else throw e;
@@ -192,38 +219,43 @@
           // shows in Naked Heart's unfiled list, where it can be deleted — then the photo goes up afresh, as before.
           const age = Date.now() - (u.path_at || 0);
           const landed = typeof u.path === 'string' && !!u.path && age >= 0 && age < 15 * 60000;
-          if (blob instanceof Blob || landed) {
-            if (!landed) {
-              const path = `${u.farm_id || farm.id}/${u.run_client_id}/${u.kind === 'trap' ? 'trap' : 'scout'}-${String(u.ref).replace(/[^A-Za-z0-9]/g, '')}-${Date.now()}.jpg`;
-              await api('/storage/v1/object/evidence/' + path, { method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: blob });
-              u.path = path; u.path_at = Date.now();
-              try { await putAll('outbox', [row]); } catch (e) { /* not noted: it goes up again next time, as before */ }
-            }
-            await api('/rest/v1/rpc/attach_photo', { method: 'POST',
-              body: JSON.stringify({ p_kind: u.kind, p_run_client_id: u.run_client_id, p_ref: u.ref, p_path: u.path }) });
+          // no file on the phone and none landed (0.11.146): set aside and listed — it was deleted as sent, with nothing
+          // uploaded. A file that landed earlier is still attached when the phone's copy is gone.
+          const hasFile = blob instanceof Blob && await readable(blob);
+          if (!landed && !hasFile && !(typeof u.path === 'string' && u.path)) throw new Error(PHOTO_GONE);
+          if (!landed && hasFile) {
+            const path = `${u.farm_id || farm.id}/${u.run_client_id}/${u.kind === 'trap' ? 'trap' : 'scout'}-${String(u.ref).replace(/[^A-Za-z0-9]/g, '')}-${Date.now()}.jpg`;
+            await api('/storage/v1/object/evidence/' + path, { method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: blob });
+            u.path = path; u.path_at = Date.now();
+            try { await outboxKeep(row); } catch (e) { if (e.superseded) throw e; /* not noted: it goes up again next time, as before */ }
           }
+          await api('/rest/v1/rpc/attach_photo', { method: 'POST',
+            body: JSON.stringify({ p_kind: u.kind, p_run_client_id: u.run_client_id, p_ref: u.ref, p_path: u.path }) });
         }
         else {
           // step photos kept with the run (0.11.55): each goes up, is noted on its step and taken off the row at once,
           // so a failure half-way re-sends none twice
           for (const st of (row.payload.steps || [])) {
             while (Array.isArray(st.media_blobs) && st.media_blobs.length) {
-              const b = st.media_blobs[0];
-              if (b instanceof Blob) {
+              const b = unBlob(st.media_blobs[0]);
+              if (b instanceof Blob && await readable(b)) {
                 const path = `${row.payload.farm_id || farm.id}/${row.payload.client_run_id}/s${st.seq}${st.item_id ? '-' + String(st.item_id).slice(0, 8) : ''}-${Date.now()}.jpg`;
                 await api('/storage/v1/object/evidence/' + path, { method: 'POST', headers: { 'Content-Type': b.type || 'image/jpeg' }, body: b });
                 (st.media = st.media || []).push({ path, kind: 'photo' });
-              }
+              } else clientNote('photo_lost', `report ${row.payload.client_run_id}: a photo of step ${st.seq} could not be read, sent without it`);
               st.media_blobs.shift();
-              await putAll('outbox', [row]);
+              await outboxKeep(row);
             }
             delete st.media_blobs;
           }
           // trap photos that never reached the bucket go first (the run waits if they cannot)
           for (const t of (row.payload.traps || [])) {
-            if (t.photo_blob instanceof Blob && !t.photo_path) {
-              t.photo_path = await uploadTrapPhoto(row.payload.client_run_id, t.code, t.photo_blob, row.payload.farm_id);
-              await putAll('outbox', [row]);
+            const pb = unBlob(t.photo_blob);
+            if (pb instanceof Blob && !t.photo_path) {
+              if (await readable(pb)) t.photo_path = await uploadTrapPhoto(row.payload.client_run_id, t.code, pb, row.payload.farm_id);
+              else clientNote('photo_lost', `report ${row.payload.client_run_id}: the photo of trap ${t.code} could not be read, sent without it`);
+              delete t.photo_blob;
+              await outboxKeep(row);
             }
             delete t.photo_blob;
           }
@@ -240,20 +272,20 @@
             clientNote('task_gone', row.payload.task_id);
           }
         }
-        await del('outbox', row.id);
+        await outboxDone(row);             // only the row that was sent: a newer one under its id stays for the next pass
         if (!isUp(row) && !row.payload.__clock && !row.payload.__feedback) told++;
       } catch (e) {
+        if (e && e.superseded) continue;   // a newer row took its place while it was sent: that one goes in the next pass
         const dead = refusedForGood(e);
         if (dead || row.tries === 2) clientNote(dead ? 'refused' : 'retry', `${row.payload.__upload ? 'photo' : row.payload.__gallery ? 'gallery' : row.payload.__timer ? 'timer' : 'report'}: ${String(e.message || e).slice(0, 200)}`);
-        // a digital scouting row taken back while it was being sent (a vote changed meanwhile) is not written back:
-        // it would come back beside the newer one
-        // nor a gallery photo discarded while it was being sent
-        const gone = row.payload && (row.payload.__dg || row.payload.__gallery) && !(await tx('outbox', 'readonly', s => s.get(row.id)).catch(() => true));
-        if (gone) continue;
-        await putAll('outbox', [{ ...row, tries: row.tries + 1, error: String(e.message || e).slice(0, 160), dead }]);
+        // a row taken back while it was being sent (a digital scouting vote changed meanwhile, a gallery photo
+        // discarded, Remove from this phone) is not written back: it would come back beside the newer one; nor is the
+        // older row written over a newer one under the same id (0.11.146)
+        try { await outboxKeep({ ...row, tries: row.tries + 1, error: String(e.message || e).slice(0, 160), dead }); }
+        catch (e2) { if (e2.superseded) continue; throw e2; }
         // set aside, and it closed a task: the sync kept that task closed while the report waited. The next sync reads
         // everything again, so the card shows what the server holds instead of "done" for ever.
-        if (dead && row.payload && row.payload.task_id) { try { await setKV('cursor', null); } catch (e2) { /* the next full sync does it */ } }
+        if (dead && row.payload && row.payload.task_id) { cursorGen++; try { await setKV('cursor', null); } catch (e2) { /* the next full sync does it */ } }
         failedNow.add(row.id);
         if (!isUp(row)) held.add(chainOf(row));   // its photos and its later timer events wait for it; everything else goes on
         if (!navigator.onLine) break;             // the connection went: no point in trying the rest

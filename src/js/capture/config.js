@@ -159,17 +159,9 @@ let noteStartTime = new Date();
 // first gets something (updateSubmitBtn); a draft that comes back keeps the start it had (restoreDraft).
 let noteStarted = false;
 
-function renderNoteStamp() {
-  const d = noteStartTime;
-  const dateStr = d.toLocaleDateString(undefined, { weekday:'short', day:'2-digit', month:'short', year:'numeric' });
-  const timeStr = d.toLocaleTimeString(undefined, { hour:'2-digit', minute:'2-digit' });
-  // The date/author line was removed from the capture box (0.9.13); keep this
-  // safe in case it comes back.
-  const dateEl = document.getElementById('noteDate');
-  if (dateEl) dateEl.textContent = `${dateStr} · ${timeStr}`;
-  const authorEl = document.getElementById('noteAuthorStamp');
-  if (authorEl) authorEl.textContent = document.getElementById('authorName')?.value.trim() || '';
-}
+// The date/author stamp line was removed from the capture box (0.9.13); nothing is drawn any more. The function
+// stays because several places call it.
+function renderNoteStamp() {}
 
 // ─── GPS LOCATION ────────────────────────────────────────────
 // Added on demand with "Add location" (never automatic): the live precision

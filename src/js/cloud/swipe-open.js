@@ -285,7 +285,14 @@
 
   // a tap on a task (0.11.60): straight into its checklist (the timer starts); a task with no checklist asks
   // "mark it done?"; a done one opens what was sent to edit it; a "not done" one opens to be done after all
+  // one opening at a time: a double tap started the timer and the run twice (review 16 Nov 2026)
+  let openingTask = false;
   async function openTask(key, fromHub = null) {
+    if (openingTask) return;
+    openingTask = true;
+    try { return await openTaskNow(key, fromHub); } finally { openingTask = false; }
+  }
+  async function openTaskNow(key, fromHub = null) {
     const groups = await loadGroups();
     const t = findGroup(groups, key);
     if (!t) return;
@@ -317,7 +324,7 @@
           const by = uniq([...doneBy(t), ...peopleOn(t, b => num(b.minutes) >= 1)]);
           showToast(`${t.area || 'This zone'} was scouted${by.length ? ' by ' + names(by) : ''} — what you add goes in as extra`, 'info');
           nudged.add(xk); extraPick = false;
-          return openTask(xk, fromHub || hubOf(groups, t.key)?.key || null);
+          return openTaskNow(xk, fromHub || hubOf(groups, t.key)?.key || null);
         }
       }
       if (hasChecklist) return editTask(t, sop);
@@ -337,7 +344,7 @@
       const same = groups.flatMap(g => g.hub ? g.zones : [g]).find(g => g.key !== t.key && g.planned_date === todayISO()
         && g.sop_id === t.sop_id && (g.area || '') === (t.area || '') && (g.farm_id || '') === (t.farm_id || '') && !isClosed(g.status));
       if (same && confirm(`This is the task for ${when}.\n\nToday's "${t.title}"${t.area ? ' · ' + t.area : ''} is still open — do today's instead?`))
-        return openTask(same.key, fromHub);
+        return openTaskNow(same.key, fromHub);
       if (!confirm(`This task is for ${when}, not today.\n\nDo it now anyway? What you record counts for today in the report.`)) return;
     }
     // somebody else has this task running (0.11.84): two people sending the same task makes two reports

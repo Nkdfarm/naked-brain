@@ -13,7 +13,7 @@
 
     /* Tabs → pill chips: which Notion database this capture goes to */
     .tab-bar { background: transparent; border-bottom: none; padding: var(--space-2) var(--space-4); gap: var(--space-2); }
-    .tab-btn { flex: 0 0 auto; min-width: 0; min-height: 40px; padding: 0 var(--space-4); border-radius: var(--radius-full); border: 1px solid var(--border);
+    .tab-btn { flex: 0 0 auto; min-width: 0; min-height: 44px; padding: 0 var(--space-4); border-radius: var(--radius-full); border: 1px solid var(--border);
       background: var(--glass); color: var(--text); font-weight: 650; box-shadow: var(--shadow-sm); }
     .tab-btn:hover { background: var(--surface); color: var(--text); }
     .tab-btn.active { background: var(--primary); color: var(--text-inverse); border-color: transparent; }

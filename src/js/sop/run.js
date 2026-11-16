@@ -36,7 +36,12 @@ async function showRun(id) {
 function requestAuthor() {
   openAuthorGate(false);
   return new Promise(resolve => {
-    const poll = setInterval(() => { const n = getAuthor(); if (n) { clearInterval(poll); resolve(n); } }, 300);
+    // stops when the name is saved, or when the name dialog is closed with no name (then null: the caller goes back)
+    const poll = setInterval(() => {
+      const n = getAuthor();
+      const gate = document.getElementById('authorGate');
+      if (n || !gate || gate.classList.contains('hidden')) { clearInterval(poll); resolve(n || null); }
+    }, 300);
   });
 }
 

@@ -28,7 +28,6 @@
       return { key: k, label, done, target, ok: done >= target };
     }).filter(c => c.target > 0 || c.done > 0);
   }
-  const dgCounterText = u => dgCounters(u).map(c => c.target > 0 ? `${c.label} ${c.done}/${c.target}` : `${c.label} ${c.done}`).join(' · ');
   // a trap's sides, each red until photographed today, green after, grey when the trap is not read today with why: a
   // two-sided card ('both') by its yellow and its blue side, any other card by one photo (as dg_day counts them)
   function dgTrapDots(t) {
@@ -72,8 +71,8 @@
   // who may change or delete an item: its writer on its own day while that day is today, a manager always (the server
   // checks the same: app.may_remove_photo)
   const dgMayChange = (item, D) => !!D && (!!D.may_change_all || (!!D.is_today && !!item && !!D.me && item.by_user === D.me));
-  // a note: its writer until the end of the note's own day (the phone's day), a manager always
-  const dgDayOf = iso => { const d = new Date(iso); return isNaN(d) ? '' : new Date(d - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); };
+  // a note: its writer until the end of the note's own day (the farm's day since 0.11.146, was the phone's), a manager always
+  const dgDayOf = iso => { const d = new Date(iso); return isNaN(d) ? '' : farmDay(d); };
   const dgNoteMayChange = (n, D, today) => !!D && (!!D.may_change_all || (!!n && !!D.me && n.by_user === D.me && dgDayOf(n.at) === today));
   // where a photo lands in the evidence bucket: by day, so a save that fails still shows in Unfiled photos
   const dgPath = (farmId, day, kind, id) => `${farmId}/dg-${String(day).replace(/-/g, '')}/${kind}-${id}.jpg`;

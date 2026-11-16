@@ -391,7 +391,6 @@ document.getElementById('videoSummaryVideoInput').addEventListener('change', asy
   // ── Transcription for the first file (reuses shared audio extraction) ──
   if (files.length > 0) {
     const file = files[0];
-    const mb = (file.size / 1024 / 1024);
     const bar    = document.getElementById('videoTranscribingBar');
     const status = document.getElementById('videoTranscribingStatus');
     bar.style.display = 'flex';

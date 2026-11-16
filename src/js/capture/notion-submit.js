@@ -165,12 +165,6 @@ async function getDbProps(dbId) {
   }
 }
 
-async function getTitlePropName(dbId) {
-  const props = await getDbProps(dbId);
-  const entry = Object.entries(props).find(([, v]) => v.type === 'title');
-  return entry ? entry[0] : 'Title';
-}
-
 // Cache the workspace member list (rarely changes) to resolve author names to Notion user IDs.
 let _workspaceUsersCache = null;
 async function getWorkspaceUsers() {

@@ -15,7 +15,14 @@
       return txt.includes("CURRENT_VERSION = '" + v + "'");
     } catch (_) { return false; }
   }
-  async function checkForUpdates() {
+  // one check at a time (0.11.146, review of 16 Nov): on waking, the screen coming back and the signal coming back ask
+  // together, and the second saw the first one's number as "said twice" at once
+  let checkingNow = null;
+  function checkForUpdates() {
+    checkingNow = checkingNow || checkUpdateOnce().finally(() => { checkingNow = null; });
+    return checkingNow;
+  }
+  async function checkUpdateOnce() {
     try {
       const res = await fetch('./version.json?t=' + Date.now());
       if (!res.ok) return;
@@ -76,6 +83,8 @@
       if (tb && tb.style.display && tb.style.display !== 'none') return false;
     } catch (_) {}
     try { if (submitting || mediaFiles.length) return false; } catch (_) {}   // names of a later script: not there yet = nothing held
+    // the outbox being sent, or Force send running (0.11.146): a reload cut the upload, and it went up again under a new name
+    try { if (typeof window.fbSending === 'function' && window.fbSending()) return false; } catch (_) {}
     return true;
   }
   function autoUpdate(v) {

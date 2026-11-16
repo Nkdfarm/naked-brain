@@ -14,8 +14,8 @@
     return new Promise(resolve => {
       const sheet = el('div', 'fb-sheet');
       const box = el('div', 'fb-sheet-card');
-      box.append(el('h3', null, 'Force send?'));
-      box.append(el('p', null, 'The normal way to send is Finish inside a task. Force send is for clearing this phone: it sends everything it still holds, as it stands, even if it is not complete.'));
+      box.append(el('h3', null, 'Send everything now?'));
+      box.append(el('p', null, 'The normal way to send is Finish inside a task. Send everything now is for clearing this phone: it sends everything it still holds, as it stands, even if it is not complete.'));
       const ul = el('ul', 'fb-sendlist');
       ['Growth photos without the scale card go with no sizes.',
        'Checklists not finished go half-done; their tasks stay open.',
@@ -23,7 +23,7 @@
        'What cannot be sent at all is listed after, and you may remove it from this phone.'].forEach(t => ul.append(el('li', null, t)));
       const done = v => { sheet.remove(); resolve(v); };
       const no = el('button', 'fb-btn', 'Cancel'); no.type = 'button'; no.onclick = () => done(false);
-      const yes = el('button', 'fb-btn fb-btn-primary', 'Force send'); yes.type = 'button'; yes.onclick = () => done(true);
+      const yes = el('button', 'fb-btn fb-btn-primary', 'Send everything now'); yes.type = 'button'; yes.onclick = () => done(true);
       const acts = el('div', 'fb-actions'); acts.append(no, yes);
       box.append(ul, acts);
       sheet.append(box);
@@ -36,7 +36,7 @@
     if (!session) { showToast('Sign in first', 'error'); return; }
     if (!navigator.onLine) { showToast('Sending needs a connection', 'error'); return; }
     const openRun = document.getElementById('fb-run');
-    if (openRun && !openRun.classList.contains('hidden')) { showToast('Finish this task or go back first, then Force send', 'error'); return; }
+    if (openRun && !openRun.classList.contains('hidden')) { showToast('Finish this task or go back first, then Send everything now', 'error'); return; }
     if (!await askForce()) return;
     btn.disabled = true; nbLabel(btn, '{i:upload} Sending…');
     const lines = [];
@@ -108,7 +108,8 @@
             // the full photos follow through the outbox; the draft keeps what it sent and the run it went to
             const ups = [...sides.filter(([, , S]) => !S.photo_path).map(([q, k, S]) => ({ kind: 'trap', ref: `${q.code}:${k}`, blob: S.full })),
                          ...go.filter(q => !q.photo_path).map(q => ({ kind: 'observation', ref: q.ref, blob: q.full }))];
-            await putAll('outbox', ups.map((u, n) => ({ id: `${cid}~up-${Date.now().toString(36)}-s${String(n).padStart(3, '0')}`, tries: 0, at: Date.now() + n,
+            // through queueRows (0.11.146): packed on an iPhone, with a revision, as Finish's rows
+            await queueRows(ups.map((u, n) => ({ id: `${cid}~up-${Date.now().toString(36)}-s${String(n).padStart(3, '0')}`, tries: 0, at: Date.now() + n,
               payload: { __upload: true, client_run_id: `${cid}~up-s${n}`, run_client_id: cid, farm_id: payload.farm_id, kind: u.kind, ref: u.ref, blob: u.blob } })));
             go.forEach(q => { q.sent = true; });
             sides.forEach(([, , S]) => { S.sent = true; });
@@ -165,7 +166,7 @@
             status: done ? 'completed' : 'partial', started_at: d?.run?.started_at || at, finished_at: d?.run?.finished_at || now,
             steps, notes: draft.runNote || null };
           // through the outbox: its photos go up first, then the run (the same road as Finish)
-          await putAll('outbox', [{ id: cid, payload, tries: 0, at: Date.now() }]);
+          await queueRows([{ id: cid, payload, tries: 0, at: Date.now() }]);
           await setKV(row.id, { ...draft, cid, sentSaved: draft.saved });
           say(`${name}: ${steps.length} answer${steps.length === 1 ? '' : 's'} sent as ${steps.length === 1 ? 'it stands' : 'they stand'}${done ? '' : ' — not finished: Finish still closes the task'}.`);
         } catch (e) { say(`${name}: not sent — ${String(e.message || e).replace(/^\d+ /, '').slice(0, 110)}`, true); }
@@ -193,7 +194,7 @@
           const g = groups.find(x => String(x.key || x.id) === key);
           const me = await getKV('me');
           const id = 'fbk-' + (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2));
-          await putAll('outbox', [{ id, tries: 0, at: Date.now(), payload: { __feedback: true, client_run_id: id, farm_id: g?.farm_id || farm?.id,
+          await queueRows([{ id, tries: 0, at: Date.now(), payload: { __feedback: true, client_run_id: id, farm_id: g?.farm_id || farm?.id,
             task_id: g?.members?.[0]?.id || null, task_title: g?.title || null, sop_id: g?.sop_id || null, sop_version_id: g?.sop_version_id || null,
             step_seq: draft.step ? Number(draft.step) : null, note: text || null,
             author: (await all('workers')).find(w => w.id === me)?.name || session?.user?.email || null,
@@ -211,7 +212,7 @@
         try {
           const me = await getKV('me');
           const id = ghNoteId();
-          await putAll('outbox', [{ id, tries: 0, at: Date.now(), payload: { __ghnote: true, client_run_id: id, farm_id: farmId || farm?.id, day: day || todayISO(),
+          await queueRows([{ id, tries: 0, at: Date.now(), payload: { __ghnote: true, client_run_id: id, farm_id: farmId || farm?.id, day: day || todayISO(),
             text: text || null, scout_task_id: null, extra: false,
             author: (await all('workers')).find(w => w.id === me)?.name || session?.user?.email || null,
             app: 'brain', app_version: typeof CURRENT_VERSION !== 'undefined' ? CURRENT_VERSION : null,
@@ -230,14 +231,15 @@
       if (went > 0) say(`${went} item${went === 1 ? '' : 's'} went up (reports and their full photos).`);
       // what the server answered and said no to (set aside, or an error with a status) cannot go by trying again: it is
       // offered for removal. What never reached the server (no signal, a time-out) waits for the next Send.
-      const said = r => r.dead || /^\d{3} /.test(String(r.error || ''));
+      // 0.11.146: only a refusal for good — a 5xx, 429 or 401 last time is the server's trouble or a sign-in, and goes later
+      const said = r => r.dead || refusedForGood({ message: r.error });
       const refused = after.filter(said), left = after.filter(r => !said(r));
-      if (left.length) say(`${left.length} still waiting for a connection — press Force send again.`, true);
-      refused.forEach(r => cant(`Refused by the server: ${String(r.error || 'no reason given').replace(/^\d+ /, '').slice(0, 140)}`, () => del('outbox', r.id)));
+      if (left.length) say(`${left.length} still waiting for a connection — press Send everything now again.`, true);
+      refused.forEach(r => cant(`${/^410 /.test(String(r.error || '')) ? 'Cannot be sent' : 'Refused by the server'}: ${String(r.error || 'no reason given').replace(/^\d+ /, '').slice(0, 140)}`, () => del('outbox', r.id)));
       if (!lines.length) say('Nothing was waiting on this phone: everything had already been sent.');
       sync(false, true).catch(() => {});
     } catch (e) { say('Send stopped: ' + String(e.message || e).slice(0, 140), true); }
-    btn.disabled = false; nbLabel(btn, '{i:upload} Force send');
+    btn.disabled = false; nbLabel(btn, '{i:upload} Send all');
     paintFoot();
     const sheet = el('div', 'fb-sheet');
     const box = el('div', 'fb-sheet-card');

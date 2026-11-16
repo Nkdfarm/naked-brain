@@ -799,12 +799,6 @@
       const pc = parseTrapCode(p.code || '');
       return pc.ok ? `${pc.n} · row ${pc.row} · ${pc.metres} m` : '';
     };
-    // a card of a known size and colour counts better: count again once the trap is known
-    function recount(p, canvas) {
-      const t = trapById.get(p.trap_id);
-      if (!t || !canvas || p.corrected) return;
-      try { const r = countInsects(canvas, t); Object.assign(p, { counts: r.counts, total: r.total, algo_total: r.total, confidence: r.confidence }); } catch (e) {}
-    }
 
     // The colour: new insects A DAY since the photo before (FarmBox 0147) — the same rule as the server:
     // after Replaced, or when the count falls hard (under 60 % and at least 3 fewer: a new card went up),
