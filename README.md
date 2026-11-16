@@ -1,5 +1,7 @@
 # Naked Brain
 
+[![check](https://github.com/Nkdfarm/naked-brain/actions/workflows/check.yml/badge.svg)](https://github.com/Nkdfarm/naked-brain/actions/workflows/check.yml)
+
 The phone app for the people working on the floor of a FarmBox: the day's tasks, checklists and SOPs, scouting
 photos, harvest, voice notes. It works offline and syncs when the phone has a signal.
 
@@ -41,11 +43,19 @@ Libraries are loaded from jsDelivr at exact versions (pdf.js, mammoth, Tesseract
 
 You can also run `python -m http.server 3000` in this folder and open http://localhost:3000.
 
+## Changing it
+
+1. Edit the piece in `src/` (each file's first line says what it holds; `js/cloud/*` and `js/sop/*` are parts of one
+   function each, so a name defined in one piece is seen by the others of the same group).
+2. `python build.py` — writes `index.html`.
+3. `python build.py --check` and `python tools/check_syntax.py` — GitHub runs both, and the version check, on every push.
+4. Open the page (`.\serve.ps1`) and read the browser console before committing `src/` and `index.html` together.
+
 ## Releasing
 
 GitHub Pages serves the branch **`live`**, not `main`: **a push to `main` publishes nothing.** A release is
 made only with the owner's script `scripts/release-brain.ps1` in FarmBox-Platform (the `release-brain` skill).
-It bumps the version in the places that move together, adds the row to `VERSION_LOG` in `index.html`, and
+It bumps the version in the places that move together, adds the row to `VERSION_LOG` in `src/js/app/version-log.js`, and
 moves `live`. Never push `live` by hand.
 
 ## History
