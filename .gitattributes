@@ -1,2 +1,5 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# index.html is built from src/ (python build.py): GitHub folds its diff, read src/ instead
+index.html linguist-generated=true

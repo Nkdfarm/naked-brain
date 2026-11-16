@@ -13,11 +13,14 @@ its rules and the decision log are in the private repository `Nkdfarm/FarmBox-Pl
 
 ## What this repository is
 
-Static files with no build step:
+Static files. The only step is `python build.py`, which joins `src/` into `index.html` (Python 3, nothing to install):
 
 | File | What |
 |---|---|
-| `index.html` | The whole app: markup, styles (design system "Naked Farm UI v1") and script |
+| `index.html` | The whole app as the phone gets it: one file. **Built** from `src/` by `python build.py` — never edit it by hand |
+| `src/` | The source of `index.html` in 69 pieces: `css/`, `html/`, `js/app` (icons, update check, version log, password gate), `js/capture` (Capture, Notion notes), `js/sop` (procedures), `js/cloud` (Tasks on Supabase: session, sync and outbox, tasks, runs, scouting, gallery). `src/index.manifest` gives the order |
+| `build.py` | Puts `src/` together into `index.html`; `--check` says whether they agree (GitHub runs it on every push) |
+| `tools/check_syntax.py` | Parses every script of `index.html` with Node |
 | `sw.js` | Service worker: offline cache |
 | `manifest.json`, `icon-*.png`, `apple-touch-icon.png`, `splash/` | Install as an app |
 | `version.json` | The version a phone checks to offer "Update now" |

@@ -1,0 +1,65 @@
+<!--! Naked Brain - markup: the FarmBox cloud Tasks views and the SoP views. Edit here, then run: python build.py -->
+<!-- FARMBOX CLOUD: the same Tasks tab, served by Supabase instead of Notion.
+     Off by default; Settings → Data source turns it on. -->
+<section class="app-view" id="viewFarmbox" aria-label="Tasks">
+  <div class="sop-bar">
+    <button id="fb-back" class="btn-icon hidden" aria-label="Back">←</button>
+    <div id="fb-title" class="hdr-title">Tasks</div>
+    <span id="fb-net" class="net-pill hidden">Offline</span>
+    <button id="fb-sendall" class="btn-icon fb-sendall" aria-label="Force send: everything on this phone, as it stands" title="Force send: everything on this phone, as it stands"><i data-ic="upload"></i> Force send</button>
+    <button id="fb-scan" class="btn-icon" aria-label="Scan a batch label" title="Scan a batch label"><i data-ic="qr"></i></button>
+    <button id="fb-sync" class="btn-icon" aria-label="Sync now" title="Sync now">⟳</button>
+  </div>
+
+  <main class="sop-main" id="fb-main">
+    <!-- sign in -->
+    <div id="fb-auth" class="doc hidden">
+      <div class="hero"><h1>Sign in</h1><p>Your FarmBox account — the same e-mail and password as in Naked Heart.</p></div>
+      <form id="fb-authForm" class="set-group" autocomplete="on">
+        <div class="field"><label for="fb-email">E-mail</label>
+          <input id="fb-email" type="email" inputmode="email" autocomplete="username" required></div>
+        <div class="field"><label for="fb-pass">Password</label>
+          <input id="fb-pass" type="password" autocomplete="current-password" required></div>
+        <div id="fb-authErr" class="config-hint" style="color:var(--error)"></div>
+        <button class="btn btn-primary btn-lg btn-block" id="fb-signin" type="submit">Sign in</button>
+      </form>
+    </div>
+
+    <!-- my week -->
+    <div id="fb-week" class="doc hidden">
+      <div class="hero"><h1 id="fb-weekTitle">This week</h1><p id="fb-weekSub">Your farm work, day by day.</p></div>
+      <div id="fb-clock" class="fb-clock"></div>
+      <div id="fb-who" class="fb-who"></div>
+      <div id="fb-next"></div>
+      <div id="fb-days"></div>
+      <div id="fb-empty" class="config-hint hidden">Nothing planned yet. Tap ⟳ to sync.</div>
+      <div class="config-hint" id="fb-foot"></div>
+    </div>
+
+    <!-- one task -->
+    <div id="fb-task" class="doc hidden"></div>
+    <!-- a batch, its label scanned (0.11.127) -->
+    <div id="fb-lot" class="doc hidden"></div>
+
+    <!-- a checklist run -->
+    <div id="fb-run" class="doc hidden">
+      <div id="fb-runHead" class="hero"></div>
+      <div id="fb-steps"></div>
+      <button class="btn btn-primary btn-lg btn-block" id="fb-finish" style="margin-top:var(--space-4)">Finish</button>
+      <div class="config-hint" id="fb-runHint"></div>
+    </div>
+  </main>
+</section>
+
+<!-- SOP: procedures, checklists, editor and import (SoP module script at the end) -->
+<section class="app-view" id="viewSop" aria-label="Tasks">
+  <div class="sop-bar">
+    <button id="sop-backBtn" class="btn-icon hidden" aria-label="Back">←</button>
+    <div id="sop-hdrTitle" class="hdr-title"></div>
+    <span id="sop-netPill" class="net-pill hidden">Offline</span>
+    <button id="sop-syncBtn" class="btn-icon hidden" aria-label="Upload pending runs" title="Upload pending runs"><i data-ic="upload"></i></button>
+    <button id="sop-menuBtn" class="btn-icon" aria-label="SoP menu">⋯</button>
+  </div>
+  <div id="sop-view" class="sop-main"></div>
+</section>
+

@@ -1,0 +1,23 @@
+name: check
+on:
+  push:
+    branches: [main, live]
+  pull_request:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - name: index.html is what src/ builds
+        run: python build.py --check
+      - name: every inline script parses
+        run: python tools/check_syntax.py
+      - name: version numbers agree
+        run: |
+          v=$(python -c "import json;print(json.load(open('version.json'))['version'])")
+          grep -q "CURRENT_VERSION = '$v'" index.html || { echo "version.json $v is not CURRENT_VERSION"; exit 1; }
+          grep -q "\['$v'" src/js/app/version-log.js || { echo "no VERSION_LOG row for $v"; exit 1; }

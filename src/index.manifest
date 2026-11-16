@@ -1,0 +1,90 @@
+# Naked Brain: index.html is built from these pieces, in this order (python build.py).
+# A line "= text" is one literal line; any other line names a file under src/.
+
+html/head.html
+css/base.css
+css/skin.css
+css/sop.css
+css/cloud-tasks.css
+css/cloud-scouting.css
+css/cloud-run.css
+html/head-end.html
+= <script>
+js/app/icons.js
+= </script>
+=
+= <script>
+js/app/update.js
+js/app/version-log.js
+= </script>
+=
+= <script>
+js/app/password-gate.js
+= </script>
+html/body-gate-header.html
+html/body-cloud.html
+html/body-capture.html
+html/body-settings.html
+= <script>
+js/capture/config.js
+js/capture/author-skins-settings.js
+js/capture/modes-toast.js
+js/capture/recording-ai.js
+js/capture/video-compress.js
+js/capture/media.js
+js/capture/fields-drafts.js
+js/capture/notion-submit.js
+js/capture/log-init.js
+= </script>
+=
+= <!-- ═══ SoP module (FarmBox SOP) — runs in the SoP tab, shares login, author, theme, toast ═══ -->
+= <script>
+js/sop/config-helpers.js
+js/sop/notion.js
+js/sop/views.js
+js/sop/run.js
+js/sop/editor.js
+js/sop/import.js
+js/sop/init.js
+js/cloud/db.js
+js/cloud/session.js
+js/cloud/sync-outbox.js
+js/cloud/device-log.js
+js/cloud/screens.js
+js/cloud/timers.js
+js/cloud/clock.js
+js/cloud/swipe-open.js
+js/cloud/extra-hub.js
+js/cloud/dscout/rules.js
+js/cloud/dscout/day-page.js
+js/cloud/dscout/feed.js
+js/cloud/dscout/zone.js
+js/cloud/dscout/post.js
+js/cloud/dscout/capture.js
+js/cloud/dscout/notes.js
+js/cloud/greenhouse-note.js
+js/cloud/feedback.js
+js/cloud/run/checklist.js
+js/cloud/run/draft.js
+js/cloud/scouting/trap-round.js
+js/cloud/scouting/scale-card-ocr.js
+js/cloud/scouting/screen.js
+js/cloud/scouting/sizing.js
+js/cloud/scouting/viewer-measure.js
+js/cloud/scouting/finish.js
+js/cloud/harvest.js
+js/cloud/traps/trap-card.js
+js/cloud/traps/insect-count.js
+js/cloud/run/step-card.js
+js/cloud/run/finish.js
+js/cloud/force-send.js
+js/cloud/gallery.js
+js/cloud/wiring.js
+js/cloud/lot-scan.js
+js/sop/tail.js
+= </script>
+= <script>
+js/app/moved-bar.js
+= </script>
+= </body>
+= </html>

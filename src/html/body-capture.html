@@ -1,0 +1,213 @@
+<!--! Naked Brain - markup: tab bar and the Capture page. Edit here, then run: python build.py -->
+<!-- TAB BAR -->
+<nav class="tab-bar" role="tablist" aria-label="Notion database">
+  <button class="tab-btn active" data-tab="ugly200" role="tab" aria-selected="true">Ugly200</button>
+  <button class="tab-btn" data-tab="sop" role="tab" aria-selected="false">SoP</button>
+  <button class="tab-btn" data-tab="daily" role="tab" aria-selected="false">Daily</button>
+  <button class="tab-btn" data-tab="sulive" role="tab" aria-selected="false">SU reports</button>
+</nav>
+
+<!-- MAIN -->
+<main id="main-content">
+
+  <div class="hero">
+    <h1 id="heroTitle">Log an issue</h1>
+    <p id="heroSub">Record what you see — it goes to the Ugly200 list.</p>
+  </div>
+
+  <!-- TOP TAB FIELDS (SU Live's Category menu, 0.11.120): before everything else -->
+  <div id="tabFieldsTop" class="tab-fields-wrap"></div>
+
+  <!-- TITLE FIELD -->
+  <div id="noteTitleWrap" class="editable-box-wrap" style="margin-bottom:var(--space-3)">
+    <div class="section-label" style="margin-bottom:var(--space-2)">Title</div>
+    <input type="text" id="noteTitle" placeholder="Give this note a title…" autocomplete="off"
+      style="width:100%;box-sizing:border-box;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-2) var(--space-3);font-size:var(--text-sm);color:var(--text-primary);outline:none;transition:border-color var(--transition)"
+      onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">
+  </div>
+
+  <!-- CAPTURE: one box — voice, photo, video. Transcription runs automatically
+       after a recording or a video is added; a summary is made with Generate. -->
+  <div class="recorder-card capture-card" role="region" aria-label="Capture">
+    <div class="cap-row">
+      <div class="cap-item">
+        <button class="record-btn cap-btn" id="recordBtn" aria-label="Start recording" aria-pressed="false">
+        <svg id="micIcon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="9" y="2" width="6" height="12" rx="3"/>
+          <path d="M5 10c0 3.866 3.134 7 7 7s7-3.134 7-7"/>
+          <line x1="12" y1="17" x2="12" y2="21"/>
+          <line x1="9" y1="21" x2="15" y2="21"/>
+        </svg>
+        <svg id="stopIcon" width="32" height="32" viewBox="0 0 24 24" fill="currentColor" style="display:none">
+          <rect x="6" y="6" width="12" height="12" rx="2"/>
+        </svg>
+      </button>
+        <div class="cap-label">Voice</div>
+      </div>
+      <div class="cap-item">
+        <button class="record-btn cap-btn" id="videoSummaryPhotoBtn" aria-label="Attach photo">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+        </button>
+        <div class="cap-label">Photo</div>
+      </div>
+      <div class="cap-item">
+        <button class="record-btn cap-btn" id="videoSummaryVideoBtn" aria-label="Attach video">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M15 10l4.553-2.069A1 1 0 0 1 21 8.82v6.362a1 1 0 0 1-1.447.888L15 14"/><rect x="1" y="6" width="14" height="12" rx="2"/>
+          </svg>
+        </button>
+        <div class="cap-label">Video</div>
+      </div>
+    </div>
+    <div class="recorder-timer" id="recTimer">0:00</div>
+    <div class="recorder-status" id="recStatus">Tap to record voice note</div>
+    <!-- LOCATION: added on demand; live precision until the user saves it -->
+    <div class="gps-box">
+      <button class="btn-copy gps-add" id="gpsAddBtn" aria-label="Add GPS location"><i data-ic="pin"></i> Add location</button>
+      <div class="gps-live" id="gpsLive" hidden>
+        <div class="gps-acc" id="gpsAcc" aria-live="polite">Searching GPS…</div>
+        <div class="gps-coords" id="gpsCoords"></div>
+        <div class="gps-actions">
+          <label class="gps-target">Target ±
+            <select id="gpsTarget" aria-label="Target precision in metres">
+              <option>3</option><option>5</option><option selected>10</option><option>20</option><option>50</option>
+            </select> m
+          </label>
+          <button class="btn-copy" id="gpsSaveBtn" disabled>Save location</button>
+          <button class="btn-copy" id="gpsCancelBtn">Cancel</button>
+        </div>
+      </div>
+      <div class="gps-saved" id="gpsSaved" hidden>
+        <a class="gps-stamp" id="gpsStamp" target="_blank" rel="noopener"></a>
+        <button class="btn-copy gps-remove" id="gpsRemoveBtn" aria-label="Remove location">×</button>
+      </div>
+    </div>
+    <input type="file" id="videoSummaryPhotoInput" accept="image/*" multiple style="display:none">
+    <input type="file" id="videoSummaryVideoInput" accept="video/*" style="display:none">
+    <div class="media-previews" id="mediaPreviews"></div>
+  </div>
+
+  <!-- VOICE TRANSCRIPTION -->
+  <div class="editable-box-wrap" id="transcriptWrap">
+    <div class="editable-box-header">
+      <div class="section-label" style="margin-bottom:0">Voice transcription</div>
+      <div class="editable-box-actions">
+        <button class="btn-copy" id="copyTranscriptBtn" aria-label="Copy transcript">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy
+        </button>
+        <button class="btn-copy" id="clearTranscriptBtn" aria-label="Clear transcript" style="color:var(--error)">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          Clear
+        </button>
+      </div>
+    </div>
+    <div id="transcribingBar" class="transcribing-bar" style="display:none">
+      <div class="dot-spin"></div>
+      <span>Transcribing your voice note…</span>
+    </div>
+    <textarea class="editable-textarea transcript-ta" id="transcriptText" placeholder="Appears automatically after you record… You can also type or paste text." rows="3"></textarea>
+  </div>
+
+
+  <!-- VOICE SUMMARY -->
+  <div class="editable-box-wrap">
+    <div class="editable-box-header">
+      <div class="section-label" style="margin-bottom:0">Voice summary</div>
+      <div class="editable-box-actions">
+        <button class="btn-generate" id="generateSummaryBtn" aria-label="Write the voice summary with AI" title="Write the voice summary with AI">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        AI
+      </button>
+        <button class="btn-copy" id="copySummaryBtn" aria-label="Copy summary">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy
+        </button>
+        <button class="btn-copy" id="clearSummaryBtn" aria-label="Clear voice summary" style="color:var(--error)">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          Clear
+        </button>
+      </div>
+    </div>
+    <div id="summaryGenerating" class="summary-generating" style="display:none">
+      <div class="dot-spin"></div>
+      <span>Writing the summary…</span>
+    </div>
+    <textarea class="editable-textarea summary-ta" id="summaryText" placeholder="Tap AI to write the summary… or type your own." rows="3"></textarea>
+  </div>
+
+  <!-- VIDEO TRANSCRIPTION -->
+  <div class="editable-box-wrap">
+    <div class="editable-box-header">
+      <div class="section-label" style="margin-bottom:0">Video transcription</div>
+      <div class="editable-box-actions">
+        <button class="btn-copy" id="copyVideoTranscriptBtn" aria-label="Copy video transcription">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy
+        </button>
+        <button class="btn-copy" id="clearVideoTranscriptBtn" aria-label="Clear video transcription" style="color:var(--error)">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          Clear
+        </button>
+      </div>
+    </div>
+    <div id="videoTranscribingBar" class="transcribing-bar" style="display:none">
+      <div class="dot-spin"></div>
+      <span id="videoTranscribingStatus">Transcribing the video…</span>
+    </div>
+    <textarea class="editable-textarea" id="videoTranscriptText" placeholder="Appears automatically after you add a video… You can also paste a transcript." rows="3"></textarea>
+  </div>
+
+
+  <!-- VIDEO SUMMARY -->
+  <div class="editable-box-wrap">
+    <div class="editable-box-header">
+      <div class="section-label" style="margin-bottom:0">Video summary</div>
+      <div class="editable-box-actions">
+        <button class="btn-generate" id="generateVideoSummaryBtn" aria-label="Write the video summary with AI" title="Write the video summary with AI">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        AI
+      </button>
+        <button class="btn-copy" id="copyVideoSummaryBtn" aria-label="Copy video summary">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy
+        </button>
+        <button class="btn-copy" id="clearVideoSummaryBtn" aria-label="Clear video summary" style="color:var(--error)">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          Clear
+        </button>
+      </div>
+    </div>
+    <div id="videoSummaryGenerating" class="summary-generating" style="display:none">
+      <div class="dot-spin"></div>
+      <span>Writing the video summary…</span>
+    </div>
+    <textarea class="editable-textarea summary-ta" id="videoSummaryText" placeholder="Tap AI to write the video summary… or type your own." rows="3"></textarea>
+  </div>
+
+  <!-- TEXT NOTE (hidden on Daily tab — Daily has its own Note field) -->
+  <div class="text-area-wrap" id="noteWrap">
+    <div class="section-label">Note</div>
+    <textarea id="noteText" placeholder="Type or paste additional text here…" rows="4"></textarea>
+  </div>
+
+  <!-- PRE-MEDIA TAB FIELDS (e.g. Location for Ugly200) -->
+  <div id="tabFieldsPre" class="tab-fields-wrap"></div>
+
+
+  <!-- TAB-SPECIFIC FIELDS (per database schema) -->
+  <div id="tabFields" class="tab-fields-wrap"></div>
+
+  <!-- LOCAL ENTRIES LOG -->
+  <div class="entries-section">
+    <div class="section-label">Recent entries</div>
+    <div class="entries-list" id="entriesList">
+      <div class="empty-log" id="emptyLog">No entries yet. Record your first voice note.</div>
+    </div>
+  </div>
+</main>
+

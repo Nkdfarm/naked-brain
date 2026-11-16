@@ -1,0 +1,157 @@
+<!--! Naked Brain - markup: Settings, submit bar, toast. Edit here, then run: python build.py -->
+<!-- SETTINGS PAGE: appearance is open to everyone; the Notion configuration needs the PIN -->
+<div id="settingsPage" class="hidden" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+  <div class="settings-head">
+    <button class="btn-icon" id="settingsBack" aria-label="Back">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <span style="font-weight:700">Settings</span>
+  </div>
+  <div class="settings-body">
+    <div class="hero">
+      <h1 id="settingsTitle">Settings</h1>
+      <p>Appearance is open to everyone. The Notion configuration needs the PIN.</p>
+    </div>
+
+    <div class="set-title">Appearance</div>
+    <div class="set-group">
+      <div class="segmented" role="group" aria-label="Theme">
+        <button type="button" data-theme-choice="light"><i data-ic="sun"></i> Light</button>
+        <button type="button" data-theme-choice="dark"><i data-ic="moon"></i> Dark</button>
+        <button type="button" data-theme-choice="system">Auto</button>
+      </div>
+      <div class="config-hint" style="margin-top:var(--space-2)">Auto follows the phone's own light/dark setting.</div>
+      <div class="set-row" style="margin-top:var(--space-3)">
+        <label for="skinSelect">Skin</label>
+        <select id="skinSelect" class="set-select" aria-label="Skin"><option value="naked-farm">Naked Farm</option></select>
+      </div>
+      <div class="config-hint">A skin changes the colours, the corners and the font. The layout stays the same.</div>
+    </div>
+
+    <div class="set-title">Account</div>
+    <div class="set-group">
+      <div class="segmented" role="group" aria-label="Data source" style="display:none">
+        <button type="button" data-source="notion">Notion</button>
+        <button type="button" data-source="cloud">FarmBox cloud</button>
+      </div>
+      <div class="config-hint" id="fb-sourceHint">You sign in with your own FarmBox account — the same e-mail and password as in Naked Heart. Capture uses the same sign-in.</div>
+      <div class="set-row" id="fb-accountRow" style="margin-top:var(--space-3);display:none">
+        <span id="fb-account" style="color:var(--text-muted)"></span>
+        <button type="button" class="btn-copy" id="fb-signout">Sign out</button>
+      </div>
+      <div class="set-row" style="margin-top:var(--space-3)">
+        <label for="fb-uploadNet">Upload photos</label>
+        <select id="fb-uploadNet" class="set-select" aria-label="Upload photos">
+          <option value="any">Wi-Fi and mobile data</option>
+          <option value="wifi">Wi-Fi only</option>
+        </select>
+      </div>
+      <div class="config-hint">Each full photo (2–3 MB) goes up as soon as it is taken when the chosen connection is there, else it waits on the phone; the checklist itself is always sent at once. Only Android says which connection it is on — an iPhone uploads on any. Digital scouting's photos go on any connection: a photo there is saved only once it is up.</div>
+    </div>
+
+    <div class="set-title">App</div>
+    <div class="set-group">
+      <div class="set-row"><span>Version</span><span id="settingsVersion" style="color:var(--text-muted)"></span></div>
+      <div class="set-row"><span>User guide</span><a href="guide.html" target="_blank" rel="noopener" class="btn-copy" style="text-decoration:none">Open</a></div>
+    </div>
+
+    <div class="set-title">Configuration <span class="lock-badge" id="configLockBadge"><i data-ic="lock"></i> PIN required</span></div>
+    <div class="set-group">
+      <div id="pinOverlay" style="display:flex;flex-direction:column;align-items:center;gap:var(--space-3);padding:var(--space-2) 0">
+        <div style="font-size:var(--text-sm);color:var(--text-muted);text-align:center">Enter the 4-digit PIN to see and change the Notion settings.</div>
+        <div style="display:flex;gap:var(--space-2)">
+          <input type="password" id="pinInput" maxlength="4" inputmode="numeric" autocomplete="off" placeholder="••••" aria-label="PIN"
+            style="width:120px;min-height:48px;text-align:center;font-size:var(--text-lg);letter-spacing:0.35em;background:var(--surface-offset);border:1px solid var(--border);border-radius:var(--radius-md);color:var(--text);outline:none">
+          <button class="btn-generate" id="pinSubmit" style="min-height:48px;padding:0 var(--space-5)">Unlock</button>
+        </div>
+        <div id="pinError" style="font-size:var(--text-sm);color:var(--error);display:none">Wrong PIN — try again</div>
+      </div>
+    <div class="config-panel" id="configPanel" role="region" aria-label="Configuration settings">
+
+      <div class="config-section-title">Notion</div>
+
+      <div class="config-field">
+        <label for="authorName">Author Name</label>
+        <input type="text" id="authorName" placeholder="e.g. Marie" autocomplete="off" spellcheck="false">
+        <div class="config-hint">The name on every note. On a signed-in phone it is the signed-in person's and is set again at each sync; a name typed here stays only on a phone that is not signed in.</div>
+      </div>
+
+      <div class="config-field">
+        <label for="notionDbId_ugly200">Ugly200 — Database ID</label>
+        <input type="text" id="notionDbId_ugly200" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="config-field">
+        <label for="notionDbId_sop">SoP — Database ID</label>
+        <input type="text" id="notionDbId_sop" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="config-field">
+        <label for="notionDbId_daily">Daily — Database ID</label>
+        <input type="text" id="notionDbId_daily" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" autocomplete="off" spellcheck="false">
+        <div class="config-hint">From the database URL: notion.so/&lt;workspace&gt;/<strong>DATABASE_ID</strong>?v=…</div>
+      </div>
+      <div class="config-field">
+        <label for="notionDbId_sulive">SU reports — Database ID</label>
+        <input type="text" id="notionDbId_sulive" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" autocomplete="off" spellcheck="false">
+        <div class="config-hint">From the database URL: notion.so/&lt;workspace&gt;/<strong>DATABASE_ID</strong>?v=…</div>
+      </div>
+
+      <!-- CREATE DATABASE HELPER -->
+      <div id="createDbWrap" style="margin-bottom:var(--space-3);padding:var(--space-3);background:var(--surface-offset);border:1px solid var(--border);border-radius:var(--radius-lg);">
+        <div style="font-size:var(--text-xs);font-weight:600;color:var(--text-muted);margin-bottom:var(--space-2);"><i data-ic="database"></i> No databases yet? Create all automatically</div>
+        <div class="config-field" style="margin-bottom:var(--space-2);">
+          <label for="notionParentId" style="font-size:var(--text-xs);font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-muted);display:block;margin-bottom:var(--space-1);">Parent Page ID</label>
+          <input type="text" id="notionParentId" placeholder="Page ID from URL — notion.so/workspace/PAGE_ID" autocomplete="off" spellcheck="false">
+          <div class="config-hint">Open any Notion page → copy the 32-char ID from its URL. The integration must be connected to that page first.</div>
+        </div>
+        <div style="display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap;">
+          <button class="btn-generate" id="createDbBtn" style="padding:var(--space-2) var(--space-4);font-size:var(--text-sm);">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Create All 4 Databases
+          </button>
+          <div id="createDbResult" style="font-size:var(--text-xs);font-weight:600;display:none;align-items:center;gap:var(--space-1);"></div>
+        </div>
+      </div>
+
+      <!-- TEST BUTTONS -->
+      <div style="display:flex;gap:var(--space-2);margin-top:var(--space-3);align-items:center;flex-wrap:wrap;">
+        <button class="btn-generate" id="testNotionBtn" style="padding:var(--space-2) var(--space-4);font-size:var(--text-sm);">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          Test Notion
+        </button>
+        <div id="notionTestResult" style="font-size:var(--text-xs);font-weight:600;display:none;align-items:center;gap:var(--space-1);"></div>
+      </div>
+
+      <!-- SAVE/CLEAR -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:var(--space-4);padding-top:var(--space-3);border-top:1px solid var(--divider);">
+        <button class="btn-sm" id="saveConfigBtn" style="background:var(--primary);color:var(--text-inverse);border-color:var(--primary);font-weight:600;">
+          <i data-ic="save"></i> Save Config on This Device
+        </button>
+        <div style="display:flex;align-items:center;gap:var(--space-3);">
+          <span class="config-saved-badge" id="configSavedBadge">✓ Saved</span>
+          <button class="config-clear-btn" id="clearConfigBtn">Clear saved</button>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <!-- the version log last: it is long (one entry a release), and Configuration sat under all of it -->
+    <div class="set-title">Version log</div>
+    <div class="set-group" id="versionLog"></div>
+  </div>
+</div>
+
+<!-- FIXED SUBMIT BAR -->
+<div class="submit-area">
+  <div class="submit-inner">
+    <button class="btn-submit" id="submitBtn" disabled>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+      </svg>
+      Send to <span id="submitTabLabel">Ugly200</span>
+    </button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
