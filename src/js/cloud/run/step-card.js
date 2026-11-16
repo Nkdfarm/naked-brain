@@ -105,11 +105,20 @@
         const img = el('img'); img.src = URL.createObjectURL(f); img.alt = 'evidence';
         img.onload = () => URL.revokeObjectURL(img.src);
         // a wrong photo can go: the ✕ in its corner (0.11.86; it was a tap on the photo)
-        shot.insertBefore(picX(img, pic => {
-          const l = run.media.get(key) || [], i = l.indexOf(f);
-          if (i >= 0) l.splice(i, 1);
+        // 0.11.147: removed with five seconds of Undo (picUndoX in js/cloud/ask.js), no question first
+        let at = -1;
+        shot.insertBefore(picUndoX(img, pic => {
+          const l = run.media.get(key) || [];
+          at = l.indexOf(f);
+          if (at >= 0) l.splice(at, 1);
           pic.remove();
           if (!l.length && !shot.querySelector('.fb-chip')) shot.append(el('span', 'fb-chip', 'required'));
+          saveRunDraft();
+        }, () => {
+          const l = run.media.get(key) || [];
+          if (!l.includes(f)) l.splice(Math.min(Math.max(at, 0), l.length), 0, f);
+          run.media.set(key, l);
+          shot.querySelector('.fb-chip')?.remove();
           saveRunDraft();
         }), btn);
         shot.querySelector('.fb-chip')?.remove();

@@ -3,6 +3,23 @@
   // Going into a task or a checklist leaves a history entry behind, so the
   // phone's own Back gesture steps back a screen instead of closing the app.
   // The entry is pushed with the same URL — the SoP hash router is untouched.
+  // "Last synced 14:32" under the top bar (0.11.147): in the farm's own time, as farmDay is (js/cloud/sync-outbox.js), so a phone
+  // set to another zone does not show another hour. Painted from paintFoot, which every sync ends with; lastSyncAt is
+  // also read by the empty list (timers.js) to tell "never synced" from "nothing planned"
+  let lastSyncAt = null;
+  async function paintLastSync() {
+    const box = $('lastSync');
+    if (!box) return;
+    try { lastSyncAt = await getKV('synced_at') || null; } catch (e) { /* what it was */ }
+    if (!lastSyncAt) { box.textContent = 'Not synced yet'; box.classList.add('stale'); return; }
+    const tz = (farm && farm.timezone) || 'Africa/Johannesburg';
+    let hm;
+    try { hm = new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(lastSyncAt)); }
+    catch (e) { hm = new Date(lastSyncAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }); }
+    const day = farmDay(lastSyncAt);
+    box.textContent = 'Last synced ' + (day === farmDay() ? '' : fmtDay(day) + ' ') + hm;
+    box.classList.toggle('stale', day !== farmDay());   // not today: said in the warning colour
+  }
   const views = ['auth', 'week', 'task', 'run', 'lot'];
   const backStack = [];
   let unwinding = 0;

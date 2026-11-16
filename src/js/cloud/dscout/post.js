@@ -165,7 +165,7 @@
         const ch = el('button', 'fb-btn', '{i:pencil} Change'); ch.type = 'button'; ch.onclick = () => dgChangeSheet(kind, it, farmId);
         const del = el('button', 'fb-link', 'Delete'); del.type = 'button';
         del.onclick = async () => {
-          if (!confirm(kind === 'trap' ? 'Delete this trap photo? It goes to Removed photos.' : 'Delete this photo? It goes to Removed photos.')) return;
+          if (!await askSheet({ title: kind === 'trap' ? 'Delete this trap photo?' : 'Delete this photo?', text: 'It goes to Removed photos.', yes: 'Delete photo', no: 'Keep it', danger: true })) return;   // 0.11.147: askSheet
           await dgQueue({ rpc: 'remove_photo', args: { p_kind: kind, p_id: p.id, p_reason: 'Deleted on the phone (Digital scouting)' }, chain: 'dg:' + p.id,
                           view: { kind: 'remove', farm_id: farmId, ref_id: p.id } });
           if (DG.page === 'post' && DG.post === P) history.back();          // back on the zone, the photo marked as deleting
@@ -378,7 +378,7 @@
           const ch = el('button', 'fb-link', 'Change'); ch.type = 'button';
           ch.onclick = () => dgNoteEdit(n, farmId);
           const del = el('button', 'fb-link', 'Delete'); del.type = 'button';
-          del.onclick = () => { if (!confirm('Delete this comment?')) return;
+          del.onclick = async () => { if (!await askSheet({ title: 'Delete this comment?', yes: 'Delete comment', no: 'Keep it', danger: true })) return;   // 0.11.147: askSheet
             dgQueue({ rpc: 'dg_delete_note', args: { p_id: n.id }, chain: 'dg:' + n.id, view: { kind: 'note-delete', farm_id: farmId, ref_id: p.id, note_id: n.id } }); };
           acts.append(ch, del);
         }

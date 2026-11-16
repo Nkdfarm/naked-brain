@@ -5,8 +5,11 @@
     const btn = $('signin'); btn.disabled = true; $('authErr').textContent = '';
     btn.textContent = 'Signing in…';
     try {
-      await signIn($('email').value.trim(), $('pass').value);
+      const d = await signIn($('email').value.trim(), $('pass').value);
       $('pass').value = '';
+      // another person than the last one: their farm was forgotten (signIn); the page starts afresh, so nothing of it
+      // stays in memory either, and reads this person's farm whole (the cursor went with the rest)
+      if (d && d.changed) { btn.textContent = 'Reading your tasks…'; location.reload(); return; }
       // a session that ended by itself never passed through Sign out: the list opens on who signs in now, not on the last choice
       try { await setKV('who', null); } catch (e) { /* the choice stays */ }
       btn.textContent = 'Reading your tasks…';
@@ -36,6 +39,7 @@
   document.getElementById('fb-signout')?.addEventListener('click', async () => {
     if (signingOut) return;
     signingOut = true;
+    let gone = false;
     try {
       // what this person has not sent would go up later under the next person's name — the server takes who it is
       // from the sign-in. So it is sent first when there is signal (eight seconds at most, never a wait without end),
@@ -51,7 +55,9 @@
       try {
         if (session && navigator.onLine) await Promise.race([flush().catch(() => {}), new Promise(res => setTimeout(res, 8000))]);
         const left = (await all('outbox')).length;
-        if (left && !confirm(`${left} thing${left === 1 ? '' : 's'} you did ${left === 1 ? 'is' : 'are'} not sent yet.\n\nIf you sign out now, ${left === 1 ? 'it goes' : 'they go'} up later under the next person's name.\n\nSign out anyway?`)) return;
+        // the app's own sheet (17 Nov 2026), the same question as the browser's confirm() it replaces
+        if (left && !await askSheet({ title: 'Sign out anyway?', yes: 'Sign out anyway', no: 'Stay signed in', danger: true,
+          text: `${left} thing${left === 1 ? '' : 's'} you did ${left === 1 ? 'is' : 'are'} not sent yet.\n\nIf you sign out now, ${left === 1 ? 'it goes' : 'they go'} up later under the next person's name.` })) return;
       } catch (e) { /* sign out as before */ }
       saveSession(null);
       await setKV('farm', null); farm = null;
@@ -59,14 +65,29 @@
       // nor do they get this person's timers (their minutes showed as the next person's own) or open checklist
       await setKV('timers', null).catch(() => {}); TIMERS = {};
       await setKV('run_open', null).catch(() => {});
-      showToast('Signed out', 'success');
-      if (document.body.classList.contains('src-cloud')) fbOpen();
+      // 17 Nov 2026: nor the farm's copies (tasks, procedures, people, the gallery list, Digital scouting's — forgetFarm,
+      // js/cloud/session.js: server copies only, never the outbox or a draft), and the page starts afresh so nothing
+      // of this person stays in memory either; "Signed out" is said after the reload
+      try { await forgetFarm(); } catch (e) { console.warn('sign-out: the farm copies could not be removed', e); await setKV('cursor', null).catch(() => {}); }
+      await setKV('auth_user', null).catch(() => {});
+      try { sessionStorage.setItem('fb_signed_out', '1'); } catch (e) { /* the toast is all it carries */ }
+      gone = true;
+      location.reload();
     } finally {
-      signingOut = false;
-      const outBtn = document.getElementById('fb-signout');
-      if (outBtn) { outBtn.disabled = false; outBtn.textContent = 'Sign out'; }
+      if (!gone) {
+        signingOut = false;
+        const outBtn = document.getElementById('fb-signout');
+        if (outBtn) { outBtn.disabled = false; outBtn.textContent = 'Sign out'; }
+      }
     }
   });
+  // said once the page has started again after a sign-out
+  try {
+    if (sessionStorage.getItem('fb_signed_out') != null) {
+      sessionStorage.removeItem('fb_signed_out');
+      setTimeout(() => showToast('Signed out', 'success'), 300);
+    }
+  } catch (e) { /* nothing to say */ }
 
   function setSource(src) {
     localStorage.setItem(SOURCE_KEY, src);

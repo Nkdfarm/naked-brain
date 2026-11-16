@@ -412,7 +412,10 @@
       ? (unit === 'all' ? units.map(u => u.name).join(' + ') : (units.find(u => u.id === unit) || {}).name || '')
       : farm ? farm.name : 'Your farm work, day by day.';
     // "Pull ⟳" was no gesture here, and when it is the person or the unit chosen above that empties the list, a sync brings nothing
-    $('empty').textContent = who !== 'all' || unit !== 'all' ? 'No tasks for this choice — change it above to see the others.' : 'Nothing planned yet. Tap ⟳ to sync.';
+    // never synced and no signal (0.11.147): not "nothing planned" — the phone has not loaded the week yet, and says what to do
+    let neverSynced = false; try { neverSynced = !(await getKV('synced_at')); } catch (e) { /* as if synced */ }
+    $('empty').textContent = neverSynced && !navigator.onLine ? 'Nothing loaded yet, and no signal. Connect to Wi-Fi or mobile data once, then tap ⟳ — the week loads and stays on this phone.'
+      : who !== 'all' || unit !== 'all' ? 'No tasks for this choice — change it above to see the others.' : 'Nothing planned yet. Tap ⟳ to sync.';
     $('empty').classList.toggle('hidden', week.length + past.length > 0);
 
     // the task in progress, at the top of the day (0.11.61): a timer left running is hard to miss
@@ -518,5 +521,6 @@
       days.append(det);
     }
     paintFoot();
+    paintSwipeHint();
   }
 

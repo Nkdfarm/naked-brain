@@ -493,11 +493,13 @@ function renderMediaPreviews() {
     removeBtn.className = 'remove-media';
     removeBtn.innerHTML = '✕';
     removeBtn.setAttribute('aria-label', 'Remove media');
-    removeBtn.addEventListener('click', () => {
+    removeBtn.addEventListener('click', async () => {
       // a voice note that could not be transcribed exists nowhere else, and a video took minutes to prepare: ask first
-      if (m.type === 'audio' && !confirm('Remove this voice note? It is not kept anywhere else.')) return;
-      if (m.type === 'video' && !confirm('Remove this video from the note?')) return;
-      mediaFiles.splice(i, 1); renderMediaPreviews(); updateSubmitBtn();
+      // (0.11.147: on the app's own sheet; the item is found again by itself, not by its index, after the answer)
+      if (m.type === 'audio' && !await askOk({ title: 'Remove this voice note?', text: 'It is not kept anywhere else.', yes: 'Remove it', no: 'Keep it', danger: true })) return;
+      if (m.type === 'video' && !await askOk({ title: 'Remove this video from the note?', yes: 'Remove it', no: 'Keep it', danger: true })) return;
+      const at = mediaFiles.indexOf(m); if (at < 0) return;
+      mediaFiles.splice(at, 1); renderMediaPreviews(); updateSubmitBtn();
     });
     thumb.appendChild(removeBtn);
     container.appendChild(thumb);

@@ -15,8 +15,12 @@
     });
     const d = await r.json();
     if (!r.ok) throw new Error(d.error_description || d.msg || d.message || 'sign-in failed');
+    // somebody else than the last person on this phone, whose session ended by itself (no Sign out): the last
+    // person's farm copies are forgotten (what they did not send stays, and goes up under this sign-in, as before)
+    let changed = false;
+    try { changed = await personChanged(d.user && d.user.id); } catch (e) { changed = false; }
     saveSession(d);
-    return d;
+    return { ...d, changed };
   }
   let authWanted = false;    // the session was refused while something else was on screen: the form shows with the list
   // 0.11.146 (review of 16 Nov): the session as this phone's storage holds it now — another window of the app (the
@@ -147,3 +151,34 @@
     throw new Error(`${r.status} ${said401.slice(0, 160)}`);
   }
 
+  // ── the farm's copies on this phone (17 Nov 2026) ───────────────────────
+  // Sign out used to leave the farm on the phone (tasks, procedures, people, the gallery list…), read by whoever signed
+  // in next. Only the server's copies go now — what the next sync reads again; never the outbox, a draft, a photo or
+  // anything a person wrote (Sign out clears its timers and open checklist itself, as before: wiring.js).
+  const FARM_STORES = ['tasks', 'sops', 'versions', 'steps', 'positions', 'traps', 'task_workers', 'workers'];
+  const FARM_KV = ['farm', 'me', 'who', 'cursor', 'synced_at', 'sisters', 'wphotos', 'task_times', 'clock', 'feedback_on',
+    'scouting_state', 'ipm_threshold', 'gallery_list', 'dg_counts'];
+  const FARM_KV_PREFIX = ['dg_feed:', 'dg_people:', 'dg_cache:'];
+  async function forgetFarm() {
+    for (const st of FARM_STORES) await tx(st, 'readwrite', s => s.clear());
+    const open = await getKV('run_open').catch(() => null);
+    const keys = (await tx('kv', 'readonly', s => s.getAllKeys())).map(String).filter(k => FARM_KV.includes(k)
+      || FARM_KV_PREFIX.some(x => k.startsWith(x)) || (k === 'timers' && !open));   // a checklist still open keeps its timer
+    await tx('kv', 'readwrite', s => keys.forEach(k => s.delete(k)));
+  }
+  // at a sign-in: another person than the last one on this phone (a session that ended by itself) has the last one's
+  // copies forgotten; what was not sent stays and goes up under the new sign-in, as before
+  async function personChanged(now) {
+    if (!now) return false;
+    const prev = await getKV('auth_user').catch(() => null);
+    const changed = !!prev && prev !== now;
+    if (changed) {
+      // the last person's session ended by itself: as Sign out does, the new person does not get their timers or open
+      // checklist (its draft stays, and Send everything now sends it) — review of 17 Nov 2026
+      await setKV('timers', null).catch(() => {}); TIMERS = {};
+      await setKV('run_open', null).catch(() => {});
+      await forgetFarm();
+    }
+    await setKV('auth_user', now);
+    return changed;
+  }

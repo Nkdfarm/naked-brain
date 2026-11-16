@@ -181,7 +181,11 @@
       const list = run.media.get(key) || []; list.push(f); run.media.set(key, list);
       const img = el('img'); img.src = URL.createObjectURL(f); img.alt = 'photo';
       img.onload = () => URL.revokeObjectURL(img.src);
-      shot.insertBefore(picX(img, pic => { const l = run.media.get(key) || [], i = l.indexOf(f); if (i >= 0) l.splice(i, 1); pic.remove(); saveRunDraft(); }), btn);
+      // the ✕ removes with five seconds of Undo (0.11.147, picUndoX in js/cloud/ask.js)
+      let at = -1;
+      shot.insertBefore(picUndoX(img,
+        pic => { const l = run.media.get(key) || []; at = l.indexOf(f); if (at >= 0) l.splice(at, 1); pic.remove(); saveRunDraft(); },
+        () => { const l = run.media.get(key) || []; if (!l.includes(f)) l.splice(Math.min(Math.max(at, 0), l.length), 0, f); run.media.set(key, l); saveRunDraft(); }), btn);
       saveRunDraft();
     };
     btn.onclick = async () => {
@@ -235,7 +239,7 @@
   async function handOver() {
     const R = run; if (!R) return;
     const tt = timerTaskOf(R.task); if (!tt) return;
-    if (!confirm('Hand this task over?\n\nWhat you have entered so far is sent as it stands, your time is kept, and the task is free for the next person to continue and finish.')) return;
+    if (!await askSheet({ title: 'Hand this task over?', text: 'What you have entered so far is sent as it stands, your time is kept, and the task is free for the next person to continue and finish.', yes: 'Hand it over', no: 'Keep working' })) return;   // 0.11.147: askSheet
     const cid = R.edit?.run?.client_run_id || R.clientId;
     try {
       if (R.sc) {

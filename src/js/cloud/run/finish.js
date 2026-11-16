@@ -41,7 +41,7 @@
       }
       const rows = [...run.harvests.values()].filter(x => num(x.kg) > 0);
       const big = rows.find(x => num(x.kg) > 200);
-      if (big && !confirm(`${big.position_code}: ${big.kg} kg — is that right?`)) { $('runHint').textContent = 'Not sent — correct the kg, then tap Finish again.'; return; }
+      if (big && !await askSheet({ title: `${big.position_code}: ${big.kg} kg`, text: 'Is that right?', yes: 'Yes, send', no: 'Correct it' })) { $('runHint').textContent = 'Not sent — correct the kg, then tap Finish again.'; return; }   // 0.11.147: askSheet, here and below
       const kg = Math.round(rows.reduce((a, x) => a + num(x.kg), 0) * 100) / 100;
       if (kg > 0) {
         run.steps.filter(s => (s.step_type === 'measure' || s.step_type === 'record') && !run.answers.has(s.seq)).forEach(s => {
@@ -72,7 +72,7 @@
     // (the "one is done with the checklist" ticks are made below, once every question that can stop Finish was answered)
     if (run.items && !run.itemsAuto) {
       const left = [...run.items.values()].filter(st => !st.done);
-      if (left.length && !confirm(`${left.length} place${left.length === 1 ? '' : 's'} still red — send ${left.length === 1 ? 'it' : 'them'} as not done?`)) {
+      if (left.length && !await askSheet({ title: `${left.length} place${left.length === 1 ? '' : 's'} still red`, text: `Send ${left.length === 1 ? 'it' : 'them'} as not done?`, yes: 'Send as not done', no: 'Tick them', danger: true })) {
         $('runHint').textContent = 'Not sent — tick the places, then tap Finish again.';
         return;
       }
@@ -81,7 +81,7 @@
     const runNote = String(document.getElementById('fb-runNote')?.value || '').trim();
     if (red.length) {
       const names = red.slice(0, 4).map(x => x.item ? zoneShort(x.item.label) : x.s.title).join(', ') + (red.length > 4 ? '…' : '');
-      if (!confirm(`${red.length} still red (${names}) — send ${red.length === 1 ? 'it' : 'them'} as not OK?`)) {
+      if (!await askSheet({ title: `${red.length} still red`, text: `${names} — send ${red.length === 1 ? 'it' : 'them'} as not OK?`, yes: 'Send as not OK', no: 'Answer them', danger: true })) {
         $('runHint').textContent = 'Not sent — answer the red steps, then tap Finish again.';
         return;
       }

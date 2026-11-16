@@ -20,6 +20,7 @@ js/app/version-log.js
 =
 = <script>
 js/app/password-gate.js
+js/shared/farm-time.js
 = </script>
 html/body-gate-header.html
 html/body-cloud.html
@@ -37,20 +38,16 @@ js/capture/notion-submit.js
 js/capture/log-init.js
 = </script>
 =
-= <!-- ═══ SoP module (FarmBox SOP) — runs in the SoP tab, shares login, author, theme, toast ═══ -->
+= <!-- ═══ SoP closure: what is left of the Notion SoP (its old outbox), and the FarmBox Tasks closure inside it ═══ -->
 = <script>
 js/sop/config-helpers.js
-js/sop/notion.js
-js/sop/views.js
 js/sop/run.js
-js/sop/editor.js
-js/sop/import.js
-js/sop/init.js
 js/cloud/db.js
 js/cloud/session.js
 js/cloud/sync-outbox.js
 js/cloud/device-log.js
 js/cloud/screens.js
+js/cloud/ask.js
 js/cloud/timers.js
 js/cloud/clock.js
 js/cloud/swipe-open.js
@@ -68,10 +65,7 @@ js/cloud/run/checklist.js
 js/cloud/run/draft.js
 js/cloud/scouting/trap-round.js
 js/cloud/scouting/scale-card-ocr.js
-js/cloud/scouting/screen.js
-js/cloud/scouting/sizing.js
 js/cloud/scouting/viewer-measure.js
-js/cloud/scouting/finish.js
 js/cloud/harvest.js
 js/cloud/traps/trap-card.js
 js/cloud/traps/insect-count.js

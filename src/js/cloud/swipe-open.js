@@ -55,6 +55,20 @@
   }
   const maySkip = g => SW.admin || (SW.me && g.workerIds.has(SW.me));
 
+  // the first card says how to swipe, once per phone (0.11.147): "Swipe right = done · left = not done". Gone for good when it
+  // is dismissed or after the first swipe, which needs no words any more. localStorage may be blocked: then it shows each time
+  const swipeHintSeen = () => { try { return !!localStorage.getItem('fb_swipehint'); } catch (e) { return false; } };
+  const swipeHintDone = () => { try { localStorage.setItem('fb_swipehint', '1'); } catch (e) { /* shown again next time */ } document.getElementById('fb-swipehint')?.remove(); };
+  function paintSwipeHint() {
+    document.getElementById('fb-swipehint')?.remove();
+    if (swipeHintSeen()) return;
+    const first = [...document.querySelectorAll('#fb-days .fb-swipe')].find(w => !w.querySelector('.fb-card.done'));
+    if (!first) return;
+    const bar = el('div', 'fb-swipehint'); bar.id = 'fb-swipehint';
+    const ok = el('button', null, 'Got it'); ok.type = 'button'; ok.onclick = swipeHintDone;
+    bar.append(el('span', null, 'Swipe right = done · left = not done'), ok);
+    first.before(bar);
+  }
   function swipeable(card, g) {
     const wrap = el('div', 'fb-swipe');
     wrap.append(el('div', 'fb-swipe-bg left', '✓ Done'), el('div', 'fb-swipe-bg right', 'Cancel ✕'), card);
@@ -82,6 +96,7 @@
       x0 = null;
       if (!on) return;
       card.dataset.swiped = '1';
+      swipeHintDone();                                    // a swipe made: it was understood
       setTimeout(() => delete card.dataset.swiped, 400);
       wrap.classList.remove('moving');
       const far = Math.abs(dx) > width * 0.35;
@@ -334,7 +349,8 @@
     }
     if (t.status === 'skipped') {
       if (hasChecklist) return startRun(t, sop);
-      if (confirm(`${t.title} — mark it done after all?`)) await markDone(t);
+      // the questions below are askSheet's (0.11.147, js/cloud/ask.js): named buttons in place of the browser's OK / Cancel
+      if (await askSheet({ title: 'Mark it done after all?', text: t.title, yes: 'Mark done', no: 'Not now' })) await markDone(t);
       return;
     }
     // a task of a later day (0.11.73, owner 30 Sept 2026: the evening of the 29th scouted Zone 1 on the task of the 30th, so
@@ -343,9 +359,9 @@
       const when = fmtDay(t.planned_date);
       const same = groups.flatMap(g => g.hub ? g.zones : [g]).find(g => g.key !== t.key && g.planned_date === todayISO()
         && g.sop_id === t.sop_id && (g.area || '') === (t.area || '') && (g.farm_id || '') === (t.farm_id || '') && !isClosed(g.status));
-      if (same && confirm(`This is the task for ${when}.\n\nToday's "${t.title}"${t.area ? ' · ' + t.area : ''} is still open — do today's instead?`))
+      if (same && await askSheet({ title: `This is the task for ${when}`, text: `Today's "${t.title}"${t.area ? ' · ' + t.area : ''} is still open — do today's instead?`, yes: "Do today's", no: 'Keep this one' }))
         return openTaskNow(same.key, fromHub);
-      if (!confirm(`This task is for ${when}, not today.\n\nDo it now anyway? What you record counts for today in the report.`)) return;
+      if (!await askSheet({ title: `This task is for ${when}, not today`, text: 'Do it now anyway? What you record counts for today in the report.', yes: 'Do it now', no: 'Not now' })) return;
     }
     // somebody else has this task running (0.11.84): two people sending the same task makes two reports
     await loadTimers();
@@ -354,12 +370,12 @@
     const lock = heldOther(t);
     if (lock && !groupRunning(t)) {
       if (!(SW.manager && navigator.onLine)) { showToast(`${lock} is on this task — it opens when ${lock} finishes or hands it over`, 'error'); return; }
-      if (!confirm(`${lock} is on this task.\n\nTake it back from ${lock}? What ${lock} has not sent stays on ${lock}'s phone.`)) return;
+      if (!await askSheet({ title: `${lock} is on this task`, text: `Take it back from ${lock}? What ${lock} has not sent stays on ${lock}'s phone.`, yes: 'Take it back', no: 'Leave it', danger: true })) return;
       try { for (const m of t.members.filter(x => !isClosed(x.status))) await api('/rest/v1/rpc/release_task', { method: 'POST', body: JSON.stringify({ p_task: m.id }) }); }
       catch (e) { showToast('Could not take it back — ' + String(e.message || e).replace(/^\d+ /, '').slice(0, 80), 'error'); return; }
       liveSay();
     }
-    if (!hasChecklist) { if (confirm(`${t.title} — mark it done?`)) await markDone(t); return; }
+    if (!hasChecklist) { if (await askSheet({ title: 'Mark it done?', text: t.title, yes: 'Mark done', no: 'Not yet' })) await markDone(t); return; }
     // online: the server is asked first, so two phones opening the same task in the same minute do not both get in
     const tt = timerTaskOf(t);
     let handed = null;

@@ -1,57 +1,20 @@
-//! Naked Brain - the SoP closure: opened in js/sop/config-helpers.js, closed in js/sop/tail.js; shares its locals with every js/sop/* and js/cloud/* file -- OPENS it. Config, helpers, login, IndexedDB. Edit here, then run: python build.py
+//! Naked Brain - the SoP closure: opened in js/sop/config-helpers.js, closed in js/sop/tail.js; shares its locals with every js/sop/* and js/cloud/* file -- OPENS it. What is left of the Notion SoP: the Worker call and its small database. Edit here, then run: python build.py
 (() => {
 'use strict';
-// ─── CONFIG ──────────────────────────────────────────────────
-const APP_VERSION = CURRENT_VERSION;   // one version for the whole app
-// Same Cloudflare Worker as Brain+: it injects the Notion token and Groq key
-// and gates every call on X-App-Password. No secrets live in this file.
+// ─── WHAT IS LEFT OF THE NOTION SoP ──────────────────────────
+// Until 0.11.117 (6 Oct 2026) the Tasks tab could read its procedures from Notion: a list, a dashboard, a checklist
+// run, an editor and a Word / PDF import, all opened by sopOpen. Since then the source is always the platform
+// (setSource('cloud') in js/cloud/lot-scan.js, the choice hidden in Settings) and none of it could be reached; it was
+// removed on 17 Nov 2026. Kept: the runs of a Notion checklist finished on a phone before then and still waiting in
+// this small database ('sopapp', key 'outbox') go up to Notion's SOP Runs when the signal comes back (js/sop/run.js).
+// The cloud closure (js/cloud/*) still sits inside this one and has its own $(), el() and helpers.
+// Same Cloudflare Worker as Brain+: it injects the Notion token and gates every call on X-App-Password (or the
+// person's session, cfFetch decides). No secrets live in this file.
 const PROXY = 'https://notion-proxy.francesco-955.workers.dev';
 const NOTION_VERSION = '2022-06-28';                    // the Worker forces this anyway
-const SOP_DB = '3581301d4ab8819693a1e1d1f958e6d6';      // Naked Farm / Brain+ / 📋 SoP
 const RUNS_DB = '2bb3587c362a490882496c3967dda7db';     // Naked Farm / Brain+ / SOP Runs
-const CATEGORIES = ['Field Ops', 'Safety', 'Hardware', 'Software'];
-// Families = the SOP's "Family" field in Notion; the Tasks dashboard groups by them.
-const FAMILIES = [['Agriculture', 'sprout'], ['Maintenance', 'wrench'], ['Office', 'briefcase']];   // family, its line icon
-const FAMILY_ICON = Object.fromEntries(FAMILIES);
-const famIc = f => FAMILY_ICON[f] ? `{i:${FAMILY_ICON[f]}} ` : '';
-const DASH_KEY = 'sopapp_dash_period';
-const STATUSES = ['Draft', 'In Review', 'Approved', 'Archived'];
-// Groq retires models and the old id then hard-fails — check
-// https://console.groq.com/docs/deprecations first if AI import breaks.
-const AI_MODEL = 'openai/gpt-oss-20b';
-const AI_MAX_INPUT_CHARS = 14000;   // free tier ≈ 8K tokens/min: bigger docs get a 413/429
-const NOTION_SINGLE_PART_LIMIT = 20 * 1024 * 1024;
-const OPERATOR_KEY = 'sopapp_operator', RUN_KEY = 'sopapp_run';
-const authorName = () => getAuthor();   // Naked Brain's mandatory author name
-
-
-// ─── SMALL HELPERS ───────────────────────────────────────────
-const SOP_ROOT = document.getElementById('viewSop');
-const $ = id => document.getElementById('sop-' + id);   // SoP element ids are prefixed
-// Build DOM with createElement/textContent only — never innerHTML with
-// Notion text (Brain+ v1.49: injected markup executed and "<B2>" vanished).
-function el(tag, attrs, ...kids) {
-  const e = document.createElement(tag);
-  if (attrs) for (const [k, v] of Object.entries(attrs)) {
-    if (v == null || v === false) continue;
-    if (k === 'class') e.className = v;
-    else if (k === 'text') nbLabel(e, v);
-    else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
-    else if (k === 'style') e.style.cssText = v;
-    else e.setAttribute(k, v === true ? '' : v);
-  }
-  for (const k of kids.flat()) if (k != null && k !== false) e.append(k instanceof Node ? k : nbFrag(k));
-  return e;
-}
-const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
-const plain = rt => (rt || []).map(t => t.plain_text ?? t.text?.content ?? '').join('');
 const fmtTime = iso => new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 const fmtDate = iso => new Date(iso).toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' });
-const safeUrl = u => (/^https?:\/\//i.test(u || '') ? u : null);
-function lsGet(k, fb = null) { try { const v = localStorage.getItem(k); return v == null ? fb : JSON.parse(v); } catch (_) { return fb; } }
-function lsSet(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} }
-
-const toast = (msg, type = 'info') => showToast(msg, type);   // Naked Brain's toast
 
 // Failed response → a short, true reason. Notion/Groq send {message} or {error:{message}}.
 async function apiErrorMessage(res) {
@@ -74,10 +37,7 @@ function failureReason(e) {
 }
 const isNetworkError = e => e instanceof TypeError || e?.name === 'AbortError';
 
-// ─── LOGIN + WORKER FETCH: Naked Brain's (one password, one login screen) ───
-const getPw = getAppPassword;
-const showGate = showPasswordGate;
-// cfFetch is Naked Brain's (injects the password, 2-minute cap, 401 → login).
+// cfFetch is Naked Brain's (the password or the session, 2-minute cap, 401 → login).
 
 // Notion REST call through the Worker. Throws Error(reason) on non-2xx.
 async function notion(path, method = 'GET', body) {
@@ -92,7 +52,7 @@ async function notion(path, method = 'GET', body) {
   return res.status === 204 ? null : res.json();
 }
 
-// ─── INDEXEDDB (offline copies + outbox) ─────────────────────
+// ─── INDEXEDDB (the old outbox) ──────────────────────────────
 let _db = null;
 function idb() {
   if (_db) return _db;

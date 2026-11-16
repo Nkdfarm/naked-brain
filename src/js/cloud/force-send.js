@@ -10,27 +10,13 @@
   // unfinished checklists are not sent: the result says how many stayed.
   // Force send says what it is before it runs (0.11.107, owner: "change the sending in force send, with a message to
   // advise"): the normal way is Finish inside a task; this one sends whatever the phone holds, complete or not
-  function askForce() {
-    return new Promise(resolve => {
-      const sheet = el('div', 'fb-sheet');
-      const box = el('div', 'fb-sheet-card');
-      box.append(el('h3', null, 'Send everything now?'));
-      box.append(el('p', null, 'The normal way to send is Finish inside a task. Send everything now is for clearing this phone: it sends everything it still holds, as it stands, even if it is not complete.'));
-      const ul = el('ul', 'fb-sendlist');
-      ['Growth photos without the scale card go with no sizes.',
-       'Checklists not finished go half-done; their tasks stay open.',
-       'Harvest weights are never forced: finish them in their task.',
-       'What cannot be sent at all is listed after, and you may remove it from this phone.'].forEach(t => ul.append(el('li', null, t)));
-      const done = v => { sheet.remove(); resolve(v); };
-      const no = el('button', 'fb-btn', 'Cancel'); no.type = 'button'; no.onclick = () => done(false);
-      const yes = el('button', 'fb-btn fb-btn-primary', 'Send everything now'); yes.type = 'button'; yes.onclick = () => done(true);
-      const acts = el('div', 'fb-actions'); acts.append(no, yes);
-      box.append(ul, acts);
-      sheet.append(box);
-      sheet.onclick = e => { if (e.target === sheet) done(false); };
-      document.body.append(sheet);
-    });
-  }
+  const askForce = () => askSheet({ title: 'Send everything now?',
+    text: 'The normal way to send is Finish inside a task. Send everything now is for clearing this phone: it sends everything it still holds, as it stands, even if it is not complete.',
+    list: ['Growth photos without the scale card go with no sizes.',
+           'Checklists not finished go half-done; their tasks stay open.',
+           'Harvest weights are never forced: finish them in their task.',
+           'What cannot be sent at all is listed after, and you may remove it from this phone.'],
+    yes: 'Send everything now', no: 'Cancel', danger: true });     // 0.11.147: through askSheet (js/cloud/ask.js), as every question
   async function sendAllNow() {
     const btn = $('sendall');
     if (!session) { showToast('Sign in first', 'error'); return; }
@@ -273,6 +259,7 @@
     const photos = rows.filter(r => r.payload?.__upload || r.payload?.__gallery).length;
     const pending = rows.length - photos;
     const at = await getKV('synced_at');
+    paintLastSync();                                   // 0.11.147: the same moment, under the top bar
     const foot = $('foot');
     foot.textContent = [
       at ? 'Synced ' + new Date(at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Not synced yet',

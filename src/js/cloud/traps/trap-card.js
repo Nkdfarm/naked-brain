@@ -1,126 +1,4 @@
-//! Naked Brain - the cloud closure (FarmBox Tasks on Supabase): opened in js/cloud/db.js, closed in js/cloud/lot-scan.js; shares session, farm, run, DG, TIMERS, show(), $() and el() with every js/cloud/* file -- a trap card and its camera. Edit here, then run: python build.py
-  function trapCard(t, th, prior) {
-    const card = el('div', 'fb-step fb-trap'); card.dataset.trap = t.id;
-    const head = el('div', 'fb-step-head');
-    const title = el('h4');
-    title.append(el('span', 'fb-trap-code', t.code));
-    title.append(document.createTextNode(' ' + [t.row_label ? 'row ' + t.row_label : null, t.metres != null ? `${t.metres} m` : null, t.colour].filter(Boolean).join(' · ')));
-    head.append(title);
-    if (t.last_total != null) head.append(el('span', 'fb-chip', `last ${t.last_total}`));
-    card.append(head);
-
-    const state = { trap_id: t.id, code: t.code, photo_data: null, counts: null, total: null, algo_total: null,
-                    algorithm: null, confidence: null, corrected: false, pest: '', replaced: false, notes: '' };
-    run.traps.set(t.id, state);
-
-    const shot = el('div', 'fb-shot');
-    const pick = el('input'); pick.type = 'file'; pick.accept = 'image/*';
-    pick.capture = 'environment'; pick.style.display = 'none';
-    const btn = el('button', 'fb-btn', '{i:camera} Photo of the trap');
-    const gal = el('button', 'fb-btn', '{i:image}');
-    gal.title = 'From the gallery or the camera app'; gal.setAttribute('aria-label', 'Photo from the gallery');
-    gal.onclick = () => pick.click();
-    const img = el('img'); img.alt = ''; img.style.display = 'none';
-    const status = el('span', 'fb-chip', 'photo needed');
-    shot.append(img, btn, gal, status, pick);
-    card.append(shot);
-
-    const counts = el('div', 'fb-trap-counts hidden');
-    const totalIn = el('input', 'fb-num'); totalIn.type = 'number'; totalIn.min = '0'; totalIn.step = '1';
-    totalIn.setAttribute('aria-label', 'Insects on trap ' + t.code);
-    const line = el('div', 'fb-actions');
-    line.append(el('span', 'fb-trap-lbl', 'Insects'), totalIn);
-    counts.append(line);
-    const sizes = el('div', 'fb-meta');
-    counts.append(sizes);
-    card.append(counts);
-
-    const paintLevel = () => {
-      const n = Number(totalIn.value);
-      card.classList.toggle('answered', state.photo_data != null && !isNaN(n) && totalIn.value !== '');
-      card.classList.toggle('bad', n >= th.over);
-      status.textContent = state.photo_data == null ? 'photo needed'
-        : n >= th.over ? `over ${th.over} — the manager is told` : n >= th.watch ? 'watch' : 'ok';
-      status.className = 'fb-chip' + (n >= th.over ? ' late' : state.photo_data != null ? ' ok' : '');
-    };
-    totalIn.oninput = () => {
-      const n = parseInt(totalIn.value, 10);
-      state.total = isNaN(n) ? null : n;
-      state.corrected = state.total != null;          // the person's own count (0260: the phone sends none of its own)
-      paintLevel();
-      saveTrapDraft();
-    };
-
-    // a shrunk canvas of the trap, from the in-app camera or a picked file. The phone does not count it (0260, owner
-    // 23 Oct 2026: "why we want to have the phone counting? we can remove it to avoid confusion"): the person types it
-    const gotCanvas = async canvas => {
-      try {
-        state.photo_data = shrinkCanvas(canvas, 640, 0.6);
-        img.src = state.photo_data; img.style.display = '';
-        Object.assign(state, { counts: null, algo_total: null, algorithm: null, confidence: null });
-      } catch (e) {
-        console.warn('photo failed', e);
-        state.photo_data = state.photo_data || null;
-      }
-      counts.classList.remove('hidden');
-      sizes.textContent = 'Type the number of insects you count on the card.';
-      paintLevel();
-      saveTrapDraft();
-    };
-    // The photo, from the camera or the gallery: the full copy (FULL_PX, high
-    // quality — for zooming in the console and for the AI; uploaded after the
-    // round, the phone does not wait for it), the count on 1600 px, the 640 px
-    // thumbnail inside the reading.
-    const gotFile = async file => {
-      status.textContent = 'reading the photo…';
-      let big;
-      try { big = await shrinkPhoto(file, FULL_PX, null); }
-      catch (e) {
-        console.warn('photo failed', e);
-        status.textContent = 'photo needed';
-        showToast('That photo could not be read — try again', 'error');
-        return;
-      }
-      state.full = await new Promise(res => big.canvas.toBlob(res, 'image/jpeg', FULL_Q));
-      state.photo_path = null;
-      await gotCanvas(scaleCanvas(big.canvas, 1600));
-    };
-    btn.onclick = async () => {
-      const r = await takeTrapPhoto(t.code, null, 'trap');
-      if (r === 'cancel') return;
-      if (!r) { pick.click(); return; }                          // no camera here: the phone's own
-      await gotFile(r);
-    };
-    pick.onchange = async () => {
-      const f = pick.files[0]; if (!f) return;
-      await gotFile(f);
-      pick.value = '';
-    };
-
-    const acts = el('div', 'fb-actions');
-    const rep = el('button', 'fb-btn', 'Replaced');
-    rep.setAttribute('aria-pressed', 'false');
-    rep.onclick = () => { state.replaced = !state.replaced; rep.setAttribute('aria-pressed', String(state.replaced)); saveTrapDraft(); };
-    acts.append(rep);
-    card.append(acts);
-    const note = el('input', 'fb-note'); note.type = 'text'; note.placeholder = 'Note (optional): missing, torn, wet…';
-    note.oninput = () => { state.notes = note.value; saveTrapDraft(); };
-    card.append(note);
-
-    // what this trap already had before the app was closed
-    if (prior && prior.photo_data) {
-      Object.assign(state, prior, { trap_id: t.id, code: t.code });
-      img.src = state.photo_data; img.style.display = '';
-      if (state.total != null) totalIn.value = String(state.total);
-      rep.setAttribute('aria-pressed', String(!!state.replaced));
-      note.value = state.notes || '';
-      sizes.textContent = state.total == null ? 'Type the number of insects you count on the card.' : '';
-      counts.classList.remove('hidden');
-      paintLevel();
-    }
-    return card;
-  }
-
+//! Naked Brain - the cloud closure (FarmBox Tasks on Supabase): opened in js/cloud/db.js, closed in js/cloud/lot-scan.js; shares session, farm, run, DG, TIMERS, show(), $() and el() with every js/cloud/* file -- the camera, shrinking a photo, a trap photo's upload. Edit here, then run: python build.py
   // A photo scaled down on a canvas: the data URL to keep, the canvas to count on.
   // Decoded ONCE, as a bitmap that is closed at once (0.11.8): a 12–50 MP phone
   // photo decoded twice through <img> was enough to push the app out of memory
@@ -299,7 +177,7 @@
   }
   let camOpenAt = 0;         // when the in-app camera was last asked to open (ms); 0 once it is on screen or gave up
   function takeTrapPhoto(code, hintText, purpose = 'trap') {
-    if (camMode() === 'phone') { samRelease(); ocrRelease(); return phoneCamera(); }
+    if (camMode() === 'phone') return phoneCamera();
     // one camera at a time: the picture comes on screen about a second after the tap, and a second tap in between
     // opened a second camera under the first — it "came back" after the photo and gave the same trap two cards.
     // camOpenAt is a time, not a switch: whatever happens below, it stops counting after four seconds by itself.
@@ -307,7 +185,6 @@
     camOpenAt = Date.now();
     return new Promise(async resolve0 => {
       const resolve = v => { camOpenAt = 0; resolve0(v); };
-      samRelease();                                                   // the camera and a 4000 px photo need the memory (0.11.82)
       if (!navigator.mediaDevices?.getUserMedia) return resolve(null);
       const pref = camPref(purpose);
       if (pref.closeup && !pref.focus) { pref.focus = { manual: true, d: null }; delete pref.closeup; }   // 0.11.41's Close-up
@@ -555,14 +432,6 @@
     return url;
   }
 
-  // Opening the camera can push the app out of memory on Android; when it
-  // comes back the run would be empty. So what was photographed and counted
-  // is kept in the phone's database as it happens, and comes back when the
-  // same task is opened again (cleared when the round is sent).
+  // the old trap round's draft (its round was removed on 17 Nov 2026): Finish still clears one, Send everything now
+  // lists what is left in one and removes it
   const trapDraftKey = task => 'trapdraft:' + (task.key || task.id);
-  async function saveTrapDraft() {
-    if (!run?.traps) return;
-    try { await setKV(trapDraftKey(run.task), { saved: Date.now(), traps: [...run.traps.values()] }); }
-    catch (e) { console.warn('trap draft not saved', e); }
-  }
-

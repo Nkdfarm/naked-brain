@@ -209,7 +209,8 @@
       drop.disabled = GL.sending === r.id;   // a send under way would write it back
       drop.onclick = async () => {
         if (GL.sending === r.id) return;
-        if (!confirm('Take this photo off the phone? It will not be sent.')) return;
+        if (!await askSheet({ title: 'Take this photo off the phone?', text: 'It will not be sent.', yes: 'Take it off', no: 'Keep it', danger: true })) return;   // 0.11.147: askSheet
+        if (GL.sending === r.id) return;                  // a send began while the question was open
         try { await del('outbox', r.id); } catch (e) { showToast('Could not remove it: ' + String(e.message || e).slice(0, 80), 'error'); }
         glSoon();
       };

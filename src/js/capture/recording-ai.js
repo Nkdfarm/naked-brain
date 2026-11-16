@@ -284,8 +284,10 @@ document.getElementById('generateSummaryBtn').addEventListener('click', runVoice
 document.getElementById('generateVideoSummaryBtn').addEventListener('click', runVideoSummary);
 // Clear asks first when the box holds text: it sits a few millimetres from Copy, and what it wipes — the box and
 // its kept draft — does not come back
-const sureClear = box => !box.value.trim() || confirm('Clear this text?');
-const clearBox = id => () => { const box = document.getElementById(id); if (!sureClear(box)) return; box.value = ''; updateSubmitBtn(); };
+// 0.11.147: asked on the app's own sheet (window.askSheet, js/cloud/ask.js); confirm() only if that did not load
+const askOk = o => window.askSheet ? window.askSheet(o) : Promise.resolve(confirm(o.title));
+const sureClear = async box => !box.value.trim() || await askOk({ title: 'Clear this text?', yes: 'Clear it', no: 'Keep it', danger: true });
+const clearBox = id => async () => { const box = document.getElementById(id); if (!await sureClear(box)) return; box.value = ''; updateSubmitBtn(); };
 document.getElementById('clearSummaryBtn').addEventListener('click', clearBox('summaryText'));
 document.getElementById('clearVideoTranscriptBtn').addEventListener('click', clearBox('videoTranscriptText'));
 document.getElementById('clearVideoSummaryBtn').addEventListener('click', clearBox('videoSummaryText'));

@@ -3,8 +3,8 @@
 // FARMBOX CLOUD — the Tasks tab served by Supabase (spec §6, phase 1)
 //
 // Sign in once, sync the farm's week into IndexedDB, work offline, post the
-// outbox when there is signal. The Notion path is untouched and stays the
-// default; Settings → Data source flips between them.
+// outbox when there is signal. Since 0.11.117 it is the only source of the
+// Tasks tab (the Notion one was removed on 17 Nov 2026).
 // ═══════════════════════════════════════════════════════════════════════════
 (function () {
   const URL_BASE = 'https://azfiajzhzewjcblbltmp.supabase.co';
@@ -47,20 +47,29 @@
     || /connection.*(lost|clos)|database.*clos/i.test(String(e.message || '')));
   async function tx(store, mode, fn, again = true) {
     const p = db(), d = await p;
+    let own = false;                                       // this code aborted it on purpose (the task_workers rewrite)
     try {
       return await new Promise((res, rej) => {
         const t = d.transaction(store, mode), s = t.objectStore(store);
+        const abort0 = t.abort;
+        t.abort = function () { own = true; return abort0.call(t); };
         const out = fn(s);
         t.oncomplete = () => res(out && out.result !== undefined ? out.result : out);
-        t.onerror = () => rej(t.error);
+        // a request's own error (a ConstraintError, a full storage on a put) is the reason; a request cut by the abort
+        // (AbortError) is not — the transaction's abort event that follows carries the reason, or none
+        t.onerror = ev => { const er = ev && ev.target && ev.target.error; if (er && er.name === 'AbortError') return; rej(er || t.error); };
         t.onabort = () => rej(t.error || Object.assign(new Error('the phone refused to save (storage full?)'), { noError: true }));
       });
     } catch (e) {
-      // an abort with no reason, or a plain AbortError, after the browser closed the connection (onclose let it go) is
-      // the same lost connection
-      const closedUnder = dbp !== p && !!e && (e.noError || e.name === 'AbortError');
-      if (!again || !(idbLost(e) || closedUnder)) throw e;
-      if (dbp === p) { dbp = null; try { d.close(); } catch (x) { /* gone already */ } }
+      // D4 (17 Nov 2026): an abort with no reason, or a plain AbortError, is the lost connection too, whenever it comes —
+      // WebKit aborts the transactions of a connection it force-closes before it fires onclose, so "after the
+      // connection was closed under it" (dbp already let go) was never true when the error arrived, and nothing was
+      // retried. Never retried: the code's own abort, and a full storage (QuotaExceededError) — trying again fills nothing.
+      const lostAbort = !own && !!e && (e.noError || e.name === 'AbortError');
+      if (!again || own || (e && e.name === 'QuotaExceededError') || !(idbLost(e) || lostAbort)) throw e;
+      // the connection is let go (closed if this is still the one in use) and the next db() opens a new one
+      if (dbp === p) dbp = null;
+      try { d.close(); } catch (x) { /* gone already */ }
       return tx(store, mode, fn, false);
     }
   }

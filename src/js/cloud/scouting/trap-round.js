@@ -1,55 +1,42 @@
-//! Naked Brain - the cloud closure (FarmBox Tasks on Supabase): opened in js/cloud/db.js, closed in js/cloud/lot-scan.js; shares session, farm, run, DG, TIMERS, show(), $() and el() with every js/cloud/* file -- old scouting: the sticky trap round, four sections. Edit here, then run: python build.py
-  // ── IPM: the sticky trap round ──────────────────────────────────────────
-  // The procedure ipm-trap-round (sop.attributes.module = 'ipm_traps') asks
-  // for every trap of the zone: a photo with the code in the frame, a count
-  // (the phone counts the dark specks on the yellow card; the person corrects),
-  // what the insects mostly are, whether the trap was replaced. The cards are
-  // the evidence for the checklist's photo step; the readings go up with the
-  // run as `traps`.
+//! Naked Brain - the cloud closure (FarmBox Tasks on Supabase): opened in js/cloud/db.js, closed in js/cloud/lot-scan.js; shares session, farm, run, DG, TIMERS, show(), $() and el() with every js/cloud/* file -- scouting and trap procedures, the old rounds' stand-ins, a photo's parts and risk. Edit here, then run: python build.py
+  // the procedure tests: the old sticky trap round (ipm-trap-round, module 'ipm_traps') and the daily scouting (FarmBox 0096)
   const isTrapRound = sop => sop && (sop.attributes?.module === 'ipm_traps' || sop.slug === 'ipm-trap-round');
-  // the daily scouting (FarmBox 0096): the traps folded, count or skip, and plant photos
   const isScouting = sop => sop && sop.attributes?.module === 'scouting';
   // the kind of insect is named in the console, by the AI on request or by a person (0.11.25)
 
+  // ── the rounds of before, removed (17 Nov 2026) ───────────────────────────
+  // The sticky trap round (procedure ipm-trap-round, archived; its last task was on 28 Sep 2026) and the scouting round
+  // in sections (scoutSections, its Finish, the automatic sizing, the trap-code reader) are gone: since Digital scouting
+  // (0.11.132, 21 Oct 2026) a zone's scouting opens Digital scouting, no extra scouting is made any more, and a phone
+  // keeps a week of tasks — none of the old kind is planned or open. What still uses their parts stays: the risk menu,
+  // the parts lists, the scale card, measuring by hand, the camera, counting insects. A round's photos still on a phone
+  // (scout2: and trapdraft: drafts) are sent or removed by "Send everything now", which reads the drafts on its own.
+  // Should an old-style scouting still be opened (a task of that kind arriving after all), it does not open the round:
+  // it says so and goes to Digital scouting, and the checklist's own Finish is never reached.
+  async function scoutSections(task, sop, detail) {
+    const R = run;
+    let held = 0;
+    try { held = ((await getKV(scDraftKey(task)))?.photos || []).length; } catch (e) { held = 0; }
+    setTimeout(async () => {
+      if (run !== R) return;
+      try { await setKV('run_open', null); } catch (e) { /* not remembered anyway */ }
+      try { await leaveRun(); } catch (e) { /* the timer stays as it was */ }
+      if (run === R) run = null;
+      try { await backFromRun(); } catch (e) { /* the list is drawn at the next screen */ }   // under Digital scouting, should it not open
+      showToast('That scouting is from before Digital scouting (21 Oct 2026) and does not open any more — scouting is done here now.'
+        + (held ? ` Its ${held} photo${held === 1 ? '' : 's'} still on this phone: Send everything now sends ${held === 1 ? 'it' : 'them'}.` : ''), 'info');
+      openDigital({ day: todayISO() });
+    }, 0);
+    return el('div', 'config-hint', 'Opening Digital scouting…');
+  }
+  async function finishScouting() { /* run.sc is no longer set by anything: nothing to finish */ }
+  const howItWorks = () => document.createDocumentFragment();
   async function trapRound(task, sop, item = null) {
-    // one zone: the task's own, or (a grouped round, FarmBox 0095) the item's
-    const zoneId = item ? item.area_zone_id : task.zone_id;
-    const systemId = item ? item.area_system_id : task.system_id;
-    const traps = (await all('traps')).filter(t => t.active !== false
-      && ((zoneId && t.zone_id === zoneId) || (t.system_id && t.system_id === systemId)))
-      .sort((a, b) => String(a.code).localeCompare(String(b.code), undefined, { numeric: true }));
-    const th = (await getKV('ipm_threshold')) || { watch: 25, over: 50 };
-    if (!run.traps) { run.traps = new Map(); run.trapList = []; run.trapsByItem = new Map(); }
-    const seen = new Set(run.trapList.map(x => x.id));
-    run.trapList.push(...traps.filter(t => !seen.has(t.id)));
-    if (item) run.trapsByItem.set(item.id, traps);
-    let draft = null;
-    try { draft = await getKV(trapDraftKey(task)); } catch (e) { /* no draft */ }
-    const prior = new Map((draft?.traps || []).map(x => [x.trap_id, x]));
     const box = el('div', 'fb-traps');
-    box.append(el('div', 'fb-sec', 'Sticky traps in this zone'));
-    if (!traps.length) {
-      box.append(el('div', 'config-hint', 'No sticky trap is registered for this zone. Add them on the console (IPM page) and sync; the round can still be finished without readings.'));
-      return box;
-    }
-    box.append(el('div', 'config-hint', `${traps.length} trap${traps.length > 1 ? 's' : ''} — photograph each one square-on with its code in the picture, then type the number of insects you count on it.`));
-    const kept = traps.filter(t => prior.get(t.id)?.photo_data).length;
-    if (kept) box.append(el('div', 'config-hint', `${kept} photo${kept > 1 ? 's' : ''} from before the app was closed ${kept > 1 ? 'are' : 'is'} back — carry on from there.`));
-    traps.forEach(t => box.append(trapCard(t, th, prior.get(t.id))));
+    box.append(el('div', 'config-hint', 'The sticky traps are read in Digital scouting now (the scouting task of the day) — this checklist no longer takes trap photos.'));
     return box;
   }
-
-  // ── the daily scouting in four sections (FarmBox 0141, 0.11.40) ─────────
-  // Traps · Plant health · Growth · Finish, filled in any order. A trap photo:
-  // the code read off the card (matched to this unit's traps), the phone's count
-  // and its colour — new insects a week against the farm's watch / over — a note
-  // and Replaced. A plant-health or growth photo: the position as written (3B8 =
-  // zone or bay 3, row B, 8 m from the corridor) or the GPS; a growth photo finds
-  // the printed scale card (a magenta 5 cm square) and sizes are measured on it.
-  // Any photo may ask the AI for a note — only when its button is pressed.
-  // Finish: OK, or not OK with a note. Everything is kept in the phone's
-  // database as it happens (KV scout2:<task>) and the full photos upload after
-  // the run, over the connection chosen in Settings.
+  // a photo's parts (Digital scouting's Add photo, its notes): what it shows, and what a growth photo measures
   const PARTS = [['leaf', 'Leaf'], ['fruit', 'Fruit'], ['root', 'Root'], ['stem', 'Stem'], ['whole', 'Whole plant'], ['other', 'Other']];
   const GROWTH_PARTS = [['fruit', 'Fruit'], ['head', 'Head'], ['leaf', 'Leaf'], ['whole', 'Whole plant']];
   // crops measured as a head seen from above (0.11.79): salads, leafy greens, herbs
@@ -75,18 +62,6 @@
     paint();
     return risk;
   }
-  const SC_TABS = [['trap', 'Traps'], ['health', 'Health'], ['growth', 'Growth']];
-  const SIDES = [['yellow', 'Yellow side'], ['blue', 'Blue side']];              // the two faces of every trap card (0149)   // OK / Not OK sit above Finish (0.11.43)
-  // a picture with its ✕ in the top right corner (0.11.86, owner 2 Oct 2026: "the possibility to remove the taken picture
-  // by clicking the top right corner of all pictures with a small x"): asks once, then remove(pic)
-  function picX(img, remove, ask = 'Remove this photo?') {
-    const pic = el('div', 'fb-pic');
-    const x = el('button', 'fb-pic-x', '✕'); x.type = 'button';
-    x.setAttribute('aria-label', 'Remove this photo'); x.title = 'Remove this photo';
-    x.onclick = e => { e.preventDefault(); e.stopPropagation(); if (!confirm(ask)) return; remove(pic); };
-    pic.append(img, x);
-    return pic;
-  }
   const scDraftKey = task => 'scout2:' + (task.key || task.id);
   let scDraftTimer = null;
   function saveScDraft() {
@@ -105,5 +80,3 @@
     const m = /^([0-9]+)([A-Z]+)([0-9]+(?:[.,][0-9]+)?)?$/.exec(String(code || '').toUpperCase().replace(/[\s\-_.·/]/g, ''));
     return m ? { n: m[1], row: m[2], m: m[3] ? m[3].replace(',', '.') : null } : null;
   };
-  const posWords = code => { const p = parsePos(code); return p ? `${p.n} · row ${p.row}${p.m != null ? ` · ${p.m} m` : ''}` : ''; };
-  const placed = p => !!parsePos(p.pos_code) || !!p.gps;

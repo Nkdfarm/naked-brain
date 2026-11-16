@@ -114,6 +114,17 @@
     .fb-sheet-card { width:100%; background: var(--surface); border-radius: var(--radius-xl) var(--radius-xl) 0 0; padding: var(--space-5) var(--space-4) var(--space-6); }
     .fb-sheet-card h3 { margin:0 0 2px; }
     .fb-sheet-card .fb-actions { margin-top: var(--space-3); }
+    /* last synced, under the top bar, and the one-time swipe hint (0.11.147) */
+    .fb-lastsync { font-size: var(--text-xs); color: var(--text-muted); margin: 0 0 var(--space-2); min-height: 1.2em; }
+    .fb-lastsync.stale { color: var(--coral); }
+    .fb-swipehint { display:flex; align-items:center; gap: var(--space-2); margin: 0 0 6px; padding: var(--space-2) var(--space-3); border-radius: var(--radius-md);
+      background: var(--accent-soft, var(--surface)); border: 1px dashed var(--accent); font-size: var(--text-sm); }
+    .fb-swipehint span { flex: 1; }
+    .fb-swipehint button { font: inherit; font-weight: 700; min-height: 44px; padding: 0 var(--space-3); color: var(--accent); background: transparent; }
+    /* the question sheet (0.11.147): two 48 px buttons side by side, the answer that does the thing on the right */
+    .fb-ask .fb-actions { flex-wrap: nowrap; }
+    .fb-ask .fb-btn { flex: 1; min-height: 48px; }
+    .fb-ask-yes { background: var(--accent); border-color: var(--accent); color:#0d2b27; }
     .fb-btn-primary { background: var(--coral); border-color: var(--coral); color:#fff; }
     /* the family, as the card's ground and as the bar down its edge */
     .fb-card.fam-agriculture { background: var(--fam-ag-bg); border-left-color: var(--fam-ag); }

@@ -289,14 +289,4 @@
     if (l.gain) return 'the photo was dark — counted after brightening it; with more light the smallest insects count better';
     return null;
   }
-  // How many of the card's printed rows were counted: all of them, or the card was not all in the photo
-  function rowsWords(S) {
-    if (S.total == null) return null;
-    if (S.rows_seen == null) return { ok: false, text: `grid not found — retake it square-on, the whole card in the photo` };
-    const all = S.rows_seen >= GRID_ROWS - 0.6;
-    const n = all ? GRID_ROWS : Math.max(0, Math.round(S.rows_seen));
-    return all ? { ok: true, text: `${n} of ${GRID_ROWS} rows counted ✓` }
-               : { ok: false, text: `${n} of ${GRID_ROWS} rows counted — the whole card must be in the photo: retake it` };
-  }
-
   // The key of an answer: the step's seq, or item|seq when the checklist runs

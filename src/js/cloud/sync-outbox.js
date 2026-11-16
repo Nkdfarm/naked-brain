@@ -22,18 +22,9 @@
   // the farm's own day (0.11.146, review of 16 Nov): "today" was the phone's day, and a phone set to UTC or abroad filed
   // the work of 00:00–02:00 on yesterday. farmDay(date or ms, default now) is YYYY-MM-DD in farm.timezone
   // (Johannesburg when the farm is not read yet); addDays moves such a day by n days.
-  let dayFmt = null, dayFmtTz = null;
-  function farmDay(at) {
-    const t = at == null ? new Date() : at instanceof Date ? at : new Date(at);
-    const tz = (farm && farm.timezone) || 'Africa/Johannesburg';
-    try {
-      if (!dayFmt || dayFmtTz !== tz) { dayFmt = new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }); dayFmtTz = tz; }
-      const p = {}; dayFmt.formatToParts(t).forEach(x => { p[x.type] = x.value; });
-      if (p.year && p.month && p.day) return `${p.year}-${p.month}-${p.day}`;
-    } catch (e) { dayFmt = null; /* an unknown zone: the phone's day, as before */ }
-    return new Date(t - t.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
-  }
-  const addDays = (day, n) => { const t = new Date(day + 'T12:00:00Z'); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10); };
+  // 0.11.147: the rule itself is shared with Naked Heart (FarmBox-Platform shared/farm-time.js -> src/js/shared/farm-time.js)
+  function farmDay(at) { return farmDayOf(at, (farm && farm.timezone) || 'Africa/Johannesburg'); }
+  const addDays = addDaysYmd;
 
   // what kind of failure it was, for words a worker can use: 'net' = no connection or no answer ("Failed to fetch",
   // "Load failed" on an iPhone, the time limit of api()), 'busy' = the server's own trouble, 'out' = the session ended

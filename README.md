@@ -20,7 +20,7 @@ Static files. The only step is `python build.py`, which joins `src/` into `index
 | File | What |
 |---|---|
 | `index.html` | The whole app as the phone gets it: one file. **Built** from `src/` by `python build.py` — never edit it by hand |
-| `src/` | The source of `index.html` in 69 pieces: `css/`, `html/`, `js/app` (icons, update check, version log, password gate), `js/capture` (Capture, Notion notes), `js/sop` (procedures), `js/cloud` (Tasks on Supabase: session, sync and outbox, tasks, runs, scouting, gallery). `src/index.manifest` gives the order |
+| `src/` | The source of `index.html` in pieces: `css/`, `html/`, `js/app` (icons, update check, version log, password gate), `js/capture` (Capture, Notion notes), `js/shared` (rules shared with Naked Heart, generated from FarmBox-Platform `shared/`: never edit here), `js/sop` (what is left of the Notion procedures: their old outbox), `js/cloud` (Tasks on Supabase: session, sync and outbox, tasks, runs, Digital scouting, gallery). `src/index.manifest` gives the order |
 | `build.py` | Puts `src/` together into `index.html`; `--check` says whether they agree (GitHub runs it on every push) |
 | `tools/check_syntax.py` | Parses every script of `index.html` with Node |
 | `sw.js` | Service worker: offline cache |

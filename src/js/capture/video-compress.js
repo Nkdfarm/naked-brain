@@ -1,8 +1,8 @@
 //! Naked Brain - the Capture script (Notion notes): plain global scope, shared by all js/capture/* files -- video capture and compression (muxers). Edit here, then run: python build.py
 // ─── VIDEO CAPTURE CARD ───────────────────────────────────────
 
-document.getElementById('clearTranscriptBtn').addEventListener('click', () => {
-  if (!sureClear(document.getElementById('transcriptText'))) return;
+document.getElementById('clearTranscriptBtn').addEventListener('click', async () => {
+  if (!await sureClear(document.getElementById('transcriptText'))) return;
   document.getElementById('transcriptText').value = '';
   updateSubmitBtn();
 });
