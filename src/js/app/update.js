@@ -4,7 +4,7 @@
   }
 
   // ─── VERSION CHECK ────────────────────────────────────────
-  const CURRENT_VERSION = '0.11.145';
+  const CURRENT_VERSION = '0.11.146';
   let updateAvailable = false;
 
   let lastSaid = null, notYetAt = 0;
