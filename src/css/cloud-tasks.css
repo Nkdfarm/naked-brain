@@ -19,7 +19,7 @@
     #viewGallery .gl-th button { position: absolute; top: -6px; right: -6px; width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--surface); background: var(--ink); color: var(--ink-text); font-weight: 800; line-height: 1; }
     #viewGallery .gl-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: var(--space-2) 0; }
     #viewGallery .gl-note { width: 100%; min-height: 0; font-size: var(--text-sm); padding: 8px 10px; border-radius: var(--radius-md); background: var(--surface-offset); box-shadow: none; resize: none; }
-    #viewGallery .gl-send { background: var(--accent); border-color: var(--accent); color: #0d2b27; font-weight: 800; min-height: 48px; flex: 1; }
+    #viewGallery .gl-send { background: var(--accent); border-color: var(--accent); color: var(--text-inverse); font-weight: 800; min-height: 48px; flex: 1; }
     #viewGallery .gl-send:disabled, #viewGallery .gl-add .fb-btn:disabled { opacity: .5; }
     #viewGallery .gl-head { margin: var(--space-5) 0 var(--space-2); }
     #viewGallery .gl-row { cursor: default; flex-wrap: wrap; }
@@ -47,7 +47,7 @@
     .fb-day { margin-top: var(--space-4); }
     .fb-slot { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted);
       padding: 10px 0 4px; margin-top: 4px; }
-    .fb-slot.pm { border-top: 2px solid var(--accent, #788c5d); color: var(--accent, #788c5d); }
+    .fb-slot.pm { border-top: 2px solid var(--accent, #1f6fd1); color: var(--accent, #1f6fd1); }
     .fb-who { margin: var(--space-3) 0; display:flex; gap: var(--space-2); }
     /* the clock (0.11.38): in and out from the phone, offline through the outbox */
     .fb-clock:empty { display: none; }
@@ -87,7 +87,7 @@
     .fb-swipe > .fb-card { transition: transform .18s ease; }
     .fb-swipe-bg { position:absolute; inset:0; border-radius: var(--radius-md); display:none; align-items:center;
       padding: 0 16px; font-weight:800; font-size: var(--text-sm); }
-    .fb-swipe-bg.left { background: var(--accent); color:#0d2b27; justify-content:flex-start; }
+    .fb-swipe-bg.left { background: var(--accent); color: var(--text-inverse); justify-content:flex-start; }
     .fb-swipe-bg.right { background: var(--coral); color:#fff; justify-content:flex-end; }
     .fb-swipe.to-right .fb-swipe-bg.left, .fb-swipe.to-left .fb-swipe-bg.right { display:flex; }
     .fb-chip.skip { background: var(--coral-soft); color: var(--coral); }
@@ -105,7 +105,7 @@
     .fb-auto-view.ok { border-color: var(--success, #2e7d32); color: var(--success, #2e7d32); }
     .fb-sizecheck { max-height: 94vh; overflow: auto; }
     .fb-sizecheck-img { display: block; width: 100%; max-height: 62vh; object-fit: contain; border-radius: var(--radius-md); background: #000; margin: 8px 0; }
-    .fb-sizecheck-img.picking { outline: 3px dashed var(--accent, #1bbfa8); cursor: crosshair; }
+    .fb-sizecheck-img.picking { outline: 3px dashed var(--accent, #1f6fd1); cursor: crosshair; }
     .fb-sizecheck-sizes { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0; }
     .fb-sizecheck .hidden { display: none !important; }   /* the sheet sits on <body>, outside #viewFarmbox's rule */
     .fb-undo span { flex:1; }
@@ -124,7 +124,7 @@
     /* the question sheet (0.11.147): two 48 px buttons side by side, the answer that does the thing on the right */
     .fb-ask .fb-actions { flex-wrap: nowrap; }
     .fb-ask .fb-btn { flex: 1; min-height: 48px; }
-    .fb-ask-yes { background: var(--accent); border-color: var(--accent); color:#0d2b27; }
+    .fb-ask-yes { background: var(--accent); border-color: var(--accent); color: var(--text-inverse); }
     .fb-btn-primary { background: var(--coral); border-color: var(--coral); color:#fff; }
     /* the family, as the card's ground and as the bar down its edge */
     .fb-card.fam-agriculture { background: var(--fam-ag-bg); border-left-color: var(--fam-ag); }
@@ -173,7 +173,7 @@
     .dg-missline { color: var(--error); }
     .dg-days { display:flex; gap: 6px; overflow-x: auto; padding: 2px 0 var(--space-3); -webkit-overflow-scrolling: touch; }
     .dg-days .fb-btn { flex: none; white-space: nowrap; }
-    .dg-days .fb-btn.on { background: var(--ink, #111); color: #fff; }
+    .dg-days .fb-btn.on { background: var(--accent-soft); border-color: var(--accent); color: var(--text); box-shadow: inset 0 0 0 1px var(--accent); }
     .dg-date { flex: none; width: auto; }
     .dg-reqs { margin-bottom: var(--space-3); }
     .dg-unit { margin-bottom: var(--space-2); }
@@ -199,4 +199,4 @@
     .dg-hold { margin-top: var(--space-2); user-select: none; -webkit-user-select: none; touch-action: none; }
     .dg-hold.on { background: var(--error-bg); color: var(--error); }
     .dg-people { display:flex; flex-wrap: wrap; gap: 6px; margin: var(--space-2) 0; }
-    .dg-people .fb-btn[aria-pressed="true"], .dg-chips .fb-btn[aria-pressed="true"] { background: var(--ink, #111); color: #fff; }
+    .dg-people .fb-btn[aria-pressed="true"], .dg-chips .fb-btn[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--text); box-shadow: inset 0 0 0 1px var(--accent); }

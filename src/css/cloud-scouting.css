@@ -36,7 +36,7 @@
     .dg-block > .fb-face, .dg-block > .dg-init, .dg-block > .dg-g1 { width: 18px; height: 18px; flex: none; vertical-align: 0; font-size: 8px; }
     .dg-block-text { flex: 1; min-width: 0; color: var(--text); white-space: pre-wrap; overflow-wrap: anywhere; padding-top: 1px; }
     .dg-block-text.clamp { display:-webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; white-space: normal; }
-    .dg-g1 { display:inline-block; border-radius: 50%; overflow: hidden; background: #e3f6fa; box-shadow: inset 0 0 0 1px rgba(27,191,168,.45); }
+    .dg-g1 { display:inline-block; border-radius: 50%; overflow: hidden; background: #e3effc; box-shadow: inset 0 0 0 1px rgba(31,111,209,.45); }
     .dg-g1 svg { width: 100%; height: 100%; display: block; }
     .dg-social { font-size: var(--text-xs); font-weight: 600; color: var(--text-muted); }
     .dg-post { display:flex; flex-direction: column; gap: var(--space-2); }
@@ -75,10 +75,11 @@
     .dg-write { margin-top: var(--space-3); }
     .dg-write-hint { text-align: center; }
     /* Digital scouting, the feed (0.11.134): Zones | Feed, the sorts, a post's risk on its left edge, the verified diagnosis */
-    .dg-switch { display:flex; margin: 0 0 var(--space-3); padding: 3px; border: 1px solid var(--border); border-radius: var(--radius-full); background: var(--surface-offset); }
-    .dg-switch-b { flex: 1; min-height: 38px; font: inherit; font-size: var(--text-sm); font-weight: 650; border: 0; border-radius: var(--radius-full);
-      background: transparent; color: var(--text-muted); cursor: pointer; }
-    .dg-switch-b.on { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+    /* Zones | Feed as tabs: words, the open one underlined in blue (19 Nov 2026, as Naked Heart; it was a pill switch) */
+    .dg-switch { display:flex; gap: var(--space-6); margin: 0 0 var(--space-3); padding: 0; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; background: transparent; }
+    .dg-switch-b { flex: 0 0 auto; min-height: 44px; padding: 0 2px; font: inherit; font-size: var(--text-sm); font-weight: 600; border: 0; border-bottom: 2px solid transparent;
+      margin-bottom: -1px; border-radius: 0; background: transparent; color: var(--text-muted); cursor: pointer; }
+    .dg-switch-b.on { background: transparent; color: var(--text); border-bottom-color: var(--accent); box-shadow: none; }
     .dg-period { align-items: center; padding-top: 0; }
     .dg-period .fb-meta { margin: 0 0 0 auto; flex: none; }
     .fb-step.dg-feed-item { border-left-width: 4px; }
@@ -97,7 +98,7 @@
     .dg-select { width: 100%; margin-bottom: var(--space-2); }
     .dg-cases { display:flex; flex-direction: column; gap: 6px; margin: var(--space-2) 0; }
     .dg-cases .fb-btn { text-align: left; }
-    .dg-cases .fb-btn[aria-pressed="true"] { background: var(--ink, #111); color: #fff; }
+    .dg-cases .fb-btn[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--text); box-shadow: inset 0 0 0 1px var(--accent); }
     .dg-more { margin-top: var(--space-2); }
     .fb-chip.paused { background: color-mix(in srgb, var(--warning, #b7791f) 16%, var(--surface)); color: var(--text); }
     .fb-chip.todo { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
@@ -121,7 +122,7 @@
     .fb-ink { background: var(--ink); color: var(--ink-text); border-radius: var(--radius-lg);
       padding: var(--space-3) var(--space-4); margin-bottom: var(--space-3); }
     .fb-ink .fb-meta, .fb-ink small { color: var(--ink-muted); }
-    #viewFarmbox .fb-ink .btn-primary { background: var(--accent); color: #0d2b27; border-color: var(--accent); }
+    #viewFarmbox .fb-ink .btn-primary { background: var(--accent); color: var(--text-inverse); border-color: var(--accent); }
     .fb-ink h3 { margin:.2rem 0 .4rem; font-size: var(--text-lg); line-height:1.2; }
     .fb-step { background: var(--surface); border:1px solid var(--border); border-radius: var(--radius-lg);
       padding: var(--space-3) var(--space-3); margin-bottom: var(--space-2); }   /* 0.11.59: compact */

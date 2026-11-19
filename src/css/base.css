@@ -19,19 +19,20 @@
     /* ═══ NAKED FARM UI v1 — shared design tokens ═══════════════════════════
        Same token block lives in the FarmBox SOP app (SOP-App/index.html). Keep in sync.
        Warm cream-to-ochre gradient ground, white rounded cards, black pill actions,
-       olive = done/active, coral = recording/urgent, ink card = the one focus item.
+       blue (olive until 19 Nov 2026) = done/active, coral = recording/urgent, ink card = the one focus item.
        Since 0.11.33 these are Naked Heart's studio tokens (near-black / pale grey, graphite and white cards,
-       the console's corners and state colours) with olive where the console has its orange. */
+       the console's corners and state colours) with olive where the console has its orange. Since 19 Nov 2026 the accent is Naked Heart's blue (#1f6fd1 light,
+       #4c9ffe dark), as in its new shell: tabs are words underlined in blue, a chosen item has a blue line. */
     :root, [data-theme="light"] {
       color-scheme: light;
       --radius-sm: 0.5rem; --radius-md: 0.625rem; --radius-lg: 1rem; --radius-xl: 1.25rem;
       --bg: #f3f3f5; --bg-end: #efeff2;
-      --bg-grad: radial-gradient(1100px 480px at 85% -12%, rgba(120,140,93,0.07), transparent 62%), linear-gradient(180deg, #f6f6f8 0%, #efeff2 100%);
+      --bg-grad: radial-gradient(1100px 480px at 85% -12%, rgba(31,111,209,0.06), transparent 62%), linear-gradient(180deg, #f6f6f8 0%, #efeff2 100%);
       --surface: #ffffff; --surface-2: #f8f8fa; --surface-raised: #ffffff; --surface-offset: #efeff3; --surface-dynamic: #e8e8ec; --glass: rgba(255,255,255,0.8);
       --border: rgba(17,17,20,0.09); --divider: rgba(17,17,20,0.07);
       --text: #16161a; --text-primary: #16161a; --text-muted: #5b5b66; --text-faint: #8a8a95; --text-inverse: #ffffff;
-      --primary: #5f7247; --primary-hover: #536540; --primary-active: #475836; --primary-highlight: rgba(95,114,71,0.12);   /* 5.3:1 on white (was #788c5d, 3.7:1) */
-      --accent: #788c5d; --accent-soft: rgba(120,140,93,0.12); --coral: #e11d48; --coral-soft: rgba(225,29,72,0.10); --lavender-soft: rgba(37,99,235,0.10);
+      --primary: #1f6fd1; --primary-hover: #1a5fb4; --primary-active: #164f96; --primary-highlight: rgba(31,111,209,0.11);   /* Naked Heart's blue (19 Nov 2026), 5.0:1 on white */
+      --accent: #1f6fd1; --accent-soft: rgba(31,111,209,0.11); --coral: #e11d48; --coral-soft: rgba(225,29,72,0.10); --lavender-soft: rgba(37,99,235,0.10);
       --ink: #232328; --ink-text: #fafafa; --ink-muted: rgba(250,250,250,0.6);
       --success: #047857; --success-bg: rgba(5,150,105,0.11); --error: #e11d48; --error-bg: rgba(225,29,72,0.09); --warning: #b45309; --warning-bg: rgba(217,119,6,0.13);
       --shadow-sm: 0 1px 2px rgba(17,17,20,0.06); --shadow-md: 0 10px 28px rgba(17,17,20,0.08); --shadow-lg: 0 24px 60px rgba(17,17,20,0.16);
@@ -45,12 +46,12 @@
     [data-theme="dark"] {
       color-scheme: dark;
       --bg: #0b0b0d; --bg-end: #0a0a0c;
-      --bg-grad: radial-gradient(1100px 480px at 85% -12%, rgba(163,181,132,0.08), transparent 62%), linear-gradient(180deg, #0d0d10 0%, #0a0a0c 100%);
+      --bg-grad: radial-gradient(1100px 480px at 85% -12%, rgba(76,159,254,0.07), transparent 62%), linear-gradient(180deg, #0d0d10 0%, #0a0a0c 100%);
       --surface: #161619; --surface-2: #1b1b1f; --surface-raised: #1b1b1f; --surface-offset: #202025; --surface-dynamic: #26262b; --glass: rgba(22,22,25,0.78);
       --border: rgba(255,255,255,0.07); --divider: rgba(255,255,255,0.06);
       --text: #f4f4f5; --text-primary: #f4f4f5; --text-muted: #a1a1aa; --text-faint: #6b6b74; --text-inverse: #0b0b0d;
-      --primary: #a3b584; --primary-hover: #b7c79c; --primary-active: #8d9f6d; --primary-highlight: rgba(163,181,132,0.14);
-      --accent: #a3b584; --accent-soft: rgba(163,181,132,0.14); --coral: #f43f5e; --coral-soft: rgba(244,63,94,0.14); --lavender-soft: rgba(96,165,250,0.13);
+      --primary: #4c9ffe; --primary-hover: #6cb0ff; --primary-active: #3a8ae6; --primary-highlight: rgba(76,159,254,0.14);
+      --accent: #4c9ffe; --accent-soft: rgba(76,159,254,0.14); --coral: #f43f5e; --coral-soft: rgba(244,63,94,0.14); --lavender-soft: rgba(96,165,250,0.13);
       --ink: #232328; --ink-text: #fafafa; --ink-muted: rgba(250,250,250,0.6);
       --success: #34d399; --success-bg: rgba(52,211,153,0.13); --error: #fb7185; --error-bg: rgba(244,63,94,0.14); --warning: #fbbf24; --warning-bg: rgba(251,191,36,0.13);
       --shadow-sm: 0 1px 2px rgba(0,0,0,0.35); --shadow-md: 0 10px 28px rgba(0,0,0,0.45); --shadow-lg: 0 24px 60px rgba(0,0,0,0.6);
@@ -63,12 +64,12 @@
       :root:not([data-theme]) {
         color-scheme: dark;
         --bg: #0b0b0d; --bg-end: #0a0a0c;
-        --bg-grad: radial-gradient(1100px 480px at 85% -12%, rgba(163,181,132,0.08), transparent 62%), linear-gradient(180deg, #0d0d10 0%, #0a0a0c 100%);
+        --bg-grad: radial-gradient(1100px 480px at 85% -12%, rgba(76,159,254,0.07), transparent 62%), linear-gradient(180deg, #0d0d10 0%, #0a0a0c 100%);
         --surface: #161619; --surface-2: #1b1b1f; --surface-raised: #1b1b1f; --surface-offset: #202025; --surface-dynamic: #26262b; --glass: rgba(22,22,25,0.78);
         --border: rgba(255,255,255,0.07); --divider: rgba(255,255,255,0.06);
         --text: #f4f4f5; --text-primary: #f4f4f5; --text-muted: #a1a1aa; --text-faint: #6b6b74; --text-inverse: #0b0b0d;
-        --primary: #a3b584; --primary-hover: #b7c79c; --primary-active: #8d9f6d; --primary-highlight: rgba(163,181,132,0.14);
-        --accent: #a3b584; --accent-soft: rgba(163,181,132,0.14); --coral: #f43f5e; --coral-soft: rgba(244,63,94,0.14); --lavender-soft: rgba(96,165,250,0.13);
+        --primary: #4c9ffe; --primary-hover: #6cb0ff; --primary-active: #3a8ae6; --primary-highlight: rgba(76,159,254,0.14);
+        --accent: #4c9ffe; --accent-soft: rgba(76,159,254,0.14); --coral: #f43f5e; --coral-soft: rgba(244,63,94,0.14); --lavender-soft: rgba(96,165,250,0.13);
         --ink: #232328; --ink-text: #fafafa; --ink-muted: rgba(250,250,250,0.6);
         --success: #34d399; --success-bg: rgba(52,211,153,0.13); --error: #fb7185; --error-bg: rgba(244,63,94,0.14); --warning: #fbbf24; --warning-bg: rgba(251,191,36,0.13);
         --shadow-sm: 0 1px 2px rgba(0,0,0,0.35); --shadow-md: 0 10px 28px rgba(0,0,0,0.45); --shadow-lg: 0 24px 60px rgba(0,0,0,0.6);
@@ -92,8 +93,8 @@
     header { position: sticky; top: 0; z-index: 100; background: var(--surface); border-bottom: 1px solid var(--border); padding: var(--space-3) var(--space-4); display: flex; align-items: center; justify-content: space-between; box-shadow: var(--shadow-sm); }
     .logo { display: flex; align-items: center; gap: var(--space-2); }
     .logo-icon { color: var(--primary); flex-shrink: 0; }
-    /* the mark (0.11.31): the sprout drawn as a brush on an olive squircle, the tile and glyph in one svg */
-    .nb-mark { width: 38px; height: 38px; display: block; filter: drop-shadow(0 4px 10px rgba(120,140,93,0.30)); }
+    /* the mark (0.11.31): the sprout drawn as a brush on a squircle (olive, blue since 19 Nov 2026), the tile and glyph in one svg */
+    .nb-mark { width: 38px; height: 38px; display: block; filter: drop-shadow(0 4px 10px rgba(47,134,238,0.30)); }
     .nb-mark svg { width: 38px; height: 38px; display: block; }
     .logo-text { font-size: var(--text-lg); font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
     .logo-text span { color: var(--primary); }

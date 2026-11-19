@@ -152,7 +152,7 @@
       </div>
       <button id="updateNowBtn" style="
         background:var(--accent);
-        color:#121212;
+        color:var(--text-inverse);
         border:none;
         border-radius:var(--radius-full);
         padding:8px 14px;
