@@ -202,7 +202,9 @@
   const dgFarmData = id => DG.data.get(id) || {};
   const dgUnit = (farmId, unitId) => ((dgFarmData(farmId).dg || {}).units || []).find(u => u.unit_id === unitId) || null;
   const dgRepUnit = (farmId, unitId) => ((dgFarmData(farmId).rep || {}).units || []).find(u => (u.unit_id || u.zone_id) === unitId) || null;
-  const dgCanAdd = D => !!D && !!D.is_today;
+  const dgCanAdd = D => !!D && !!D.is_today;       // the camera: today only
+  // photos from the gallery: today and the days before it, DG_BACK_DAYS in all (0.11.150)
+  const dgCanFile = D => !!D && (!!D.is_today || (DG.day >= dgFirstDay() && DG.day <= todayISO()));
   function dgCounterLine(u, extra) {
     const line = el('div', 'dg-count');
     dgCounters(u).forEach((c, i) => {
@@ -274,7 +276,9 @@
       if (DG.farms.length > 1) box.append(el('div', 'fb-unit', f.name));
       if (!D) { box.append(el('div', 'config-hint', navigator.onLine ? 'Could not read this day — try again in a moment.' : 'No signal, and nothing read on this phone for this day yet.')); continue; }
       if (fd.stale) box.append(el('div', 'config-hint', `No signal: as read at ${new Date(fd.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`));
-      if (!D.is_today) box.append(el('div', 'config-hint', D.may_change_all ? 'A day gone by: you may still change or delete its items.' : 'A day gone by: to look at only.'));
+      if (!D.is_today) box.append(el('div', 'config-hint', dgCanFile(D)
+        ? 'A day gone by: open a zone to add its photos from the gallery. ' + (D.may_change_all ? 'You may change or delete its items.' : 'What you add you may change or delete until the end of today.')
+        : D.may_change_all ? 'A day gone by: you may still change or delete its items.' : 'A day gone by: to look at only.'));
       for (const u of D.units || []) {
         any = true;
         const mine = pend.filter(r => !r.dead && r.payload.view.farm_id === f.id && r.payload.view.unit_id === u.unit_id && ['photo', 'trap'].includes(r.payload.view.kind)).length;
@@ -290,7 +294,7 @@
       }
     }
     if (!any && DG.farms.some(f => dgFarmData(f.id).dg)) box.append(el('div', 'config-hint', 'No zone to scout on this day.'));
-    box.append(el('div', 'config-hint', 'Everybody sees the same page, live. You may change or delete your own photos and notes until the end of the day; a manager may change everything.'));
+    box.append(el('div', 'config-hint', 'Everybody sees the same page, live. You may change or delete your own photos and notes until the end of the day (a photo from the gallery: the day you add it); a manager may change everything.'));
     dgSwap(box);
   }
 

@@ -68,9 +68,11 @@
     if (x.traps && x.traps.list) x.traps.done = x.traps.list.filter(y => y.done).length;
     return x;
   }
-  // who may change or delete an item: its writer on its own day while that day is today, a manager always (the server
-  // checks the same: app.may_remove_photo)
-  const dgMayChange = (item, D) => !!D && (!!D.may_change_all || (!!D.is_today && !!item && !!D.me && item.by_user === D.me));
+  // who may change or delete an item: its writer on its own day while that day is today, or on the day they added it (a
+  // gallery photo of a day gone by: dg_day's added_today, 0.11.150), a manager always (the server checks the same:
+  // app.may_remove_photo, given greatest(the item's time, its created_at) since FarmBox 0282)
+  const dgMayChange = (item, D) => !!D && (!!D.may_change_all || (!!item && !!D.me && item.by_user === D.me
+    && (!!D.is_today || (Array.isArray(D.added_today) && D.added_today.includes(item.id)))));
   // a note: its writer until the end of the note's own day (the farm's day since 0.11.146, was the phone's), a manager always
   const dgDayOf = iso => { const d = new Date(iso); return isNaN(d) ? '' : farmDay(d); };
   const dgNoteMayChange = (n, D, today) => !!D && (!!D.may_change_all || (!!n && !!D.me && n.by_user === D.me && dgDayOf(n.at) === today));

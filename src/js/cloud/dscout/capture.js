@@ -1,8 +1,9 @@
 //! Naked Brain - the cloud closure (FarmBox Tasks on Supabase): opened in js/cloud/db.js, closed in js/cloud/lot-scan.js; shares session, farm, run, DG, TIMERS, show(), $() and el() with every js/cloud/* file -- Digital scouting: writing through the outbox, a plant photo, a trap. Edit here, then run: python build.py
   // ── writing: through the outbox, the file first, the phone's own id on every call ──
-  async function dgQueue({ rpc, args, uploads = [], chain, view, voice = false }) {
+  // day: the report the item goes in, when not the day on screen (a gallery photo of another day, 0.11.150)
+  async function dgQueue({ rpc, args, uploads = [], chain, view, voice = false, day = null }) {
     const id = 'dg-' + uuid();
-    await queue({ __dg: true, client_run_id: id, rpc, args, uploads, chain: chain || ('dg:' + id), view, voice, day: DG.day || todayISO() });
+    await queue({ __dg: true, client_run_id: id, rpc, args, uploads, chain: chain || ('dg:' + id), view, voice, day: day || DG.day || todayISO() });
     if (dgOpen()) { const y = window.scrollY; if (DG.page === 'zone') await dgPaintZone(); else if (DG.page === 'post') await dgPaintPost(); window.scrollTo(0, y); }
   }
   // the flush sent one: the page reads again (the report has it now, under its own id)
@@ -35,16 +36,96 @@
       document.body.append(sheet);
     });
   }
-  // the photo from the gallery when the camera gives none
-  function dgPickFile() {
+  // the photo from the gallery when the camera gives none; several at once (an array) when many is true
+  function dgPickFile(many = false) {
     return new Promise(res => {
       const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.style.display = 'none';
+      if (many) inp.multiple = true;
       document.body.append(inp);
-      inp.onchange = () => { const f = inp.files[0] || null; inp.remove(); res(f); };
-      inp.addEventListener('cancel', () => { inp.remove(); res(null); });
+      inp.onchange = () => { const fs = [...(inp.files || [])]; inp.remove(); res(many ? fs : fs[0] || null); };
+      inp.addEventListener('cancel', () => { inp.remove(); res(many ? [] : null); });
       inp.click();
     });
   }
+
+  // ── when a photo was taken (0.11.150, owner 19 Nov 2026: "use the pictures from phone gallery in order to generate a
+  // digital scouting report also after the physical digital scouting") ──
+  // A gallery photo goes in the report of the day it was taken, up to DG_BACK_DAYS back (today counted): its camera's
+  // EXIF time first, else the file's date — but not a date of this very minute, which is often the picking's, not the
+  // photo's. No time at all: the day on screen (midday of it when it is a day gone by). Older: not filed.
+  const DG_BACK_DAYS = 7;
+  const dgFirstDay = () => addDays(todayISO(), -(DG_BACK_DAYS - 1));
+  // a JPEG's EXIF DateTimeOriginal (with OffsetTimeOriginal when the camera wrote one, else the phone's own clock), else
+  // IFD0's DateTime; ms, or null. Read from the first 256 KB, never decoding the picture
+  async function jpegShotTime(file) {
+    if (!file || (file.type && !/jpe?g/i.test(file.type))) return null;
+    const d = new DataView(await file.slice(0, 262144).arrayBuffer());
+    if (d.byteLength < 4 || d.getUint16(0) !== 0xFFD8) return null;
+    let i = 2;
+    while (i + 4 <= d.byteLength) {
+      if (d.getUint8(i) !== 0xFF) return null;
+      const m = d.getUint8(i + 1), len = d.getUint16(i + 2);
+      if (m === 0xDA || m === 0xD9) return null;                     // the picture itself: no EXIF before it
+      if (m === 0xE1 && i + 10 < d.byteLength && d.getUint32(i + 4) === 0x45786966) {      // 'Exif'
+        const t = i + 10, end = Math.min(d.byteLength, i + 2 + len), le = d.getUint16(t) === 0x4949;
+        const u16 = o => d.getUint16(o, le), u32 = o => d.getUint32(o, le);
+        const ascii = (o, n) => { let s = ''; for (let k = 0; k < n && o + k < end; k++) { const c = d.getUint8(o + k); if (!c) break; s += String.fromCharCode(c); } return s; };
+        const tags = ifd => {
+          const out = {};
+          if (ifd < t || ifd + 2 > end) return out;
+          for (let k = 0, n = u16(ifd); k < n; k++) {
+            const e = ifd + 2 + k * 12; if (e + 12 > end) break;
+            const tag = u16(e), type = u16(e + 2), cnt = u32(e + 4);
+            if (type === 2) out[tag] = ascii(cnt <= 4 ? e + 8 : t + u32(e + 8), cnt);
+            else if (type === 4 || type === 13) out[tag] = u32(e + 8);
+          }
+          return out;
+        };
+        if (t + 8 > end) return null;
+        const ifd0 = tags(t + u32(t + 4)), ex = ifd0[0x8769] ? tags(t + ifd0[0x8769]) : {};
+        const mt = /^(\d{4}):(\d\d):(\d\d)[ T](\d\d):(\d\d):(\d\d)/.exec(ex[0x9003] || ex[0x9004] || ifd0[0x0132] || '');
+        if (!mt || mt[1] === '0000') return null;
+        const off = [ex[0x9011], ex[0x9010]].find(x => /^[+-]\d\d:\d\d$/.test(x || '')) || '';
+        const ms = off ? Date.parse(`${mt[1]}-${mt[2]}-${mt[3]}T${mt[4]}:${mt[5]}:${mt[6]}${off}`)
+                       : new Date(+mt[1], +mt[2] - 1, +mt[3], +mt[4], +mt[5], +mt[6]).getTime();
+        return isNaN(ms) ? null : ms;
+      }
+      i += 2 + len;
+    }
+    return null;
+  }
+  async function dgShotTime(f) {
+    let t = null;
+    try { t = await jpegShotTime(f); } catch (e) { t = null; }
+    if (!t) { const m = Number(f && f.lastModified); t = m && Date.now() - m > 120000 ? m : null; }
+    return t && t <= Date.now() + 6e4 ? t : null;
+  }
+  // midday of a farm day, as an instant
+  function dgNoonOf(day) {
+    const t = Date.parse(day + 'T12:00:00Z');
+    let h = 12;
+    try { h = Number(new Intl.DateTimeFormat('en-GB', { timeZone: (farm && farm.timezone) || 'Africa/Johannesburg', hour: '2-digit', hourCycle: 'h23' }).format(new Date(t))); } catch (e) { h = 12; }
+    return new Date(t - (h - 12) * 36e5).toISOString();
+  }
+  // { at, day } the photo is filed with; { old: day } when it is older than the days that can still be filled in;
+  // guessed when the photo said no time
+  async function dgFileWhen(f) {
+    const t = await dgShotTime(f), today = todayISO();
+    if (t) {
+      const day = farmDay(new Date(t));
+      return day < dgFirstDay() ? { old: day } : { at: new Date(t).toISOString(), day: day > today ? today : day };
+    }
+    return DG.day === today ? { at: new Date().toISOString(), day: today } : { at: dgNoonOf(DG.day), day: DG.day, guessed: true };
+  }
+  // the line in a photo's sheet saying where it goes, when that is not plainly now on the day on screen
+  function dgWhenLine(w) {
+    if (!w) return null;
+    if (w.guessed) return el('div', 'fb-meta dg-when', `No date in this photo: it goes in ${fmtDay(w.day)}, at midday.`);
+    if (w.day !== DG.day) return el('div', 'fb-meta dg-when late', `Taken ${fmtDay(w.day)} at ${dgHm(w.at)}: it goes in that day's report, not this one.`);
+    if (w.day !== todayISO()) return el('div', 'fb-meta dg-when', `Taken at ${dgHm(w.at)}.`);
+    return null;
+  }
+  const dgTooOld = day => `Taken ${fmtDay(day)}: more than ${DG_BACK_DAYS} days ago, it cannot go in a report`;
 
   // ── a plant photo: the camera, the scale card decides (growth with sizes, else plant health), then its details ──
   async function dgAddPhoto(farmId, u, ru) {
@@ -52,9 +133,36 @@
     if (r === 'cancel') return;
     const f = r || await dgPickFile();
     if (!f) return;
+    const out = await dgFilePhoto(farmId, u, ru, f, '');
+    if (out === 'saved') showToast(dgElsewhere(f.__day) + (navigator.onLine ? 'Saved — sending' : 'Saved on this phone — it goes when there is signal'), 'success');
+  }
+  // a photo filed on another day than the one on screen: said in the toast (it is not on this page)
+  const dgElsewhere = day => (day && day !== DG.day ? `In ${fmtDay(day)}'s report · ` : '');
+  // several photos from the gallery, after the walk: each through the same sheet, one after the other, into the day it
+  // was taken
+  async function dgAddFromGallery(farmId, u, ru) {
+    const files = await dgPickFile(true);
+    if (!files.length) return;
+    let saved = 0, left = 0, old = 0;
+    const elsewhere = new Set();
+    for (let i = 0; i < files.length; i++) {
+      const out = await dgFilePhoto(farmId, u, ru, files[i], files.length > 1 ? `${i + 1} of ${files.length}` : '');
+      if (out === 'stop') { left += files.length - i; break; }
+      if (out === 'saved') { saved++; if (files[i].__day && files[i].__day !== DG.day) elsewhere.add(files[i].__day); }
+      else if (out === 'old') old++; else left++;
+    }
+    if (files.length === 1 && saved === 0) return;        // one photo: its own toast was enough (old, unreadable) or none wanted
+    const words = [saved ? `${saved} saved` : null, elsewhere.size ? 'some in the report of ' + [...elsewhere].sort().map(fmtDay).join(', ') : null,
+                   left ? `${left} left out` : null, old ? `${old} older than ${DG_BACK_DAYS} days, not added` : null].filter(Boolean).join(' · ');
+    if (words) showToast(words + (saved ? (navigator.onLine ? ' — sending' : ' — they go when there is signal') : ''), saved ? 'success' : 'error');
+  }
+  // one photo: 'saved', 'left' (left out), 'stop' (the rest left out too), 'old' or 'error'
+  async function dgFilePhoto(farmId, u, ru, f, of) {
+    const w = await dgFileWhen(f);
+    if (w.old) { if (!of) showToast(dgTooOld(w.old), 'error'); return 'old'; }
     let big;
-    try { big = await shrinkPhoto(f, FULL_PX, null); } catch (e) { showToast('That photo could not be read — try again', 'error'); return; }
-    const p = { taken_at: dgTakenAt(f), full_w: big.canvas.width, full_h: big.canvas.height, measures: [], note: '', note_level: null };
+    try { big = await shrinkPhoto(f, FULL_PX, null); } catch (e) { showToast('That photo could not be read' + (of ? '' : ' — try again'), 'error'); return 'error'; }
+    const p = { taken_at: w.at, full_w: big.canvas.width, full_h: big.canvas.height, measures: [], note: '', note_level: null };
     p.thumb = shrinkCanvas(big.canvas, 640, 0.6);
     p.full = await new Promise(res => big.canvas.toBlob(res, 'image/jpeg', FULL_Q));
     const c1600 = scaleCanvas(big.canvas, 1600), cw = c1600.width;
@@ -63,7 +171,7 @@
     let m = null;
     try { m = await findMarker(c1600); } catch (e) { m = null; }
     freeCanvas(c1600);
-    if (!p.full) { showToast('That photo could not be kept — try again', 'error'); return; }
+    if (!p.full) { showToast('That photo could not be kept' + (of ? '' : ' — try again'), 'error'); return 'error'; }
     // the scale card in the picture: growth, measured by two taps (the same tool as the round's)
     if (m && !m.error) {
       p.px_per_mm = Math.round(m.ppm * (p.full_w / cw) * 1000) / 1000;
@@ -72,10 +180,12 @@
     } else p.section = 'health';
     const crops = (ru?.crops || []);
     p.part = p.section === 'growth' ? (crops.length && crops.every(c => HEAD_RE.test(c.name || '')) ? 'head' : 'fruit') : 'leaf';
-    const ok = await dgSheet(p.section === 'growth' ? 'Growth photo' : 'Plant health photo', (card, done) => {
+    const title = (p.section === 'growth' ? 'Growth photo' : 'Plant health photo') + (of ? ' · ' + of : '');
+    const ok = await dgSheet(title, (card, done) => {
       const img = el('img', 'dg-img big'); img.src = p.thumb; img.alt = '';
-      img.onclick = () => photoViewer(p.full, { title: p.section === 'growth' ? 'Growth photo' : 'Plant health photo' });
+      img.onclick = () => photoViewer(p.full, { title });
       card.append(img, dgZoomButton(() => img.onclick()));
+      { const wl = dgWhenLine(w); if (wl) card.append(wl); }
       if (p.section === 'growth') card.append(el('div', 'fb-meta', p.measures.length ? 'Sizes: ' + p.measures.map(x => `${x.what} ${x.mm} mm`).join(', ') : 'The scale card is in the picture: it goes in Growth.'));
       else card.append(el('div', 'fb-meta', m && m.error ? 'The scale card reader is not on this phone yet (it needs signal once): it goes in Plant health.' : 'No scale card in the picture: it goes in Plant health.'));
       card.append(dgChips(p.section === 'growth' ? GROWTH_PARTS : PARTS, () => p.part, v => { p.part = v; }));
@@ -84,11 +194,15 @@
       card.append(row);
       const save = el('button', 'fb-btn fb-btn-primary', 'Save'), drop = el('button', 'fb-btn', 'Leave it out');
       save.type = drop.type = 'button';
-      save.onclick = () => done(true); drop.onclick = () => done(false);
-      const acts = el('div', 'fb-actions'); acts.append(save, drop); card.append(acts);
+      save.onclick = () => done('saved'); drop.onclick = () => done('left');
+      const acts = el('div', 'fb-actions'); acts.append(save, drop);
+      // several from the gallery: the rest can be left out at once
+      if (of) { const stop = el('button', 'fb-btn', 'Stop here'); stop.type = 'button'; stop.onclick = () => done('stop'); acts.append(stop); }
+      card.append(acts);
     });
-    if (!ok) return;
-    const day = DG.day, cref = uuid(), path = dgPath(farmId, day, 'scout', cref);
+    if (ok !== 'saved') return ok || 'left';
+    try { f.__day = w.day; } catch (e) { /* a File that takes no property: the toast just says less */ }
+    const day = w.day, cref = uuid(), path = dgPath(farmId, day, 'scout', cref);
     const crop = crops.length === 1 ? crops[0].id : null;
     const level = noteLevelOf(p);
     await dgQueue({
@@ -97,9 +211,10 @@
                    taken_at: p.taken_at, part: p.part, measures: p.measures, px_per_mm: p.px_per_mm ?? null, crop_id: crop,
                    note: String(p.note || '').trim() || null, note_level: level, ...(p.section === 'growth' ? { section: 'growth' } : {}) } },
       uploads: [{ path, blob: p.full, type: 'image/jpeg' }], chain: 'dg:' + cref,
-      view: { kind: 'photo', farm_id: farmId, unit_id: u.unit_id, section: p.section, part: p.part, thumb: p.thumb, note: String(p.note || '').trim(), note_level: level }
+      view: { kind: 'photo', farm_id: farmId, unit_id: u.unit_id, section: p.section, part: p.part, thumb: p.thumb, note: String(p.note || '').trim(), note_level: level },
+      day
     });
-    showToast(navigator.onLine ? 'Saved — sending' : 'Saved on this phone — it goes when there is signal', 'success');
+    return 'saved';
   }
   function dgChips(list, get, set) {
     const row = el('div', 'fb-actions dg-chips');
@@ -117,9 +232,6 @@
   }
   // ── a trap: each side photographed, counted, checked, then sent on its own ──
   // the count of one side (the round's own reader: countInsects, the light and the whole-card checks)
-  // when a photo was taken: a file from the gallery says it (lastModified) — kept when it is of the last day and a half;
-  // the in-app camera's still is now
-  const dgTakenAt = f => { const t = Number(f && f.lastModified); return t && t <= Date.now() + 6e4 && Date.now() - t < 36 * 36e5 ? new Date(t).toISOString() : new Date().toISOString(); };
   // counting v5 (0.11.138, FarmBox 0254; owner 22–23 Oct 2026): the server's AI counts every trap photo — the card
   // alone, cropped from the full photo, counted far better than the phone (164 photos counted by eye). Since the next
   // version (owner 23 Oct 2026: "crop properly the pic to the card and send only the cropped pic on database … we do
@@ -167,7 +279,9 @@
   async function dgSide(file, colour, again) {
     let big;
     try { big = await shrinkPhoto(file, FULL_PX, null); } catch (e) { return null; }
-    const S = { taken_at: dgTakenAt(file), card: false, full: null, thumb: null };
+    const w = await dgFileWhen(file);
+    if (w.old) { freeCanvas(big.canvas); return { old: w.old }; }
+    const S = { taken_at: w.at, when: w, card: false, full: null, thumb: null };
     let box = null;
     try {
       const r = countInsects(big.canvas, { colour: colour || cardColour(scaleCanvas(big.canvas, 800)) });
@@ -189,7 +303,8 @@
     if (kept) { S.full = kept.blob; S.thumb = kept.thumb; }
     return S.full || (!again && S.thumb) ? S : null;
   }
-  async function dgReadTrap(farmId, u, ru, t) {
+  // fromGallery: a day gone by — the photo comes from the gallery, the in-app camera is not opened (0.11.150)
+  async function dgReadTrap(farmId, u, ru, t, fromGallery = false) {
     let sides = t.colour === 'both' ? ['yellow', 'blue'].filter(s => !t[s]) : [null];
     if (t.colour === 'both' && !sides.length) {
       const pick = await dgSheet(`Trap ${dgTrapName(t)} — which side again?`, (card, done) => {
@@ -204,11 +319,13 @@
     // missed: photos of this side with no whole card found — from the second on, the person may keep the photo
     for (let i = 0, missed = 0; i < sides.length; i++) {
       const side = sides[i];
-      const r = await takeTrapPhoto(t.code, `Trap ${dgTrapName(t)}${side ? ' — the ' + side + ' side' : ''}: square-on, the whole card, top to bottom`, 'trap');
+      if (fromGallery && side) showToast(`Trap ${dgTrapName(t)}: choose the photo of the ${side} side`, 'success');
+      const r = fromGallery ? null : await takeTrapPhoto(t.code, `Trap ${dgTrapName(t)}${side ? ' — the ' + side + ' side' : ''}: square-on, the whole card, top to bottom`, 'trap');
       if (r === 'cancel') return;
       const f = r || await dgPickFile();
       if (!f) return;
       const S = await dgSide(f, side || (t.colour === 'blue' ? 'blue' : 'yellow'), missed > 0);
+      if (S && S.old) { showToast(dgTooOld(S.old), 'error'); return; }
       if (!S) { showToast('That photo could not be read — try again', 'error'); i--; continue; }
       const out = await dgTrapSheet(farmId, u, ru, t, side, S);
       if (out === 'retake') { if (!S.card) missed++; i--; continue; }
@@ -225,11 +342,14 @@
   async function dgTrapSheet(farmId, u, ru, t, side, S) {
     const D = dgFarmData(farmId).dg;
     const st = { total: null, new_card: false, replaced: false, note: '', note_level: null };
-    const earlier = (ru?.traps || []).filter(r => r.code === t.code && (r.side || null) === (side || null));
+    // the earlier photos of this side on the photo's own day (none known when that is not the day on screen)
+    const sameDay = !S.when || S.when.day === DG.day;
+    const earlier = sameDay ? (ru?.traps || []).filter(r => r.code === t.code && (r.side || null) === (side || null)) : [];
     return dgSheet(`Trap ${dgTrapName(t)}${side ? ' · ' + side + ' side' : ''}`, (card, done) => {
       const img = el('img', 'dg-img big'); img.src = S.thumb; img.alt = '';
       img.onclick = () => photoViewer(S.full || S.thumb, { title: `Trap ${dgTrapName(t)}` });
       card.append(img, dgZoomButton(() => img.onclick()));
+      { const wl = dgWhenLine(S.when); if (wl) card.append(wl); }
       if (S.check) card.append(el('span', 'fb-chip late', S.check));
       const btn = (l, fn, primary) => { const b = el('button', 'fb-btn' + (primary ? ' fb-btn-primary' : ''), l); b.type = 'button'; b.onclick = fn; return b; };
       if (!S.full) {                                // no whole card, first photo: nothing to keep — take it again
@@ -274,7 +394,7 @@
         let replaceId = null;
         const prev = earlier.filter(r => r.id && dgMayChange(r, D)).pop();
         if (prev) {
-          const how = await dgSheet('This side was already photographed today', (c2, d2) => {
+          const how = await dgSheet(DG.day === todayISO() ? 'This side was already photographed today' : 'This side was already photographed that day', (c2, d2) => {
             c2.append(el('div', 'fb-meta', 'Replace the earlier photo or keep both?'));
             const a = el('div', 'fb-actions');
             const r1 = el('button', 'fb-btn fb-btn-primary', 'Replace'), r2 = el('button', 'fb-btn', 'Keep both'), r3 = el('button', 'fb-btn', 'Cancel');
@@ -285,7 +405,8 @@
           if (!how) { saving = false; save.disabled = false; return; }
           if (how === 'replace') replaceId = prev.id;
         }
-        const cref = uuid(), path0 = dgPath(farmId, DG.day, 'trap-' + (side || t.colour || 'card'), cref);
+        const day = (S.when && S.when.day) || DG.day;
+        const cref = uuid(), path0 = dgPath(farmId, day, 'trap-' + (side || t.colour || 'card'), cref);
         // the one file of the side: the card, named …-card.jpg (the server counts it as the card itself); a photo kept
         // without the card under the plain name, so the server knows it is not one
         const path = S.card ? dgCardPath(path0) : path0;
@@ -304,7 +425,8 @@
           chain: 'dg:' + cref,
           // while sending, a figure only when typed: otherwise the AI is still to count it
           view: { kind: 'trap', farm_id: farmId, unit_id: u.unit_id, trap_id: t.trap_id, code: dgTrapName(t), side, total: typed ? st.total : null, corrected: typed,
-                  thumb: S.thumb, note: String(st.note || '').trim(), note_level: level }
+                  thumb: S.thumb, note: String(st.note || '').trim(), note_level: level },
+          day
         }).catch(e => { saving = false; save.disabled = false; throw e; });
         done('saved');
       }, !!S.card);

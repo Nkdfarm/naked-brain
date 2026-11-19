@@ -48,11 +48,17 @@
     box.append(dgCounterLine(uNow, adds ? `${adds} sending` : ''));
     const miss = dgMissing(uNow).text;
     if (miss && D.is_today) box.append(el('div', 'fb-meta dg-missline', miss));
-    const canAdd = dgCanAdd(D);
+    const canAdd = dgCanAdd(D), canFile = dgCanFile(D);
     if (canAdd) {
       const add = el('button', 'btn btn-primary btn-lg btn-block', '{i:camera} Add a photo');
       add.onclick = () => dgAddPhoto(farmId, u, ru);
       box.append(add);
+    }
+    // after the walk: photos from the phone's gallery, several at once, each into the day it was taken (0.11.150)
+    if (canFile) {
+      const gal = el('button', 'btn btn-block' + (canAdd ? '' : ' btn-primary btn-lg'), '{i:image} Add photos from the gallery');
+      gal.onclick = () => dgAddFromGallery(farmId, u, ru);
+      box.append(gal);
     }
 
     // the traps of the unit: one row of chips, nothing under them (owner 22 Oct 2026: "remove the traps collapsed line,
@@ -84,8 +90,8 @@
                      t.skipped && t.skipped !== 'sending' ? 'not read: ' + t.skipped : null,
                      waiting.length ? (waiting.some(r => r.dead) ? 'could not be sent' : 'sending') : null].filter(Boolean).join(' · ');
           b.setAttribute('aria-label', b.title);
-          b.disabled = !canAdd && !shots.length && !(D.may_change_all && t.skipped);
-          b.onclick = () => (canAdd && !shots.length && !t.skipped ? dgReadTrap(farmId, u, ru, t0) : dgTrapGallery(farmId, u, ru, t0, t, D, shots, pend));
+          b.disabled = !canFile && !shots.length && !(D.may_change_all && t.skipped);
+          b.onclick = () => (canFile && !shots.length && !t.skipped ? dgReadTrap(farmId, u, ru, t0, !canAdd) : dgTrapGallery(farmId, u, ru, t0, t, D, shots, pend));
           chips.append(b);
         });
         box.append(chips);
@@ -107,7 +113,7 @@
       waiting.forEach(r => box.append(dgPendingCard(r)));
       items.forEach(p => box.append(dgItemCard('observation', p, farmId, D, pend)));
     }
-    if (!photos.length && !traps.length && !pPend.length && !tPend.length) box.append(el('div', 'config-hint', canAdd ? 'Nothing yet today: add a photo or tap a trap.' : 'Nothing on this day.'));
+    if (!photos.length && !traps.length && !pPend.length && !tPend.length) box.append(el('div', 'config-hint', canAdd ? 'Nothing yet today: add a photo or tap a trap.' : canFile ? 'Nothing on this day yet: add its photos from the gallery, or tap a trap.' : 'Nothing on this day.'));
     dgSwap(box);
   }
   // a report's trap photo belongs to a chip's trap: by the trap's id when the photo carries it, else by its code
@@ -125,7 +131,7 @@
   // style"): one beside the other, a swipe from side to side, each with its count, the AI's and the people's blocks
   // and the comments; a tap opens it as a post. Under them: photograph a side, not read today (or that undone)
   async function dgTrapGallery(farmId, u, ru, t0, t, D, shots, pend) {
-    const canAdd = dgCanAdd(D), name = dgTrapName(t);
+    const canAdd = dgCanAdd(D), canFile = dgCanFile(D), name = dgTrapName(t);
     const out = await dgSheet(`Trap ${name}`, (card, done) => {
       const sides = dgTrapDots(t).map(d => (d.side ? d.side[0].toUpperCase() + d.side.slice(1) + ' side ' : '')
         + ({ ok: 'photographed', todo: 'to photograph', skip: 'not read today' }[d.state]));
@@ -162,10 +168,10 @@
       }
       const acts = el('div', 'fb-actions');
       const btn = (label, v, primary) => { const b = el('button', 'fb-btn' + (primary ? ' fb-btn-primary' : ''), label); b.type = 'button'; b.onclick = () => done(v); acts.append(b); };
-      if (canAdd && !t.skipped) {
-        const todo = dgTrapDots(t).filter(d => d.state === 'todo');
-        btn(t.colour === 'both' ? (todo.length ? `{i:camera} The ${todo.map(d => d.side).join(' and ')} side` : '{i:camera} A side again')
-                                : (todo.length ? '{i:camera} Photograph it' : '{i:camera} Again'), 'read', true);
+      if (canFile && !t.skipped) {
+        const todo = dgTrapDots(t).filter(d => d.state === 'todo'), ic = canAdd ? '{i:camera} ' : '{i:image} ';
+        btn(t.colour === 'both' ? (todo.length ? `${ic}The ${todo.map(d => d.side).join(' and ')} side` : `${ic}A side again`)
+                                : (todo.length ? (canAdd ? `${ic}Photograph it` : `${ic}Its photo from the gallery`) : `${ic}Again`), 'read', true);
       }
       if (canAdd || D.may_change_all) {
         if (t.skipped && t.skipped !== 'sending') btn('Read after all', 'unskip');
@@ -176,7 +182,7 @@
     });
     if (!out) return;
     if (out.post) return dgOpenPost(out.post, 'zone');
-    if (out === 'read') return dgReadTrap(farmId, u, ru, t0);
+    if (out === 'read') return dgReadTrap(farmId, u, ru, t0, !canAdd);
     if (out === 'skip') return dgSkip(farmId, u, t0);
     if (out === 'unskip') return dgUnskip(farmId, u, t0);
   }
