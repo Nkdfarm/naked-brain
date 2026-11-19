@@ -185,7 +185,7 @@
       const head = document.createElement('div');
       head.style.cssText = 'display:flex;justify-content:space-between;width:100%;gap:8px';
       const left = document.createElement('span');
-      left.innerHTML = '<b>' + v + '</b>' + (v === CURRENT_VERSION ? ' <span style="color:var(--accent,#1f6fd1)">· this one</span>' : '') + ' — ' + t;
+      left.innerHTML = '<b>' + v + '</b>' + (v === CURRENT_VERSION ? ' <span style="color:var(--accent,#788c5d)">· this one</span>' : '') + ' — ' + t;
       const right = document.createElement('span');
       right.style.cssText = 'color:var(--text-muted);white-space:nowrap;font-size:var(--text-sm)';
       right.textContent = fmt(d);

@@ -11,7 +11,7 @@
     .btn-icon:hover { background: var(--surface); color: var(--text); }
     #authorBtn { border-radius: var(--radius-full) !important; min-height: 36px; padding: 0 var(--space-4) !important; }
 
-    /* Tabs: which Notion database this capture goes to. Since 19 Nov 2026 words, the open one underlined in blue,
+    /* Tabs: which Notion database this capture goes to. Since 19 Nov 2026 words, the open one underlined in the accent (green),
        as Naked Heart's tool bar (they were pill chips) */
     .tab-bar { background: transparent; border-bottom: 1px solid var(--border); padding: 0 var(--space-4); margin-bottom: var(--space-2); gap: var(--space-5); }
     .tab-btn { flex: 0 0 auto; min-width: 0; min-height: 44px; padding: 0 2px; border-radius: 0; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px;
@@ -101,7 +101,7 @@
     .set-row + .set-row { border-top: 1px solid var(--divider); }
     .segmented { display: flex; gap: 4px; padding: 4px; background: var(--surface-offset); border-radius: var(--radius-full); }
     .segmented button { flex: 1; min-height: 42px; border-radius: var(--radius-full); font-weight: 650; font-size: var(--text-sm); color: var(--text-muted); }
-    .segmented button[aria-pressed="true"] { background: var(--accent-soft); color: var(--text); box-shadow: inset 0 0 0 2px var(--accent); }   /* a blue line, not a fill (19 Nov 2026) */
+    .segmented button[aria-pressed="true"] { background: var(--accent-soft); color: var(--text); box-shadow: inset 0 0 0 2px var(--accent); }   /* a line in the accent, not a fill (19 Nov 2026) */
     .lock-badge { font-size: var(--text-xs); font-weight: 650; padding: 2px 10px; border-radius: var(--radius-full); background: var(--coral-soft); color: var(--error); letter-spacing: 0; }
     .lock-badge.open { background: var(--success-bg); color: var(--success); }
     #settingsPage .config-panel { border: none; box-shadow: none; padding: 0; margin: 0; background: transparent; }
@@ -109,7 +109,7 @@
     /* Update popup: keep the -50% centring during the slide-in (slideUp overrode it). */
     @keyframes nbPopIn { from { opacity: 0; transform: translate(-50%, -12px); } to { opacity: 1; transform: translate(-50%, 0); } }
 
-    /* APP TABS: Tasks / Capture / Gallery. Since 19 Nov 2026 words, the open one underlined in blue, as Naked Heart's
+    /* APP TABS: Tasks / Capture / Gallery. Since 19 Nov 2026 words, the open one underlined in the accent (green), as Naked Heart's
        tabs (they were a pill bar with the open one filled) */
     .app-tabs { display: flex; gap: var(--space-6); margin: var(--space-1) var(--space-4) 0; padding: 0; background: transparent; border: 0; border-bottom: 1px solid var(--border);
       border-radius: 0; box-shadow: none; overflow-x: auto; scrollbar-width: none; }
