@@ -8436,7 +8436,13 @@ window.addEventListener('online', () => syncOutbox());
                post: null, threads: new Map(), zoneY: 0, catalog: null,
                // the feed (0.11.134): the answers read, one per farm, sort and period (dgFeedKey); the scroll it was left at
                view: 'zones', feed: { farmId: null, sort: 'attention', days: 7, answers: new Map(), tok: 0, loading: false, failed: null, y: 0, dirty: false } };
-  const dgRpc = (name, args) => api('/rest/v1/rpc/' + name, { method: 'POST', body: JSON.stringify(args) });
+  // zones by their number only on scouting (owner, 19 Nov 2026): FarmBox1's zone names carry the system and the crop
+  // since migration 0280 ("Zone 5 · Grow bags · peppers"); here "Zone 5". Only the fields that name a zone, only that shape.
+  const DG_LONG_ZONE = /^(Zone \d+[A-Z]?(?:-\d+)?) · .+$/, DG_ZONE_KEYS = new Set(['name', 'zone', 'zone_name']);
+  const dgShort = (v, key) => Array.isArray(v) ? v.map(x => dgShort(x, key))
+    : v && typeof v === 'object' ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, dgShort(x, k)]))
+    : DG_ZONE_KEYS.has(key) && typeof v === 'string' ? v.replace(DG_LONG_ZONE, '$1') : v;
+  const dgRpc = (name, args) => api('/rest/v1/rpc/' + name, { method: 'POST', body: JSON.stringify(args) }).then(r => dgShort(r));
   const dgOpen = () => !!DG.page && !$('task').classList.contains('hidden') && !!$('task').querySelector(':scope > .dg-page');
   // a page is built aside, with its own marker (another page that paints the view takes it away), then put in place at
   // once — no empty view between two reads — keeping the scroll; the pictures fill in as they land
