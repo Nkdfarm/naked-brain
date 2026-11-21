@@ -1,0 +1,21 @@
+name: Something is wrong
+description: A screen, a number or a sync that does not do what it should
+labels: [bug]
+body:
+  - type: input
+    id: where
+    attributes:
+      label: Where
+      description: Naked Brain screen, farm, and version from Settings
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what should have happened
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps, or the time it happened (Africa/Johannesburg)

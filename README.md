@@ -13,6 +13,26 @@ Naked Brain is one of the two apps of the **FarmBox Operations Platform**. The o
 desktop console for managers (https://heart.nkd.farm/). Both apps share one database on Supabase. The database,
 its rules and the decision log are in the private repository `Nkdfarm/FarmBox-Platform`.
 
+## Features
+
+- Today's tasks, checklists and standard operating procedures (SOPs) for each crew member
+- Scouting photos with an AI reading that a person confirms
+- Harvest capture and voice notes
+- Works offline: a local cache and an outbox keep the crew working without signal and sync later
+- Installable on iPhone and Android, with an in-app update prompt
+
+## Architecture
+
+```mermaid
+flowchart LR
+  U[Phone PWA] --- SW[Service worker<br/>offline cache]
+  U --- L[Local cache + outbox]
+  L -->|sync| S[(Supabase<br/>Postgres + row-level security)]
+  U -->|via gateway| G[Gateway]
+  G --> N[Notion]
+  G --> Q[Groq]
+```
+
 ## What this repository is
 
 Static files. The only step is `python build.py`, which joins `src/` into `index.html` (Python 3, nothing to install):
@@ -31,7 +51,6 @@ Static files. The only step is `python build.py`, which joins `src/` into `index
 | `cloudflare-worker.js` | A copy of the Cloudflare Worker that passes calls to Notion and Groq behind the team password |
 | `serve.ps1` | Serves the folder on http://localhost:3000 for testing |
 | `transcribe.ps1` | Turns a video or audio file into text with Groq Whisper |
-| `docs/` | Older working notes |
 
 Libraries are loaded from jsDelivr at exact versions (pdf.js, mammoth, Tesseract.js, jsQR, MediaPipe and others).
 
@@ -58,8 +77,14 @@ made only with the owner's script `scripts/release-brain.ps1` in FarmBox-Platfor
 It bumps the version in the places that move together, adds the row to `VERSION_LOG` in `src/js/app/version-log.js`, and
 moves `live`. Never push `live` by hand.
 
+## Security
+
+See [SECURITY.md](SECURITY.md) to report a problem privately.
+
+## Licence
+
+Copyright © 2026 Naked Farms. All rights reserved. See [LICENSE](LICENSE).
+
 ## History
 
-Until 6 Oct 2026 this was the repository `Kissanga/Ugly200`. Its old address,
-https://kissanga.github.io/Ugly200/, is frozen at 0.11.116 and tells people to open https://brain.nkd.farm/.
-On the owner's computers the folder is still called `Ugly200`.
+Formerly published under a different account name; the old address now redirects people to https://brain.nkd.farm/.

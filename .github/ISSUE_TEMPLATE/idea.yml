@@ -1,0 +1,14 @@
+name: An idea
+description: Something Naked Brain could do or do better
+labels: [idea]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would help, and for whom
+    validations:
+      required: true
+  - type: textarea
+    id: today
+    attributes:
+      label: How it is done today
