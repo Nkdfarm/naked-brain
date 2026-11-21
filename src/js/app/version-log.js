@@ -3,6 +3,7 @@
   // Same idea as the console's Settings › Version log (release_note): one line per
   // release, what it changed, in plain words. Add the new release on top with each bump.
   const VERSION_LOG = [
+    ['0.11.151', '2026-11-21', 'Lighter sync and a cleaner look', 'Photos waiting to be sent no longer slow the phone down. The app opens faster on a weak signal. A gallery photo you discard is never sent. Buttons, fields and cards look cleaner, in the same green.'],
     ['0.11.150', '2026-11-19', 'Scouting photos from the gallery', 'Digital scouting: in a zone, Add photos from the gallery takes several photos at once, after the walk. Each one goes in the report of the day it was taken, up to 7 days back, traps too. What you add you may change or delete until the end of the day you add it.'],
     ['0.11.149', '2026-11-19', 'Green again', 'Naked Brain is green again, as before. The cleaner tabs stay: the open one is underlined, and a chosen answer, chip or setting has a green line instead of a filled colour.'],
     ['0.11.148', '2026-11-19', 'Blue, and zones by their number on scouting', 'Naked Brain takes the blue of Naked Heart: tabs underlined in blue and chosen items marked with a blue line. Digital scouting says Zone 1 to Zone 8 instead of the full zone name, to be more compact.'],
