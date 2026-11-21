@@ -104,8 +104,10 @@
       const cut = ctl ? setTimeout(() => ctl.abort(), 20000) : null;
       let big = null;
       try {
+        const b = await window.fbBearer();       // a token near its end is refreshed first (21 Nov 2026)
+        if (!b) throw new Error('signed out');
         const r = await fetch(URL_BASE + '/storage/v1/object/authenticated/evidence/' + p.photo_path,
-                              { headers: { apikey: ANON, Authorization: 'Bearer ' + session.access_token }, ...(ctl ? { signal: ctl.signal } : {}) });
+                              { headers: { apikey: ANON, Authorization: 'Bearer ' + b.token }, ...(ctl ? { signal: ctl.signal } : {}) });
         if (r.ok) big = await r.blob();
       } catch (e) { big = null; }
       finally { clearTimeout(cut); img.classList.remove('loading'); }
@@ -573,7 +575,9 @@
     if (!navigator.onLine || !session) { showToast('Listening needs signal', 'error'); return; }
     btn.disabled = true;
     try {
-      const r = await fetch(URL_BASE + '/storage/v1/object/authenticated/evidence/' + path, { headers: { apikey: ANON, Authorization: 'Bearer ' + session.access_token } });
+      const b = await window.fbBearer();         // a token near its end is refreshed first (21 Nov 2026)
+      if (!b) throw new Error('signed out');
+      const r = await fetch(URL_BASE + '/storage/v1/object/authenticated/evidence/' + path, { headers: { apikey: ANON, Authorization: 'Bearer ' + b.token } });
       if (!r.ok) throw new Error(String(r.status));
       const url = URL.createObjectURL(await r.blob());
       const a = new Audio(url); a.onended = () => URL.revokeObjectURL(url);

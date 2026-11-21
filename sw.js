@@ -2,7 +2,7 @@ const CACHE_NAME = 'ugly200-v238';
 // the scouting's text reader (Tesseract.js from jsDelivr, 0.11.40): kept across releases for offline days
 const LIB_CACHE = 'fb-lib-v1';
 // how long the app's start waits for the network before it opens from the kept page (see the fetch handler)
-const HTML_WAIT_MS = 5000;
+const HTML_WAIT_MS = 3000;   // 5000 until 21 Nov 2026
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -51,8 +51,10 @@ self.addEventListener('fetch', e => {
   const url = new URL(request.url);
 
   // the text reader's files (script, worker, wasm core, language data) from jsDelivr: cache-first, versioned URLs
-  // and the measuring tool's model (MediaPipe MagicTouch, 0.11.53), the same way
-  if ((url.hostname === 'cdn.jsdelivr.net' || (url.hostname === 'storage.googleapis.com' && url.pathname.startsWith('/mediapipe-models/'))) && request.method === 'GET') {
+  // and the measuring tool's model (MediaPipe MagicTouch, 0.11.53), the same way; and the font files (fonts.gstatic.com,
+  // versioned URLs fetched with CORS, 21 Nov 2026) — only a 200 is kept. The fonts.googleapis.com stylesheet is left alone.
+  if ((url.hostname === 'cdn.jsdelivr.net' || url.hostname === 'fonts.gstatic.com'
+       || (url.hostname === 'storage.googleapis.com' && url.pathname.startsWith('/mediapipe-models/'))) && request.method === 'GET') {
     e.respondWith(caches.open(LIB_CACHE).then(cache => cache.match(request).then(hit => hit || fetch(request).then(res => {
       if (res && res.status === 200) cache.put(request, res.clone());
       return res;

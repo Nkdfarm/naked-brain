@@ -1,11 +1,10 @@
 /*! Naked Brain - FarmBox cloud Tasks: week, clock, cards, swipe, people. Edit here, then run: python build.py */
     /* ── FarmBox cloud Tasks ─────────────────────────────────────────────── */
     #viewFarmbox .hidden { display: none !important; }
-    #viewFarmbox .net-pill { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: var(--radius-full);
+    #viewFarmbox .net-pill { font-size: var(--text-xs); font-weight: 600; padding: 4px 10px; border-radius: var(--radius-full);
       background: var(--coral-soft); color: var(--coral); }
     #viewFarmbox .spin { animation: fb-spin 1s linear infinite; }
     @keyframes fb-spin { to { transform: rotate(360deg); } }
-    @media (prefers-reduced-motion: reduce) { #viewFarmbox .spin { animation: none; } }
     /* Gallery tab (0.11.144): only in FarmBox mode; its view shows with the tab */
     body:not(.src-cloud) .app-tab[data-mode="gallery"] { display: none; }
     body.mode-gallery.src-cloud #viewGallery { display: block; }
@@ -16,15 +15,15 @@
     #viewGallery .gl-strip { display: flex; gap: 10px; overflow-x: auto; padding: 6px 6px 8px 0; }
     #viewGallery .gl-th { position: relative; flex: none; width: 84px; height: 84px; }
     #viewGallery .gl-th img { width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius-md); display: block; background: var(--surface-offset); }
-    #viewGallery .gl-th button { position: absolute; top: -6px; right: -6px; width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--surface); background: var(--ink); color: var(--ink-text); font-weight: 800; line-height: 1; }
+    #viewGallery .gl-th button { position: absolute; top: -6px; right: -6px; width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--surface); background: var(--ink); color: var(--ink-text); font-weight: 700; line-height: 1; }
     #viewGallery .gl-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: var(--space-2) 0; }
     #viewGallery .gl-note { width: 100%; min-height: 0; font-size: var(--text-sm); padding: 8px 10px; border-radius: var(--radius-md); background: var(--surface-offset); box-shadow: none; resize: none; }
-    #viewGallery .gl-send { background: var(--accent); border-color: var(--accent); color: var(--text-inverse); font-weight: 800; min-height: 48px; flex: 1; }
+    #viewGallery .gl-send { background: var(--accent); border-color: var(--accent); color: var(--text-inverse); font-weight: 700; min-height: 48px; flex: 1; box-shadow: var(--shadow-accent); }
     #viewGallery .gl-send:disabled, #viewGallery .gl-add .fb-btn:disabled { opacity: .5; }
     #viewGallery .gl-head { margin: var(--space-5) 0 var(--space-2); }
     #viewGallery .gl-row { cursor: default; flex-wrap: wrap; }
     #viewGallery .gl-row .fb-actions { flex: 1 0 100%; }
-    #viewGallery .gl-row img, #viewGallery .gl-row .gl-ph { width: 56px; height: 56px; flex: none; border-radius: 8px; object-fit: cover; }
+    #viewGallery .gl-row img, #viewGallery .gl-row .gl-ph { width: 56px; height: 56px; flex: none; border-radius: var(--radius-sm); object-fit: cover; }
     #viewGallery .gl-bad { color: var(--error); }
     #viewGallery .gl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: var(--space-3); }
     #viewGallery .gl-tile { min-width: 0; padding: 0; background: none; border: 0; text-align: left; font: inherit; color: var(--text); cursor: pointer; }
@@ -37,12 +36,12 @@
     body.mode-sop.src-cloud #viewFarmbox { display: block; }
     #viewFarmbox .field { margin-bottom: var(--space-3); }
     #viewFarmbox .field label { display:block; font-size: var(--text-xs); font-weight:600; color: var(--text-muted); margin-bottom: 4px; }
-    #viewFarmbox .field input { width:100%; font:inherit; padding:10px 12px; border:1px solid var(--border);
-      border-radius: var(--radius-md); background: var(--surface-offset); color: var(--text); }
+    #viewFarmbox .field input { width:100%; font:inherit; padding:10px 12px; border:1px solid var(--border); min-height: var(--tap);
+      border-radius: var(--radius-md); background: var(--field-bg); color: var(--text); }
     /* the week header earns one line, not a quarter of the screen */
     #viewFarmbox .hero { margin: var(--space-2) 0 var(--space-3);
       display:flex; align-items:baseline; gap: var(--space-2); flex-wrap:wrap; }
-    #viewFarmbox .hero h1 { font-size: var(--text-lg); font-weight:750; letter-spacing:-0.02em; }
+    #viewFarmbox .hero h1 { font-size: var(--text-lg); font-weight: 700; letter-spacing:-0.02em; }
     #viewFarmbox .hero p { margin:0; color: var(--text-muted); font-size: var(--text-sm); }
     .fb-day { margin-top: var(--space-4); }
     .fb-slot { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted);
@@ -52,7 +51,7 @@
     /* the clock (0.11.38): in and out from the phone, offline through the outbox */
     .fb-clock:empty { display: none; }
     .fb-clock { display:flex; align-items:center; gap: var(--space-3); margin: var(--space-2) 0; padding: 10px 14px;
-      border-radius: 14px; background: var(--surface); border: 1px solid var(--border); }
+      border-radius: var(--radius-lg); background: var(--surface); border: 1px solid var(--border); }
     .fb-clock.on { border-color: var(--success, #2e7d32); background: color-mix(in srgb, var(--success, #2e7d32) 10%, var(--surface)); }
     .fb-clock .fb-clock-text { flex: 1; min-width: 0; font-size: var(--text-sm); }
     .fb-clock .fb-clock-text b { display:block; font-size: var(--text-base); }
@@ -61,32 +60,32 @@
     .fb-who > * { flex: 1; min-width: 0; }
     /* sister units (0.11.37): one heading per unit inside the day, in the unit's colour */
     .fb-unit { display:flex; align-items:center; gap: 8px; margin: var(--space-3) 0 2px; padding: 6px 10px;
-      border-radius: 10px; background: color-mix(in srgb, var(--u, var(--text-muted)) 14%, transparent);
+      border-radius: var(--radius-md); background: color-mix(in srgb, var(--u, var(--text-muted)) 14%, transparent);
       border-left: 4px solid var(--u, var(--text-muted)); font-weight: 700; font-size: var(--text-sm); }
-    .fb-unit .fb-ubadge { font-size: 11px; font-weight: 800; letter-spacing: .04em; color: #fff; background: var(--u, #888);
-      border-radius: 6px; padding: 2px 6px; }
+    .fb-unit .fb-ubadge { font-size: 11px; font-weight: 700; letter-spacing: .04em; color: #fff; background: var(--u, #888);
+      border-radius: var(--radius-xs); padding: 2px 6px; }
     .fb-unit .fb-ucount { margin-left: auto; font-weight: 600; color: var(--text-muted); font-size: 12px; }
-    .fb-who-sel { width:100%; font-size: var(--text-base); padding: 10px 12px; border-radius: 12px;
-      border: 1px solid var(--border); background: var(--surface); color: var(--text); font-weight: 600; }
+    .fb-who-sel { width:100%; font-size: var(--text-base); padding: 10px 12px; border-radius: var(--radius-md); min-height: var(--tap);
+      border: 1px solid var(--border); background: var(--field-bg); color: var(--text); font-weight: 600; }
     .fb-slot.any { border-top: 1px dashed var(--border); }
     .fb-day h2 { font-size: var(--text-sm); text-transform: uppercase; letter-spacing:.08em;
       color: var(--text-muted); margin: 0 0 var(--space-2); font-weight: 700; }
     .fb-card { display:flex; align-items:center; gap: var(--space-3); width:100%; text-align:left;
-      background: var(--surface); border:1px solid var(--border); border-left:6px solid var(--border);
-      border-radius: var(--radius-md);
+      background: var(--surface); border:1px solid var(--border); border-left:4px solid var(--border);
+      border-radius: var(--radius-lg);
       padding: var(--space-2) var(--space-3); margin-bottom: 6px; cursor:pointer;
-      font: inherit; color: var(--text); box-shadow: var(--shadow-sm); }
+      font: inherit; color: var(--text); box-shadow: none; }   /* 21 Nov 2026: flat, as Naked Heart's cards; the family bar 4 px */
     .fb-card:active { transform: scale(.995); }
     .fb-card.done { opacity:.5; }
     /* the whole greenhouse (0.11.122): not a zone and not a task — the accent's own colour, a dashed edge */
     .fb-card.fb-gh { border-left-color: var(--primary); border-style: dashed; border-left-style: solid; box-shadow: none; margin-bottom: var(--space-3); }
     /* swipe (0.11.27): the card slides over a band saying what the swipe does */
-    .fb-swipe { position:relative; margin-bottom: 6px; border-radius: var(--radius-md); }
+    .fb-swipe { position:relative; margin-bottom: 6px; border-radius: var(--radius-lg); }
     .fb-swipe > .fb-card { margin-bottom: 0; position:relative; z-index:1; touch-action: pan-y; }
     .fb-swipe.moving > .fb-card { transition:none; }
     .fb-swipe > .fb-card { transition: transform .18s ease; }
-    .fb-swipe-bg { position:absolute; inset:0; border-radius: var(--radius-md); display:none; align-items:center;
-      padding: 0 16px; font-weight:800; font-size: var(--text-sm); }
+    .fb-swipe-bg { position:absolute; inset:0; border-radius: var(--radius-lg); display:none; align-items:center;
+      padding: 0 16px; font-weight: 700; font-size: var(--text-sm); }
     .fb-swipe-bg.left { background: var(--accent); color: var(--text-inverse); justify-content:flex-start; }
     .fb-swipe-bg.right { background: var(--coral); color:#fff; justify-content:flex-end; }
     .fb-swipe.to-right .fb-swipe-bg.left, .fb-swipe.to-left .fb-swipe-bg.right { display:flex; }
@@ -96,12 +95,11 @@
       font-size: var(--text-sm); }
     .fb-undo.show { display:flex; animation: fb-undo-in .18s ease-out; }
     @keyframes fb-undo-in { from { transform: translateY(-12px); opacity: 0; } to { transform: none; opacity: 1; } }
-    @media (prefers-reduced-motion: reduce) { .fb-undo.show { animation: none; } }
     .fb-sc-notraps { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 8px 0; }
     .fb-dim { opacity: 0.4; pointer-events: none; }
     .fb-auto-view { display: flex; align-items: center; gap: 8px; width: 100%; padding: 4px; border: 1px solid var(--border); border-radius: var(--radius-md);
       background: var(--surface); color: var(--text-muted); font: inherit; font-size: var(--text-xs); text-align: left; cursor: pointer; }
-    .fb-auto-view img { height: 72px; width: auto; border-radius: 6px; flex: none; }
+    .fb-auto-view img { height: 72px; width: auto; border-radius: var(--radius-xs); flex: none; }
     .fb-auto-view.ok { border-color: var(--success, #2e7d32); color: var(--success, #2e7d32); }
     .fb-sizecheck { max-height: 94vh; overflow: auto; }
     .fb-sizecheck-img { display: block; width: 100%; max-height: 62vh; object-fit: contain; border-radius: var(--radius-md); background: #000; margin: 8px 0; }
@@ -109,9 +107,9 @@
     .fb-sizecheck-sizes { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0; }
     .fb-sizecheck .hidden { display: none !important; }   /* the sheet sits on <body>, outside #viewFarmbox's rule */
     .fb-undo span { flex:1; }
-    .fb-undo .fb-link { color: var(--accent); font-weight:800; }
-    .fb-sheet { position:fixed; inset:0; z-index:1400; background: rgba(0,0,0,.45); display:flex; align-items:flex-end; }
-    .fb-sheet-card { width:100%; background: var(--surface); border-radius: var(--radius-xl) var(--radius-xl) 0 0; padding: var(--space-5) var(--space-4) var(--space-6); }
+    .fb-undo .fb-link { color: var(--accent); font-weight: 700; }
+    .fb-sheet { position:fixed; inset:0; z-index:1400; background: rgba(0,0,0,.45); display:flex; align-items:flex-end; animation: nb-fade 180ms var(--ease); }
+    .fb-sheet-card { width:100%; background: var(--surface); border-radius: var(--radius-xl) var(--radius-xl) 0 0; padding: var(--space-5) var(--space-4) var(--space-6); animation: nb-rise 260ms var(--ease); }
     .fb-sheet-card h3 { margin:0 0 2px; }
     .fb-sheet-card .fb-actions { margin-top: var(--space-3); }
     /* last synced, under the top bar, and the one-time swipe hint (0.11.147) */
@@ -124,7 +122,7 @@
     /* the question sheet (0.11.147): two 48 px buttons side by side, the answer that does the thing on the right */
     .fb-ask .fb-actions { flex-wrap: nowrap; }
     .fb-ask .fb-btn { flex: 1; min-height: 48px; }
-    .fb-ask-yes { background: var(--accent); border-color: var(--accent); color: var(--text-inverse); }
+    .fb-ask-yes { background: var(--accent); border-color: var(--accent); color: var(--text-inverse); box-shadow: var(--shadow-accent); }
     .fb-btn-primary { background: var(--coral); border-color: var(--coral); color:#fff; }
     /* the family, as the card's ground and as the bar down its edge */
     .fb-card.fam-agriculture { background: var(--fam-ag-bg); border-left-color: var(--fam-ag); }
@@ -132,24 +130,24 @@
     .fb-card.fam-office      { background: var(--fam-of-bg); border-left-color: var(--fam-of); }
     .fb-when { min-width: 42px; font-variant-numeric: tabular-nums; font-weight:700; font-size: var(--text-sm); }
     .fb-body { flex:1; min-width:0; }
-    .fb-name { font-weight:620; line-height:1.25; font-size: var(--text-sm); }
+    .fb-name { font-weight: 600; line-height:1.25; font-size: var(--text-sm); }
     .fb-meta { font-size: var(--text-xs); color: var(--text-muted); margin-top:1px; }
     .fb-where { font-weight:700; color: var(--text); }
-    .fb-chip { font-size:12px; font-weight:700; padding:4px 9px; border-radius: var(--radius-full);
+    .fb-chip { font-size: var(--text-xs); font-weight:600; padding:4px 9px; border-radius: var(--radius-full);
       background: var(--surface-offset); color: var(--text-muted); white-space:nowrap; }
     .fb-chip.ok { background: var(--success-bg); color: var(--success); }
     .fb-chip.ok.over { color: var(--error, #c0392b); }
     /* 0.11.57: a tick is red until tapped green; zones as buttons; one notes box; Pause beside Finish */
     .fb-step.todo { border-color: color-mix(in srgb, var(--error, #c0392b) 55%, var(--border)); }
-    .fb-tick, .fb-zchip { font: inherit; font-weight: 800; border-radius: var(--radius-full); cursor: pointer;
+    .fb-tick, .fb-zchip { font: inherit; font-weight: 700; border-radius: var(--radius-full); cursor: pointer;
       border: 2px solid var(--error, #c0392b); background: color-mix(in srgb, var(--error, #c0392b) 12%, var(--surface)); color: var(--error, #c0392b); }
     .fb-tick { min-height: 48px; padding: 0 22px; font-size: var(--text-base); }
     .fb-tick.on, .fb-zchip.on { border-color: var(--success, #2e7d32); background: var(--success-bg, #e3f2e5); color: var(--success, #2e7d32); }
     .fb-zchips { display: flex; flex-wrap: wrap; gap: 10px; margin: var(--space-3) 0 var(--space-1); }
     .fb-zchip { min-width: 64px; min-height: 52px; padding: 0 14px; font-size: var(--text-lg); font-variant-numeric: tabular-nums; }
     .fb-run-end { margin-top: var(--space-4); display: grid; gap: var(--space-2); }
-    .fb-runnote { width: 100%; box-sizing: border-box; font: inherit; padding: 10px 12px; border-radius: var(--radius-lg, 12px);
-      border: 1px solid var(--border); background: var(--surface); color: var(--text); resize: vertical; }
+    .fb-runnote { width: 100%; box-sizing: border-box; font: inherit; padding: 10px 12px; border-radius: var(--radius-md);
+      border: 1px solid var(--border); background: var(--field-bg); color: var(--text); resize: vertical; box-shadow: none; }
     .fb-chip.run { background: var(--primary); color: var(--text-inverse); }
     .fb-chip.run.other { background: transparent; color: var(--primary); box-shadow: inset 0 0 0 1.5px var(--primary); }   /* somebody else has it running */
     .fb-chip.ok.wait { box-shadow: inset 0 0 0 1.5px var(--warning, #d98a1f); }   /* done here, not on the server yet */

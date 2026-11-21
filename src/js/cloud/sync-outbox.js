@@ -31,9 +31,12 @@
   const errKind = e => { const m = String((e && e.message) || e || '');
     return /Failed to fetch|Load failed|NetworkError|network error|no answer in time/i.test(m) ? 'net' : /^5\d\d /.test(m) ? 'busy' : m === 'signed out' ? 'out' : ''; };
   // the tasks this phone has closed and whose report, tick or cancel is still in the outbox
-  const unsentTasks = async () => new Set((await all('outbox')).filter(r => !r.dead && r.payload && r.payload.task_id
-    && (r.payload.__tick || r.payload.__skip || (!r.payload.__timer && !r.payload.__upload && !r.payload.__clock
-        && !r.payload.__feedback && !r.payload.__ghnote && r.payload.status === 'completed'))).map(r => r.payload.task_id));
+  // read one row at a time, keeping only that task and whether the row is a clock event (21 Nov 2026: all('outbox')
+  // loaded every waiting photo's bytes at each sync)
+  const outboxLight = () => scan('outbox', r => { const p = r.payload;
+    return { task: !r.dead && p && p.task_id && (p.__tick || p.__skip || (!p.__timer && !p.__upload && !p.__clock
+        && !p.__feedback && !p.__ghnote && p.status === 'completed')) ? p.task_id : null, clock: !!(p && p.__clock) }; });
+  const unsentTasks = rows => new Set(rows.filter(x => x.task).map(x => x.task));
   async function sync(full, quiet) {
     if (syncing || !session) return;
     syncing = true; $('sync').classList.add('spin');
@@ -45,7 +48,7 @@
       // read before the call too (0.11.146): the outbox is sent beside the sync now, and a report that went up while
       // the server answered is no longer in the outbox after it
       let unsentBefore = new Set();
-      try { unsentBefore = await unsentTasks(); } catch (e) { /* read again below */ }
+      try { unsentBefore = unsentTasks(await outboxLight()); } catch (e) { /* read again below */ }
       const d = await api('/rest/v1/rpc/sync_since', {
         method: 'POST',
         body: JSON.stringify({ p_farm: farm.id, p_since: since || '-infinity' })
@@ -55,8 +58,10 @@
       // opening it gave an empty checklist to do again. Only while its report, tick or cancel is still in the outbox,
       // and never over a task the server cancelled. Anything unexpected here: the server's rows as they came, as before.
       let fromServer = d.tasks;
+      let outAfter = null;                     // the read after the call
       try {
-        const unsent = new Set([...unsentBefore, ...(await unsentTasks())]);
+        outAfter = await outboxLight();
+        const unsent = new Set([...unsentBefore, ...unsentTasks(outAfter)]);
         if (unsent.size && Array.isArray(d.tasks)) {
           const shut = st => st === 'done' || st === 'skipped';
           const had = new Map((await all('tasks')).map(t => [t.id, t]));
@@ -116,7 +121,7 @@
         if (mine && mine.name && typeof setAuthor === 'function' && typeof getAuthor === 'function' && getAuthor() !== mine.name) setAuthor(mine.name);
       } catch (e) { /* the name stays as it was */ }
       if (Array.isArray(d.task_times)) await setKV('task_times', d.task_times);   // FarmBox 0161
-      if (d.clock && !(await all('outbox')).some(r => r.payload && r.payload.__clock)) await setKV('clock', { ...d.clock, at: Date.now() });
+      if (d.clock && !(await outboxLight()).some(x => x.clock)) await setKV('clock', { ...d.clock, at: Date.now() });
       // sister units (FarmBox 0126): the tasks of every unit of the group come in one sync
       await setKV('sisters', Array.isArray(d.sisters) && d.sisters.length > 1 ? d.sisters : null);
       await putAll('sops', d.sops);
@@ -164,7 +169,9 @@
       try { dgMoved = await dgSyncCounts(); } catch (e) { /* the cards keep what they showed */ }
       liveOpen();
       // the reports kept for adding offline go after eight days
-      for (const r of (await all('kv')).filter(r => String(r.id).startsWith('sent:') && (r.v?.kept || 0) < Date.now() - 8 * 86400000)) await del('kv', r.id);
+      // only the 'sent:' keys, one at a time (21 Nov 2026: all('kv') read every draft's photos too)
+      const sentOld = Date.now() - 8 * 86400000;
+      for (const id of await scan('kv', r => ((r.v?.kept || 0) < sentOld ? r.id : undefined), IDBKeyRange.bound('sent:', 'sent:\uffff'))) await del('kv', id);
       // not waited for (0.11.146, review of 16 Nov): a flush with full photos runs for minutes, and every sync meanwhile
       // did nothing — the minute's, the live "moved", the ⟳ tap. flush() is one pass at a time by itself.
       flush().catch(e => console.warn('flush:', e));

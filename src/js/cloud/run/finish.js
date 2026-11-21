@@ -1,6 +1,5 @@
 //! Naked Brain - the cloud closure (FarmBox Tasks on Supabase): opened in js/cloud/db.js, closed in js/cloud/lot-scan.js; shares session, farm, run, DG, TIMERS, show(), $() and el() with every js/cloud/* file -- finishing a checklist run. Edit here, then run: python build.py
   async function finishRun() {
-    if (run?.sc) return finishScouting();
     const R = run;   // the run being finished: the person may open another task while it saves (0.11.55)
     // the trap round: every trap needs its photo and a number before the round can close
     if (run.traps) {

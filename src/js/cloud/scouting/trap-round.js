@@ -29,8 +29,6 @@
     }, 0);
     return el('div', 'config-hint', 'Opening Digital scouting…');
   }
-  async function finishScouting() { /* run.sc is no longer set by anything: nothing to finish */ }
-  const howItWorks = () => document.createDocumentFragment();
   async function trapRound(task, sop, item = null) {
     const box = el('div', 'fb-traps');
     box.append(el('div', 'config-hint', 'The sticky traps are read in Digital scouting now (the scouting task of the day) — this checklist no longer takes trap photos.'));
@@ -62,20 +60,9 @@
     paint();
     return risk;
   }
+  // an old round's draft key: still read (scoutSections above, the swipe's "mine" check); run.sc, saveScDraft,
+  // finishScouting and howItWorks were removed on 21 Nov 2026 — nothing set run.sc since 17 Nov
   const scDraftKey = task => 'scout2:' + (task.key || task.id);
-  let scDraftTimer = null;
-  function saveScDraft() {
-    if (!run?.sc) return;
-    run.touched = true;
-    clearTimeout(scDraftTimer);
-    const r = run;
-    scDraftTimer = setTimeout(async () => {
-      try {
-        await setKV(scDraftKey(r.task), { saved: Date.now(), cid: r.sc.cid || null, tab: r.sc.tab, outcome: r.sc.outcome, outcomeNote: r.sc.outcomeNote, verdict: r.sc.verdict,
-          lastPos: r.sc.lastPos, extra: [...r.sc.extra], status: [...r.sc.status], noTraps: !!r.sc.noTraps, photos: [...r.sc.photos.values()] });
-      } catch (e) { console.warn('scouting draft not saved', e); }
-    }, 250);
-  }
   const parsePos = code => {
     const m = /^([0-9]+)([A-Z]+)([0-9]+(?:[.,][0-9]+)?)?$/.exec(String(code || '').toUpperCase().replace(/[\s\-_.·/]/g, ''));
     return m ? { n: m[1], row: m[2], m: m[3] ? m[3].replace(',', '.') : null } : null;

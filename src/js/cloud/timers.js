@@ -55,8 +55,9 @@
     try { const c = await getKV('dg_counts'); if (c && c.byTask) DG_COUNTS = c; } catch (e) { /* none yet */ }
     try { DG_UNSENT = new Set((await dgUnsentRounds()).map(x => x.key)); } catch (e) { DG_UNSENT = new Set(); }
     // the tasks whose report is still on this phone (0.11.91): their card says "waiting to send"
-    try { WAITING = new Set((await all('outbox')).filter(r => r.payload && r.payload.task_id && !r.payload.__timer && !r.payload.__upload && !r.payload.__feedback)
-                              .map(r => r.payload.task_id)); } catch (e) { WAITING = new Set(); }
+    // read one row at a time, keeping only the task (21 Nov 2026: all('outbox') read every waiting photo's bytes)
+    try { WAITING = new Set(await scan('outbox', r => (r.payload && r.payload.task_id && !r.payload.__timer && !r.payload.__upload && !r.payload.__feedback
+                              ? r.payload.task_id : undefined))); } catch (e) { WAITING = new Set(); }
   }
   const saveTimers = () => setKV('timers', TIMERS).catch(() => {});
   // 0.11.91 (FarmBox 0201): a stretch nobody closed ends when the person stops touching the checklist — the idle limit

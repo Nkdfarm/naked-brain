@@ -29,8 +29,8 @@
     const tt = timerTaskOf(run.task); if (tt) timerTouch(tt.id);
   }, { capture: true, passive: true }));
   const upSel = document.getElementById('fb-uploadNet');
-  if (upSel) { upSel.value = uploadNet(); upSel.onchange = () => { try { localStorage.setItem('fb_upload_net', upSel.value); } catch (e) {} flush(); }; }
-  navigator.connection?.addEventListener?.('change', () => flush());
+  if (upSel) { upSel.value = uploadNet(); upSel.onchange = () => { try { localStorage.setItem('fb_upload_net', upSel.value); } catch (e) {} flush().catch(() => {}); }; }
+  navigator.connection?.addEventListener?.('change', () => flush().catch(() => {}));
 
   document.querySelectorAll('[data-source]').forEach(btn => btn.addEventListener('click', () => {
     setSource(btn.dataset.source);
@@ -54,7 +54,7 @@
       try { for (const id of Object.keys(TIMERS)) if (timerRunning(id)) await timerPause(id); } catch (e) { /* as before */ }
       try {
         if (session && navigator.onLine) await Promise.race([flush().catch(() => {}), new Promise(res => setTimeout(res, 8000))]);
-        const left = (await all('outbox')).length;
+        const left = await tx('outbox', 'readonly', s => s.count());   // counted, not read (21 Nov 2026)
         // the app's own sheet (17 Nov 2026), the same question as the browser's confirm() it replaces
         if (left && !await askSheet({ title: 'Sign out anyway?', yes: 'Sign out anyway', no: 'Stay signed in', danger: true,
           text: `${left} thing${left === 1 ? '' : 's'} you did ${left === 1 ? 'is' : 'are'} not sent yet.\n\nIf you sign out now, ${left === 1 ? 'it goes' : 'they go'} up later under the next person's name.` })) return;
@@ -111,7 +111,7 @@
   }
 
   const netPill = () => $('net')?.classList.toggle('hidden', navigator.onLine);
-  addEventListener('online', () => { netPill(); session ? sync(false) : flush(); });
+  addEventListener('online', () => { netPill(); session ? sync(false) : flush().catch(() => {}); });
   // who is doing what stays current (0.11.84): a quiet sync every minute while the app is on screen and connected
   setInterval(() => {
     if (!document.hidden && navigator.onLine && session && document.body.classList.contains('src-cloud')
@@ -121,7 +121,7 @@
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) { liveClose(); return; }
     liveOpen();
-    if (document.body.classList.contains('src-cloud')) { (session && navigator.onLine) ? sync(false, true) : flush(); }
+    if (document.body.classList.contains('src-cloud')) { (session && navigator.onLine) ? sync(false, true) : flush().catch(() => {}); }
   });
   addEventListener('online', () => liveOpen());
 

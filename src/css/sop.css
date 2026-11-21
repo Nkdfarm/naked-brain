@@ -7,25 +7,28 @@
     #viewSop .hidden { display: none !important; }
     #viewSop .sop-bar, #viewFarmbox .sop-bar, #viewGallery .sop-bar { position: sticky; top: 0; z-index: 50; padding: calc(env(safe-area-inset-top) + var(--space-2)) var(--space-4) var(--space-2); display: flex; align-items: center; gap: var(--space-2); background: color-mix(in srgb, var(--bg) 55%, transparent); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
     #viewSop .hdr-title, #viewFarmbox .hdr-title, #viewGallery .hdr-title { flex: 1; min-width: 0; font-weight: 700; font-size: var(--text-base); letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    #viewSop .hdr-title span { font-weight: 800; }
-    #viewSop .btn-icon, #viewFarmbox .btn-icon, #viewGallery .btn-icon { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; height: 44px; padding: 0 var(--space-3); border-radius: var(--radius-full); background: var(--glass); border: 1px solid var(--border); color: var(--text); font-size: 1.15rem; box-shadow: var(--shadow-sm); }
-    #viewSop .btn-icon:hover { background: var(--surface); }
+    #viewSop .hdr-title span { font-weight: 700; }
+    #viewSop .btn-icon, #viewFarmbox .btn-icon, #viewGallery .btn-icon { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; height: 44px; padding: 0 var(--space-3); border-radius: var(--radius-full); background: transparent; border: 1px solid transparent; color: var(--text); font-size: 1.15rem; box-shadow: none; }   /* ghost (21 Nov 2026) */
+    #viewSop .btn-icon:hover, #viewFarmbox .btn-icon:hover, #viewGallery .btn-icon:hover { background: var(--hover); }
     #viewSop .btn-icon:disabled { opacity: 0.35; cursor: not-allowed; }
-    #viewSop .net-pill { font-size: var(--text-xs); font-weight: 650; padding: 4px 12px; border-radius: var(--radius-full); background: var(--coral); color: #fff; white-space: nowrap; }
+    #viewSop .net-pill { font-size: var(--text-xs); font-weight: 600; padding: 4px 12px; border-radius: var(--radius-full); background: var(--coral); color: #fff; white-space: nowrap; }
     #viewSop .sop-main, #viewFarmbox .sop-main, #viewGallery .sop-main { max-width: 46rem; margin: 0 auto; padding: var(--space-2) var(--space-4) calc(env(safe-area-inset-bottom) + 7rem); }
     #viewSop .hero { margin: var(--space-3) 0 var(--space-5); }
-    #viewSop .hero h1 { font-size: clamp(1.9rem, 1.4rem + 2.2vw, 2.5rem); font-weight: 750; letter-spacing: -0.035em; line-height: 1.08; }
+    #viewSop .hero h1 { font-size: clamp(1.9rem, 1.4rem + 2.2vw, 2.5rem); font-weight: 700; letter-spacing: -0.035em; line-height: 1.08; }
     #viewSop .hero p { color: var(--text-muted); margin-top: var(--space-2); font-size: var(--text-base); }
     #viewSop .sec-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin: var(--space-6) 0 var(--space-3); }
     #viewSop .sec-head h2 { font-size: 1.3rem; font-weight: 650; letter-spacing: -0.02em; }
     #viewSop .lbl, #viewSop .field label { display: block; font-size: var(--text-sm); font-weight: 650; color: var(--text-muted); margin-bottom: var(--space-2); }
     #viewSop .hint { font-size: var(--text-sm); color: var(--text-muted); margin-top: var(--space-1); }
-    #viewSop .btn, #viewFarmbox .btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: 48px; padding: var(--space-2) var(--space-5); border-radius: var(--radius-full); font-weight: 650; font-size: var(--text-sm); background: var(--surface); color: var(--text); border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
-    #viewSop .btn:hover, #viewFarmbox .btn:hover { background: var(--surface-2); }
+    #viewSop .btn, #viewFarmbox .btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: 48px; padding: var(--space-2) var(--space-5); border-radius: var(--radius-full); font-weight: 600; font-size: var(--text-sm); background: var(--surface); color: var(--text); border: 1px solid var(--border); box-shadow: none; }
+    #viewSop .btn:hover, #viewFarmbox .btn:hover { background: var(--surface-offset); border-color: var(--border-strong); }
     #viewSop .btn:disabled, #viewFarmbox .btn:disabled { opacity: 0.45; cursor: not-allowed; }
-    #viewSop .btn-primary, #viewFarmbox .btn-primary { background: var(--primary); color: var(--text-inverse); border-color: transparent; }
-    #viewSop .btn-primary:hover, #viewFarmbox .btn-primary:hover { background: var(--primary-hover); }
+    #viewSop .btn-primary, #viewFarmbox .btn-primary { background: var(--primary); color: var(--text-inverse); border-color: transparent; box-shadow: var(--shadow-accent); }
+    #viewSop .btn-primary:hover, #viewFarmbox .btn-primary:hover { background: var(--primary-hover); border-color: transparent; }
     #viewSop .btn-danger, #viewFarmbox .btn-danger { background: var(--coral-soft); color: var(--error); border-color: transparent; }
+    #viewSop .btn-danger:hover, #viewFarmbox .btn-danger:hover { background: var(--coral-soft); border-color: transparent; }
+    #viewSop .btn-ghost, #viewFarmbox .btn-ghost { background: transparent; border-color: transparent; box-shadow: none; color: var(--text-muted); }
+    #viewSop .btn-ghost:hover, #viewFarmbox .btn-ghost:hover { background: var(--hover); border-color: transparent; color: var(--text); }
     #viewSop .btn-block, #viewFarmbox .btn-block { width: 100%; }
     #viewSop .btn-lg, #viewFarmbox .btn-lg { min-height: 58px; font-size: var(--text-base); }
     #viewSop .btn-sm, #viewFarmbox .btn-sm { min-height: 38px; padding: var(--space-1) var(--space-4); font-size: var(--text-sm); }
@@ -43,7 +46,7 @@
     #viewSop .chips::-webkit-scrollbar { display: none; }
     #viewSop .chip { flex-shrink: 0; min-height: 40px; padding: var(--space-1) var(--space-4); border-radius: var(--radius-full); font-size: var(--text-sm); font-weight: 650; background: var(--glass); border: 1px solid var(--border); color: var(--text); }
     #viewSop .chip.active { background: var(--accent-soft); border-color: var(--accent); color: var(--text); box-shadow: inset 0 0 0 1px var(--accent); }
-    #viewSop .card { display: block; width: 100%; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: var(--space-4) var(--space-4); margin-bottom: var(--space-3); box-shadow: var(--shadow-md); color: inherit; text-decoration: none; }
+    #viewSop .card { display: block; width: 100%; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: var(--space-4) var(--space-4); margin-bottom: var(--space-3); box-shadow: var(--shadow-sm); color: inherit; text-decoration: none; }
     #viewSop button.card:active, #viewSop a.card:active { transform: scale(0.99); }
     #viewSop .sop-card { display: flex; gap: var(--space-3); align-items: center; }
     #viewSop .sc-icon { width: 52px; height: 52px; border-radius: 50%; background: var(--surface-offset); display: flex; align-items: center; justify-content: center; font-size: 1.55rem; flex-shrink: 0; }
@@ -71,9 +74,9 @@
     #viewSop .bottom-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; padding: var(--space-4) var(--space-4) calc(env(safe-area-inset-bottom) + var(--space-3)); background: linear-gradient(to top, var(--bg-end) 55%, transparent); }
     #viewSop .bottom-bar > div { max-width: 46rem; margin: 0 auto; }
     #viewSop .bottom-bar .btn { box-shadow: var(--shadow-lg); }
-    #viewSop .sop-head h1 { font-size: clamp(1.75rem, 1.3rem + 2vw, 2.25rem); font-weight: 750; line-height: 1.12; letter-spacing: -0.03em; margin: var(--space-2) 0 var(--space-3); }
+    #viewSop .sop-head h1 { font-size: clamp(1.75rem, 1.3rem + 2vw, 2.25rem); font-weight: 700; line-height: 1.12; letter-spacing: -0.03em; margin: var(--space-2) 0 var(--space-3); }
     #viewSop .sop-head .note { color: var(--text-muted); font-size: var(--text-base); margin-top: var(--space-3); }
-    #viewSop #sop-view > .doc { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: var(--space-5) var(--space-5); box-shadow: var(--shadow-md); }
+    #viewSop #sop-view > .doc { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: var(--space-5) var(--space-5); box-shadow: var(--shadow-sm); }
     #viewSop .doc, #viewFarmbox .doc { margin-top: var(--space-4); overflow-wrap: anywhere; line-height: 1.6; }
     #viewSop .doc > * + *, #viewFarmbox .doc > * + * { margin-top: var(--space-3); }
     #viewSop .doc > :first-child, #viewFarmbox .doc > :first-child { margin-top: 0; }
@@ -85,7 +88,7 @@
     #viewSop .doc li::marker { font-weight: 700; }
     #viewSop .doc li > .kids { margin-top: var(--space-1); }
     #viewSop .doc .todo { display: flex; gap: var(--space-2); align-items: flex-start; }
-    #viewSop .doc .todo .box { flex-shrink: 0; width: 1.15rem; height: 1.15rem; margin-top: 0.25rem; border: 2px solid var(--text-faint); border-radius: 6px; }
+    #viewSop .doc .todo .box { flex-shrink: 0; width: 1.15rem; height: 1.15rem; margin-top: 0.25rem; border: 2px solid var(--text-faint); border-radius: var(--radius-xs); }
     #viewSop .doc .todo .box.on { background: var(--accent); border-color: var(--accent); }
     #viewSop .doc .callout { display: flex; gap: var(--space-3); background: var(--lavender-soft); border-radius: var(--radius-lg); padding: var(--space-3) var(--space-4); }
     #viewSop .doc .callout.warn { background: var(--coral-soft); }
@@ -93,7 +96,7 @@
     #viewSop .doc .callout > div > * + * { margin-top: var(--space-2); }
     #viewSop .doc blockquote { border-left: 3px solid var(--text); padding-left: var(--space-3); color: var(--text-muted); }
     #viewSop .doc hr { border: none; border-top: 1px solid var(--divider); margin: var(--space-5) 0; }
-    #viewSop .doc code { font-family: ui-monospace, Consolas, monospace; font-size: 0.9em; background: var(--surface-dynamic); padding: 1px 6px; border-radius: 6px; }
+    #viewSop .doc code { font-family: var(--font-mono); font-size: 0.9em; background: var(--surface-dynamic); padding: 1px 6px; border-radius: var(--radius-xs); }
     #viewSop .doc pre { background: var(--surface-dynamic); padding: var(--space-3); border-radius: var(--radius-md); overflow-x: auto; font-size: var(--text-sm); }
     #viewSop .doc a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
     #viewSop .doc figure img { border-radius: var(--radius-lg); }
@@ -119,15 +122,15 @@
     #viewSop .progress-fill { height: 100%; background: var(--accent); border-radius: var(--radius-full); transition: width 250ms; }
     #viewSop .progress { display: flex; flex-direction: column; }
     #viewSop .progress-label { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-2); order: 1; }
-    #viewSop .progress-label span:first-child { font-size: 1.35rem; font-weight: 750; letter-spacing: -0.02em; }
+    #viewSop .progress-label span:first-child { font-size: 1.35rem; font-weight: 700; letter-spacing: -0.02em; }
     #viewSop .progress-label span:last-child { font-size: var(--text-xs); color: var(--ink-muted); text-align: right; }
     #viewSop .run-section { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; margin: var(--space-6) 0 var(--space-3); }
-    #viewSop .step { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); margin-bottom: var(--space-3); overflow: hidden; box-shadow: var(--shadow-md); transition: background var(--transition); }
+    #viewSop .step { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); margin-bottom: var(--space-3); overflow: hidden; box-shadow: var(--shadow-sm); transition: background var(--transition); }
     #viewSop .step.done { background: var(--accent); border-color: transparent; color: var(--text-inverse); }
     #viewSop .step-main { display: flex; gap: var(--space-3); width: 100%; text-align: left; padding: var(--space-4) var(--space-4); min-height: 64px; align-items: flex-start; font-size: var(--text-base); line-height: 1.45; }
-    #viewSop .step-check { flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%; border: 2.5px solid var(--text-faint); display: flex; align-items: center; justify-content: center; font-weight: 800; color: transparent; }
+    #viewSop .step-check { flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%; border: 2.5px solid var(--text-faint); display: flex; align-items: center; justify-content: center; font-weight: 700; color: transparent; }
     #viewSop .step.done .step-check { background: var(--text-inverse); border-color: var(--text-inverse); color: var(--accent); }
-    #viewSop .step-num { font-weight: 800; margin-right: 2px; }
+    #viewSop .step-num { font-weight: 700; margin-right: 2px; }
     #viewSop .step-time { font-size: var(--text-xs); font-weight: 700; margin-top: var(--space-1); color: rgba(18,18,18,0.7); }
     #viewSop .step-extra { padding: 0 var(--space-4) var(--space-4) calc(var(--space-4) + 34px + var(--space-3)); }
     #viewSop .step-extra .doc { margin-top: 0; font-size: var(--text-sm); }
@@ -151,12 +154,12 @@
     #viewSop .ed-locked-label { font-size: var(--text-sm); color: var(--text-muted); font-style: italic; }
     #viewSop .ed-add { display: flex; gap: var(--space-2); flex-wrap: wrap; margin: var(--space-3) 0; }
     #viewSop .ed-img { max-height: 200px; border-radius: var(--radius-md); }
-    #viewSop .overlay { position: fixed; inset: 0; z-index: 150; background: rgba(10,10,12,0.45); display: flex; align-items: flex-end; justify-content: center; }
-    #viewSop .sheet { background: var(--surface); width: 100%; max-width: 32rem; max-height: 90dvh; overflow-y: auto; border-radius: 28px 28px 0 0; padding: var(--space-3) var(--space-5) calc(env(safe-area-inset-bottom) + var(--space-5)); box-shadow: var(--shadow-lg); }
+    #viewSop .overlay { position: fixed; inset: 0; z-index: 150; background: rgba(10,10,12,0.45); display: flex; align-items: flex-end; justify-content: center; animation: nb-fade 180ms var(--ease); }
+    #viewSop .sheet { background: var(--surface); width: 100%; max-width: 32rem; max-height: 90dvh; overflow-y: auto; border-radius: var(--radius-xl) var(--radius-xl) 0 0; padding: var(--space-3) var(--space-5) calc(env(safe-area-inset-bottom) + var(--space-5)); box-shadow: var(--shadow-lg); animation: nb-rise 260ms var(--ease); }
     #viewSop .sheet::before { content: ''; display: block; width: 40px; height: 5px; border-radius: 3px; background: var(--surface-dynamic); margin: 0 auto var(--space-4); }
     @media (min-width: 600px) {
     #viewSop .overlay { align-items: center; }
-    #viewSop .sheet { border-radius: 28px; }
+    #viewSop .sheet { border-radius: var(--radius-xl); }
     }
     #viewSop .sheet h2 { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: var(--space-2); }
     #viewSop .sheet p { color: var(--text-muted); font-size: var(--text-base); margin-bottom: var(--space-4); }

@@ -175,9 +175,11 @@
     ['0.8.2', '2026-09-11', 'Bigger logo with "beta"', 'Warm gradient, update popup, launch fixes.'],
     ['0.8', '2026-09-11', 'The version under the nb. logo', 'New version scheme.'],
   ];
+  // drawn when Settings first opens (openSettings, js/capture/author-skins-settings.js; 21 Nov 2026), not at the app's start
   function renderVersionLog() {
     const box = document.getElementById('versionLog');
-    if (!box) return;
+    if (!box || box.dataset.drawn) return;
+    box.dataset.drawn = '1';
     box.textContent = '';
     const fmt = d => { try { return new Date(d + 'T12:00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'short' }); } catch (_) { return d; } };
     VERSION_LOG.forEach(([v, d, t, sum]) => {
@@ -232,10 +234,9 @@
 
   // Check for updates on page load
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => { updateVersionDisplay(); renderVersionLog(); checkForUpdates(); });
+    document.addEventListener('DOMContentLoaded', () => { updateVersionDisplay(); checkForUpdates(); });
   } else {
     updateVersionDisplay();
-    renderVersionLog();
     checkForUpdates();
   }
 

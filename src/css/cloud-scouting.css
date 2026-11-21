@@ -28,7 +28,7 @@
     /* a note, a person's or the AI's, as one block — Naked Heart's (viewer.js noteChip / aiNote, 0.7.273): the risk colour
        as the left edge and the ground, the face inside on the left (the robot's for the AI), the words in ink */
     .dg-block { display:flex; align-items:flex-start; gap: 6px; width: 100%; box-sizing: border-box; min-width: 0; padding: 5px 9px 5px 6px;
-      border-radius: 3px 10px 10px 10px; border-left: 4px solid var(--border); background: var(--surface-offset);
+      border-radius: 3px var(--radius-md) var(--radius-md) var(--radius-md); border-left: 4px solid var(--border); background: var(--surface-offset);
       font-size: 12px; font-weight: 500; line-height: 1.4; }
     .dg-block.r-green { border-left-color: var(--success); background: var(--success-bg); }
     .dg-block.r-yellow { border-left-color: var(--warning); background: var(--warning-bg); }
@@ -48,21 +48,21 @@
     /* the post as a comment flow (0.11.142): the AI's whole reading opened under its one line; the reactions under every
        comment — small emoji there only, the line icons everywhere else */
     .dg-ai-full { display:flex; flex-direction: column; gap: 6px; margin-left: 26px; padding: 8px 10px; border-left: 3px solid var(--accent);
-      background: var(--surface-offset); border-radius: 6px; }
+      background: var(--surface-offset); border-radius: var(--radius-xs); }
     .dg-ai-full[hidden] { display: none; }
     .dg-react { display:inline-flex; align-items: center; gap: 4px; }
     .dg-rb { min-height: 30px; min-width: 38px; padding: 2px 8px; font: inherit; font-size: 13px; line-height: 1; border-radius: var(--radius-full);
       border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; }
-    .dg-rb.on { border-color: var(--accent); background: var(--accent-soft); font-weight: 750; }
+    .dg-rb.on { border-color: var(--accent); background: var(--accent-soft); font-weight: 700; }
     .dg-rb:disabled { opacity: .55; cursor: default; }
     .dg-who-line { padding: 6px 2px; font-size: var(--text-sm); border-bottom: 1px solid var(--border); }
-    .dg-new { color: var(--accent); font-weight: 750; }
+    .dg-new { color: var(--accent); font-weight: 700; }
     .dg-thread { display:flex; flex-direction: column; gap: 10px; }
     .dg-msg { display:flex; flex-direction: column; gap: 3px; min-width: 0; }
     .dg-msg.reply { margin-left: 26px; }
     .dg-msg.sending { opacity: .75; }
     .dg-init { display:inline-flex; align-items:center; justify-content:center; flex: none; width: 1.6em; height: 1.6em; border-radius: 50%;
-      font-size: 10px; font-weight: 800; background: var(--surface-offset); color: var(--text); }
+      font-size: 10px; font-weight: 700; background: var(--surface-offset); color: var(--text); }
     /* the conversation in the same blocks: a comment in its risk colour, "Name · time" on top; the AI's answer indented
        under it with the accent edge, as Naked Heart's .vw-reply */
     .dg-msg .dg-block { font-size: var(--text-sm); padding: 7px 10px 7px 7px; }
@@ -86,11 +86,11 @@
     .fb-step.dg-feed-item.risk-red { border-left-color: var(--error); }
     .fb-step.dg-feed-item.risk-orange { border-left-color: var(--warning); }
     .fb-step.dg-feed-item.risk-green { border-left-color: var(--success); }
-    .dg-verified { display:flex; align-items: baseline; gap: 6px; min-width: 0; font-size: var(--text-xs); padding: 3px 8px; border-radius: 6px;
+    .dg-verified { display:flex; align-items: baseline; gap: 6px; min-width: 0; font-size: var(--text-xs); padding: 3px 8px; border-radius: var(--radius-xs);
       background: var(--success-bg); border-left: 3px solid var(--success); }
-    .dg-verified-k { flex: none; font-weight: 750; color: var(--success); }
+    .dg-verified-k { flex: none; font-weight: 700; color: var(--success); }
     .dg-verified-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-    .dg-post-verified { display:flex; flex-direction: column; gap: 4px; padding: 8px 10px; border-left: 3px solid var(--success); background: var(--success-bg); border-radius: 6px; }
+    .dg-post-verified { display:flex; flex-direction: column; gap: 4px; padding: 8px 10px; border-left: 3px solid var(--success); background: var(--success-bg); border-radius: var(--radius-xs); }
     .dg-post-verified.r-yellow { border-left-color: var(--warning); } .dg-post-verified.r-red { border-left-color: var(--error); }
     .dg-post-verified .fb-sec { color: var(--success); }
     .dg-msg.verified .dg-block { box-shadow: inset 0 0 0 1.5px var(--success); }
@@ -103,17 +103,17 @@
     .fb-chip.paused { background: color-mix(in srgb, var(--warning, #b7791f) 16%, var(--surface)); color: var(--text); }
     .fb-chip.todo { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
     .fb-going { display:flex; align-items:center; gap: var(--space-2); margin: var(--space-2) 0 var(--space-3); padding: 10px 12px;
-      border-radius: var(--radius-lg, 12px); background: color-mix(in srgb, var(--primary) 16%, var(--surface)); border: 1px solid var(--primary); cursor: pointer; }
+      border-radius: var(--radius-lg); background: color-mix(in srgb, var(--primary) 16%, var(--surface)); border: 1px solid var(--primary); cursor: pointer; }
     .fb-going-text { flex: 1; min-width: 0; display: grid; }
-    .fb-going-text small { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); }
+    .fb-going-text small { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); }
     .fb-going-text b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .fb-going-time { font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .fb-going-time { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
     .fb-timer { display:flex; align-items:center; gap: var(--space-3); margin-top: var(--space-2); padding: 8px 12px;
-      border-radius: var(--radius-lg, 12px); background: color-mix(in srgb, var(--primary) 14%, var(--surface)); flex-basis: 100%; width: 100%; box-sizing: border-box; }
+      border-radius: var(--radius-lg); background: color-mix(in srgb, var(--primary) 14%, var(--surface)); flex-basis: 100%; width: 100%; box-sizing: border-box; }
     .fb-timer.paused { background: var(--surface-offset); }
-    .fb-timer-text { flex: 1; font-weight: 800; font-size: var(--text-base); font-variant-numeric: tabular-nums; }
+    .fb-timer-text { flex: 1; font-weight: 700; font-size: var(--text-base); font-variant-numeric: tabular-nums; }
     .fb-chip.late { background: var(--coral-soft); color: var(--coral); }
-    .fb-sc-few { margin: 6px 0; padding: 8px 10px; border-radius: var(--radius-sm, 8px); background: var(--coral-soft); color: var(--coral); font-size: 0.86rem; }
+    .fb-sc-few { margin: 6px 0; padding: 8px 10px; border-radius: var(--radius-sm); background: var(--coral-soft); color: var(--coral); font-size: 0.86rem; }
     .fb-sc-few .fb-sc-few-t { margin-bottom: 6px; }
     .fb-sc-few .fb-actions { margin: 0; flex-wrap: wrap; }
     .fb-sc-few.done { background: var(--success-bg); color: var(--success); }

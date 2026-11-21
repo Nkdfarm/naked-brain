@@ -254,9 +254,10 @@
   }
 
   async function paintFoot() {
-    const all_ = await all('outbox');
+    // only the flags, one row at a time (21 Nov 2026: all('outbox') read every waiting photo's bytes at each sync)
+    const all_ = await scan('outbox', r => ({ dead: !!r.dead, photo: !!(r.payload?.__upload || r.payload?.__gallery), error: r.error || '' }));
     const dead = all_.filter(r => r.dead), rows = all_.filter(r => !r.dead);
-    const photos = rows.filter(r => r.payload?.__upload || r.payload?.__gallery).length;
+    const photos = rows.filter(r => r.photo).length;
     const pending = rows.length - photos;
     const at = await getKV('synced_at');
     paintLastSync();                                   // 0.11.147: the same moment, under the top bar
@@ -273,7 +274,12 @@
     try { const at = dead.length ? $('next') : $('empty'); if (at && foot.previousElementSibling !== at) at.after(foot); } catch (e) { /* stays where it is */ }
     foot.title = dead.map(r => r.error).filter(Boolean).join('\n');
     // tap: the rows set aside go back in the queue once more (0.11.55)
-    foot.onclick = dead.length ? async () => { await putAll('outbox', dead.map(r => ({ ...r, dead: false }))); flush(); } : null;
+    // each row as it is at the tap, one at a time (the light read above has no payload to write back)
+    foot.onclick = dead.length ? async () => {
+      await tx('outbox', 'readwrite', s => { const q = s.openCursor();
+        q.onsuccess = () => { const c = q.result; if (!c) return; if (c.value.dead) c.update({ ...c.value, dead: false }); c.continue(); }; });
+      flush().catch(() => {});
+    } : null;
   }
 
   function paintAccount() {

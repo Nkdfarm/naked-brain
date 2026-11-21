@@ -176,14 +176,14 @@
     box.append(el('div', 'fb-lot-h', 'Open cases'));
     const cg = el('div', 'set-group');
     if (!cases.length) cg.append(el('div', 'fb-meta', 'None on its zone'));
-    cases.forEach(x => { const r = el('div', 'set-row'); r.append(el('span', null, x.label || x.title), el('span', null, `${x.severity} · since ${lotDay(String(x.opened).slice(0, 10))}`)); cg.append(r); });
+    cases.forEach(x => { const r = el('div', 'set-row'); r.append(el('span', null, x.label || x.title), el('span', null, `${x.severity} · since ${lotDay(x.opened ? farmDay(x.opened) : String(x.opened).slice(0, 10))}`)); cg.append(r); });
     box.append(cg);
 
     const sprays = c.sprays || [];
     const sprayDone = sprays.filter(s => s.status === 'done'), sprayNext = sprays.filter(s => s.status !== 'done');
     const sprayRow = (s, doneOne) => { const r = el('div', 'set-row');
       r.append(el('span', null, (doneOne ? '{i:check} ' : '') + (s.product || 'Treatment')),
-               el('span', null, `${lotDay(String(doneOne ? (s.done_at || s.date) : s.date).slice(0, 10))}${s.phi_days ? ' · wait ' + s.phi_days + ' d' : ''}`));
+               el('span', null, `${lotDay(doneOne && s.done_at ? farmDay(s.done_at) : String(s.date).slice(0, 10))}${s.phi_days ? ' · wait ' + s.phi_days + ' d' : ''}`));
       return r; };
     box.append(el('div', 'fb-lot-h', 'Sprays'));
     const sg = el('div', 'set-group');

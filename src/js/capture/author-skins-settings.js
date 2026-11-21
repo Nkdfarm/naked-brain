@@ -146,6 +146,7 @@ const settingsPage = document.getElementById('settingsPage');
 function openSettings() {
   setConfigLocked(true);
   document.getElementById('settingsVersion').textContent = 'v ' + CURRENT_VERSION;
+  try { renderVersionLog(); } catch (e) { /* the list stays empty */ }   // drawn here, not at the start (21 Nov 2026)
   settingsPage.classList.remove('hidden');
   settingsPage.scrollTop = 0;
   document.body.style.overflow = 'hidden';

@@ -64,8 +64,6 @@
     if (String(task.generation_key || '').startsWith('ipm:') && task.notes) {
       head.append(el('p', 'fb-runfacts', (/ L of water/.test(task.notes) ? 'Mix: ' : 'Planned: ') + task.notes));
     }
-    // the scouting's how-to, folded under its title (0.11.74; it was the ? tab)
-    if (isScouting(sop)) head.append(howItWorks());
     // a crop task's batches, folded under the facts (they were on the task page)
     const batches = task.positions.filter(p => !isItem(p));
     if (batches.length && !isScouting(sop)) {
@@ -144,13 +142,6 @@
     show('run', detail && !detail.resume ? (detail.addOnly ? 'Add' : 'Edit') : isScouting(sop) ? 'Scouting' : 'Checklist',
          async () => {
            setKV('run_open', null).catch(() => {});
-           // 0.11.101: Back from a zone of an extra scouting sends what was captured there — nothing waits for a Finish
-           const R = run;
-           if (R?.task?.extraZone && R.sc && R.sc.photos.size && !R.edit && !R.sentOk) {
-             await finishScouting();
-             if (R.sentOk) return;                                     // sent: it went back by itself
-             showToast('Not sent yet — kept on this phone. Open the zone again to finish it.', 'info');
-           }
            await leaveRun(); backFromRun();
          });
     run.paintTimer?.();          // after show(), which writes the bar's title
@@ -206,7 +197,7 @@
     const tt = timerTaskOf(R.task); if (!tt) return;
     if (groupRunning(R.task)) {
       await timerPause(tt.id);
-      if (R.sc) saveScDraft(); else saveRunDraft();
+      saveRunDraft();
       showToast('Paused — the answers are kept', 'success');
     } else await timerStart(tt.id);
     R.paintTimer?.();
@@ -220,7 +211,7 @@
     addStop(R);
     if (R.edit && !R.resume) return;
     const tt = timerTaskOf(R.task); if (!tt) return;
-    const entered = R.touched || R.resume || localMin(tt.id) >= 1 || R.answers.size > 0 || !!(R.sc && R.sc.photos.size);
+    const entered = R.touched || R.resume || localMin(tt.id) >= 1 || R.answers.size > 0;
     if (!entered) { await timerRelease(tt.id); return; }
     if (timerRunning(tt.id)) await timerPause(tt.id);
   }
@@ -242,36 +233,27 @@
     if (!await askSheet({ title: 'Hand this task over?', text: 'What you have entered so far is sent as it stands, your time is kept, and the task is free for the next person to continue and finish.', yes: 'Hand it over', no: 'Keep working' })) return;   // 0.11.147: askSheet
     const cid = R.edit?.run?.client_run_id || R.clientId;
     try {
-      if (R.sc) {
-        // the scouting as it stands goes the way of the Send button (its photos and counted trap sides)
-        if (R.sc.photos.size) { R.sc.cid = R.sc.cid || cid; }
-        clearTimeout(scDraftTimer);
-        await setKV(scDraftKey(R.task), { saved: Date.now(), cid: R.sc.cid || null, tab: R.sc.tab, outcome: R.sc.outcome, outcomeNote: R.sc.outcomeNote, verdict: R.sc.verdict,
-          lastPos: R.sc.lastPos, extra: [...R.sc.extra], status: [...R.sc.status], noTraps: !!R.sc.noTraps, photos: [...R.sc.photos.values()] });
-      } else {
-        const steps = [...R.answers.entries()].filter(([, a]) => a && (a.result || a.value_num != null || (a.value_text != null && a.value_text !== '')))
-          .map(([k, a]) => { const blobs = (R.media.get(k) || []).filter(f => f instanceof Blob);
-            const saved = (R.media.get(k) || []).filter(f => f && f.saved).map(f => typeof f.saved === 'string' ? { path: f.saved, kind: 'photo' } : f.saved);
-            return { ...a, media: saved, ...(blobs.length ? { media_blobs: blobs } : {}), recorded_at: new Date().toISOString() }; })
-          .filter(x => Number.isFinite(Number(x.seq)));
-        if (steps.length) {
-          R.draftCid = cid;
-          await queue([{ farm_id: tt.farm_id || farm.id, task_id: tt.id, sop_version_id: tt.sop_version_id || R.task.sop_version_id, client_run_id: cid,
-            status: 'partial', ...(R.resume ? { edit: true, append: true } : {}), started_at: R.edit?.run?.started_at || R.started, finished_at: new Date().toISOString(),
-            steps, notes: String(document.getElementById('fb-runNote')?.value || '').trim() || null }]);
-          clearTimeout(draftTimer);
-          await setKV(runDraftKey(R.task), { saved: Date.now(), sentSaved: Date.now(), cid, answers: [...R.answers.entries()],
-            runNote: document.getElementById('fb-runNote')?.value || '', media: [] });
-        }
+      const steps = [...R.answers.entries()].filter(([, a]) => a && (a.result || a.value_num != null || (a.value_text != null && a.value_text !== '')))
+        .map(([k, a]) => { const blobs = (R.media.get(k) || []).filter(f => f instanceof Blob);
+          const saved = (R.media.get(k) || []).filter(f => f && f.saved).map(f => typeof f.saved === 'string' ? { path: f.saved, kind: 'photo' } : f.saved);
+          return { ...a, media: saved, ...(blobs.length ? { media_blobs: blobs } : {}), recorded_at: new Date().toISOString() }; })
+        .filter(x => Number.isFinite(Number(x.seq)));
+      if (steps.length) {
+        R.draftCid = cid;
+        await queue([{ farm_id: tt.farm_id || farm.id, task_id: tt.id, sop_version_id: tt.sop_version_id || R.task.sop_version_id, client_run_id: cid,
+          status: 'partial', ...(R.resume ? { edit: true, append: true } : {}), started_at: R.edit?.run?.started_at || R.started, finished_at: new Date().toISOString(),
+          steps, notes: String(document.getElementById('fb-runNote')?.value || '').trim() || null }]);
+        clearTimeout(draftTimer);
+        const t = Date.now();              // one moment for both (21 Nov 2026): two calls could differ by a millisecond
+        await setKV(runDraftKey(R.task), { saved: t, sentSaved: t, cid, answers: [...R.answers.entries()],
+          runNote: document.getElementById('fb-runNote')?.value || '', media: [] });
       }
       addStop(R);
       await timerRelease(tt.id);
       await setKV('run_open', null);
       showToast('Handed over — the task is free for the next person', 'success');
-      const wasSc = !!R.sc;
       run = null;
       await backFromRun();
-      if (wasSc && navigator.onLine) sendAllNow();
     } catch (e) { showToast('Could not hand over — ' + String(e.message || e).slice(0, 80), 'error'); }
   }
   // "Not done…" under Finish (0.11.60): what the task page offered, for the Admin and the task's own people
@@ -298,7 +280,7 @@
         const tt = timerTaskOf(R.task); if (!tt) return;
         if (groupRunning(R.task)) {
           await timerPause(tt.id);
-          if (R.sc) saveScDraft(); else saveRunDraft();
+          saveRunDraft();
           showToast('Paused — the answers are kept', 'success');
         } else {
           await timerStart(tt.id);

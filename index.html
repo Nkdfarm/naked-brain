@@ -24,10 +24,20 @@
       --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem;
       --space-4: 1rem; --space-5: 1.25rem; --space-6: 1.5rem;
       --space-8: 2rem; --space-10: 2.5rem; --space-12: 3rem; --space-16: 4rem;
-      --radius-sm: 0.375rem; --radius-md: 0.5rem; --radius-lg: 0.75rem;
-      --radius-xl: 1rem; --radius-full: 9999px;
+      /* corners, as Naked Heart's (21 Nov 2026: one block; a skin may still set sm, md, lg and xl) */
+      --radius-xs: 6px; --radius-sm: 0.5rem; --radius-md: 0.625rem; --radius-lg: 1rem; --radius-xl: 1.25rem; --radius-full: 9999px;
       --font-body: 'Inter', system-ui, sans-serif;
-      --transition: 180ms cubic-bezier(0.16, 1, 0.3, 1);
+      --font-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
+      --ease: cubic-bezier(0.16, 1, 0.3, 1);
+      --transition: 180ms var(--ease);
+      --tap: 44px; --tap-lg: 48px;   /* a thumb, a glove: nothing to tap is smaller */
+      /* derived from the theme's own colours (no colour of their own), so they follow light, dark and a skin */
+      --border-strong: color-mix(in srgb, var(--text) 16%, transparent);
+      --hover: color-mix(in srgb, var(--text) 5%, transparent);
+      --chip: color-mix(in srgb, var(--text) 6%, transparent);
+      --field-bg: var(--surface-offset);
+      --ring: 0 0 0 3px color-mix(in srgb, var(--primary) 18%, transparent);
+      --shadow-accent: 0 6px 16px color-mix(in srgb, var(--primary) 28%, transparent);
     }
 
     /* ═══ NAKED FARM UI v1 — shared design tokens ═══════════════════════════
@@ -40,7 +50,6 @@
        a chosen item has a line in the accent instead of a fill. */
     :root, [data-theme="light"] {
       color-scheme: light;
-      --radius-sm: 0.5rem; --radius-md: 0.625rem; --radius-lg: 1rem; --radius-xl: 1.25rem;
       --bg: #f3f3f5; --bg-end: #efeff2;
       --bg-grad: radial-gradient(1100px 480px at 85% -12%, rgba(120,140,93,0.07), transparent 62%), linear-gradient(180deg, #f6f6f8 0%, #efeff2 100%);
       --surface: #ffffff; --surface-2: #f8f8fa; --surface-raised: #ffffff; --surface-offset: #efeff3; --surface-dynamic: #e8e8ec; --glass: rgba(255,255,255,0.8);
@@ -102,6 +111,7 @@
     input, textarea, select { font: inherit; color: inherit; }
     a, button, input, textarea, select { transition: color var(--transition), background var(--transition), border-color var(--transition), box-shadow var(--transition), opacity var(--transition); }
     :focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; border-radius: var(--radius-sm); }
+    ::selection { background: color-mix(in srgb, var(--primary) 30%, transparent); }
     .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
 
     /* HEADER */
@@ -163,14 +173,14 @@
     .editable-box-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-2); }
     .editable-box-actions { display: flex; gap: var(--space-2); align-items: center; }
     .btn-copy { display: flex; align-items: center; gap: var(--space-1); padding: var(--space-1) var(--space-3); border-radius: var(--radius-full); background: var(--surface-offset); border: 1px solid var(--border); font-size: var(--text-xs); color: var(--text-muted); font-weight: 500; }
-    .btn-copy:hover { background: var(--surface-dynamic); color: var(--text); }
+    .btn-copy:hover { background: var(--surface-offset); border-color: var(--border-strong); color: var(--text); }
     .btn-generate { display: flex; align-items: center; gap: var(--space-1); padding: var(--space-1) var(--space-3); border-radius: var(--radius-full); background: var(--primary-highlight); border: 1px solid color-mix(in oklch, var(--primary) 35%, transparent); font-size: var(--text-xs); color: var(--primary); font-weight: 600; }
     .btn-generate:hover { background: var(--primary); color: var(--text-inverse); }
     .btn-generate:disabled { opacity: 0.5; cursor: not-allowed; }
     .editable-textarea { width: 100%; background: var(--surface); border-radius: var(--radius-lg); border: 1px solid var(--border); padding: var(--space-3) var(--space-4); font-size: var(--text-sm); color: var(--text); resize: vertical; min-height: 80px; line-height: 1.65; font-family: var(--font-body); }
     .editable-textarea:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px color-mix(in oklch, var(--primary) 18%, transparent); }
     .editable-textarea::placeholder { color: var(--text-faint); font-style: italic; }
-    .editable-textarea.transcript-ta { font-family: SFMono-Regular, Consolas, monospace; font-size: var(--text-xs); line-height: 1.7; background: var(--surface-offset); }
+    .editable-textarea.transcript-ta { font-family: var(--font-mono); font-size: var(--text-xs); line-height: 1.7; background: var(--surface-offset); }
     .editable-textarea.summary-ta { min-height: 100px; }
     .transcribing-bar { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-xs); color: var(--primary); padding: var(--space-2) var(--space-4); background: var(--primary-highlight); border-radius: var(--radius-md); margin-bottom: var(--space-2); border: 1px solid color-mix(in oklch, var(--primary) 25%, transparent); }
     .groq-badge { display: inline-flex; align-items: center; gap: 4px; font-size: var(--text-xs); color: var(--text-faint); margin-left: auto; font-style: italic; }
@@ -189,7 +199,7 @@
     .media-wrap { margin-bottom: var(--space-4); }
     .media-actions { display: flex; gap: var(--space-2); margin-bottom: var(--space-3); flex-wrap: wrap; }
     .btn-attach { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-4); border-radius: var(--radius-full); background: var(--surface); border: 1px solid var(--border); font-size: var(--text-sm); color: var(--text-muted); font-weight: 500; }
-    .btn-attach:hover { background: var(--surface-dynamic); color: var(--text); border-color: var(--primary); }
+    .btn-attach:hover { background: var(--surface-offset); color: var(--text); border-color: var(--border-strong); }
     .btn-attach:active { background: var(--primary-highlight); }
     .video-link-row { display: flex; gap: var(--space-2); margin-top: var(--space-2); }
     .video-link-row input { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: var(--space-2) var(--space-3); font-size: var(--text-sm); }
@@ -246,7 +256,7 @@
     .config-field { margin-bottom: var(--space-3); }
     .config-field:last-child { margin-bottom: 0; }
     .config-field label { display: block; font-size: var(--text-xs); font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); margin-bottom: var(--space-1); }
-    .config-field input { width: 100%; background: var(--surface-offset); border: 1px solid var(--border); border-radius: var(--radius-md); padding: var(--space-2) var(--space-3); font-size: var(--text-sm); font-family: SFMono-Regular, Consolas, monospace; }
+    .config-field input { width: 100%; background: var(--surface-offset); border: 1px solid var(--border); border-radius: var(--radius-md); padding: var(--space-2) var(--space-3); font-size: var(--text-sm); font-family: var(--font-mono); }
     .config-field input:focus { border-color: var(--primary); outline: none; }
     .config-field input::placeholder { color: var(--text-faint); font-style: italic; font-family: var(--font-body); }
     .config-hint { font-size: var(--text-xs); color: var(--text-faint); margin-top: var(--space-1); }
@@ -295,7 +305,8 @@
     .toast.info { background: var(--primary-highlight); color: var(--primary); }
 
     @media (min-width: 600px) { .recorder-card { padding: var(--space-8); } }
-    @media (prefers-reduced-motion: reduce) { *, ::before, ::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+    /* the one reduced-motion rule of the app: animations end at once (a spinner stands still), no slides, no smooth scroll */
+    @media (prefers-reduced-motion: reduce) { *, ::before, ::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; } }
 
     /* PASSWORD GATE */
     #passwordGate {
@@ -329,7 +340,7 @@
       outline: none;
       transition: border-color var(--transition), box-shadow var(--transition);
     }
-    .pw-input-wrap input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px color-mix(in oklch, var(--primary) 20%, transparent); }
+    .pw-input-wrap input:focus { border-color: var(--primary); box-shadow: var(--ring); }
     .pw-eye-btn {
       position: absolute; right: var(--space-3); top: 50%; transform: translateY(-50%);
       background: none; border: none; color: var(--text-faint); cursor: pointer;
@@ -353,9 +364,9 @@
       background: color-mix(in srgb, var(--bg) 55%, transparent); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
     .logo-icon { color: var(--text); }
     .logo-text { font-size: var(--text-base); font-weight: 700; }
-    .logo-text span { color: var(--text); font-weight: 800; }
-    .btn-icon { width: 44px; height: 44px; border-radius: 50%; background: var(--glass); border: 1px solid var(--border); color: var(--text); box-shadow: var(--shadow-sm); }
-    .btn-icon:hover { background: var(--surface); color: var(--text); }
+    .logo-text span { color: var(--text); font-weight: 700; }
+    .btn-icon { width: 44px; height: 44px; border-radius: 50%; background: transparent; border: 1px solid transparent; color: var(--text); box-shadow: none; }   /* ghost, as Naked Heart's (21 Nov 2026); the glass is the bar's */
+    .btn-icon:hover { background: var(--hover); color: var(--text); }
     #authorBtn { border-radius: var(--radius-full) !important; min-height: 36px; padding: 0 var(--space-4) !important; }
 
     /* Tabs: which Notion database this capture goes to. Since 19 Nov 2026 words, the open one underlined in the accent (green),
@@ -368,12 +379,12 @@
 
     main { padding-top: var(--space-2); }
     .hero { margin: var(--space-2) 0 var(--space-5); }
-    .hero h1 { font-size: clamp(1.9rem, 1.4rem + 2.2vw, 2.5rem); font-weight: 750; letter-spacing: -0.035em; line-height: 1.08; }
+    .hero h1 { font-size: clamp(1.9rem, 1.4rem + 2.2vw, 2.5rem); font-weight: 700; letter-spacing: -0.035em; line-height: 1.08; }
     .hero p { color: var(--text-muted); margin-top: var(--space-2); font-size: var(--text-base); }
     .section-label { font-size: var(--text-sm); font-weight: 650; text-transform: none; letter-spacing: -0.01em; color: var(--text); }
 
     /* Cards */
-    .recorder-card, .entry-card, .config-panel { border-radius: var(--radius-xl); border: 1px solid var(--border); box-shadow: var(--shadow-md); background: var(--surface); }
+    .recorder-card, .entry-card, .config-panel { border-radius: var(--radius-xl); border: 1px solid var(--border); box-shadow: var(--shadow-sm); background: var(--surface); }
     .record-btn { background: var(--primary); color: var(--text-inverse); box-shadow: var(--shadow-lg); }
     .record-btn:hover { background: var(--primary-hover); }
     .record-btn:active { background: var(--primary-active); }
@@ -389,6 +400,7 @@
 
     /* Pills */
     .btn-copy, .btn-generate, .btn-attach, .btn-sm, .tag-chip { border-radius: var(--radius-full); min-height: 40px; padding: 0 var(--space-4); font-weight: 600; }   /* 40 px: a thumb, a glove */
+    .btn-copy, .btn-attach { border: 1px solid var(--border); }
     .btn-copy { background: var(--surface); color: var(--text); }
     .btn-generate { background: var(--accent); color: var(--text-inverse); border: none; }
     .btn-generate:hover { background: var(--primary); color: var(--text-inverse); }
@@ -400,6 +412,7 @@
     .selected-tag { background: var(--accent-soft); color: var(--text); border: 1px solid var(--accent); border-radius: var(--radius-full); padding: var(--space-1) var(--space-3); }
     .priority-tag { background: var(--ink); color: var(--ink-text); border-radius: var(--radius-full); }
     .tab-field-text, .tag-custom-row input, .video-link-row input { border-radius: var(--radius-md); min-height: 44px; font-size: var(--text-base); }
+    .tab-field-text { background: var(--field-bg); padding: 10px 12px; }
 
     /* Config */
     .config-toggle { border-radius: var(--radius-full); background: var(--glass); color: var(--text); min-height: 48px; box-shadow: var(--shadow-sm); }
@@ -414,7 +427,7 @@
 
     /* Send */
     .submit-area { background: linear-gradient(to top, var(--bg-end) 55%, transparent); padding-bottom: calc(env(safe-area-inset-bottom) + var(--space-3)); }
-    .btn-submit { border-radius: var(--radius-full); min-height: 58px; background: var(--primary); color: var(--text-inverse); box-shadow: var(--shadow-lg); font-weight: 650; }
+    .btn-submit { border-radius: var(--radius-full); min-height: 58px; background: var(--primary); color: var(--text-inverse); box-shadow: var(--shadow-accent); font-weight: 650; }
     .btn-submit:hover { background: var(--primary-hover); }
 
     /* Toast */
@@ -425,25 +438,25 @@
 
     /* Password gate */
     #passwordGate { background: var(--bg-grad); }
-    .pw-card { border-radius: 28px; border: none; }
+    .pw-card { border-radius: var(--radius-xl); border: none; }
     .pw-input-wrap input { border-radius: var(--radius-md); min-height: 48px; background: var(--surface-offset); }
-    .pw-unlock-btn { border-radius: var(--radius-full); min-height: 52px; }
+    .pw-unlock-btn { border-radius: var(--radius-full); min-height: 52px; box-shadow: var(--shadow-accent); }
 
     /* SETTINGS PAGE */
     .logo { gap: var(--space-3); }
     .logo-words { display: inline-flex; flex-direction: column; line-height: 1.1; }
     .logo-beta { font-size: 11px; font-style: italic; font-weight: 500; color: var(--text-muted); letter-spacing: 0.01em; }
     /* 0.11.33: the wordmark of Naked Heart's rail — NAKED, bold capitals, the app's name small underneath */
-    .logo-text { font-size: 0.875rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text); }
+    .logo-text { font-size: 0.875rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text); }
     .logo-beta { font-size: 0.75rem; font-style: normal; font-weight: 500; color: var(--text-faint); letter-spacing: 0; }
     #settingsPage { position: fixed; inset: 0; z-index: 500; overflow-y: auto; -webkit-overflow-scrolling: touch; background: var(--bg-grad); }
     #settingsPage.hidden { display: none; }
     .settings-head { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: var(--space-3); padding: calc(env(safe-area-inset-top) + var(--space-2)) var(--space-4) var(--space-2);
       background: color-mix(in srgb, var(--bg) 55%, transparent); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
     .settings-body { max-width: 640px; margin: 0 auto; padding: var(--space-2) var(--space-4) calc(env(safe-area-inset-bottom) + var(--space-8)); }
-    .set-select { font: inherit; font-size: var(--text-sm); color: var(--text); background: var(--surface-offset); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 6px 10px; max-width: 60%; }
+    .set-select { font: inherit; font-size: var(--text-sm); color: var(--text); background: var(--field-bg); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px 12px; min-height: var(--tap); max-width: 60%; }
     .set-title { display: flex; align-items: center; gap: var(--space-2); font-size: 1.15rem; font-weight: 700; letter-spacing: -0.02em; margin: var(--space-5) 0 var(--space-2); }
-    .set-group { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: var(--shadow-md); padding: var(--space-4); }
+    .set-group { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: var(--shadow-sm); padding: var(--space-4); }
     .set-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: 48px; }
     .set-row + .set-row { border-top: 1px solid var(--divider); }
     .segmented { display: flex; gap: 4px; padding: 4px; background: var(--surface-offset); border-radius: var(--radius-full); }
@@ -481,6 +494,27 @@
     #authorGate.hidden, #authorGateCancel.hidden { display: none; }
     #authorGateCancel { min-height: 44px; border-radius: var(--radius-full); font-weight: 600; color: var(--text-muted); }
 
+    /* ═══ 21 Nov 2026 — closer to Naked Heart, the colours unchanged ════════════════════════════════════════════
+       Buttons: pills with a 1 px edge, semi-bold; a press shrinks a button a little (only buttons: a card or a picture
+       has a transform of its own from swipe-open.js and viewer-measure.js). Hover only where there is a mouse, never
+       on a chosen answer (its line in the accent stays), a fill or the camera's buttons. */
+    .btn, .fb-btn, .btn-copy, .btn-attach, .btn-generate, .btn-submit, .pw-unlock-btn {
+      transition: color var(--transition), background var(--transition), border-color var(--transition), box-shadow var(--transition), opacity var(--transition), transform var(--transition); }
+    .btn:active:not(:disabled), .fb-btn:active:not(:disabled), .btn-copy:active, .btn-attach:active, .btn-generate:active:not(:disabled),
+    .btn-submit:active:not(:disabled), .pw-unlock-btn:active:not(:disabled) { transform: scale(0.985); }
+    @media (hover: hover) {
+      .fb-btn:hover:not(:disabled):not(:where([aria-pressed="true"], .on, .fb-btn-primary, .fb-ask-yes, .gl-send, .fb-size-pick, .fb-cam .fb-btn)) {
+        background: var(--surface-offset); border-color: var(--border-strong); }
+    }
+
+    /* Fields: one look for every box to type or choose in, as Naked Heart's .field */
+    .fb-num:hover, .fb-note:hover, .fb-runnote:hover, .fb-who-sel:hover, .set-select:hover, .tab-field-text:hover, #viewFarmbox .field input:hover { border-color: var(--border-strong); }
+    .fb-num:focus-visible, .fb-note:focus-visible, .fb-runnote:focus-visible, .fb-who-sel:focus-visible, .set-select:focus-visible, .tab-field-text:focus-visible,
+    #viewFarmbox .field input:focus-visible { outline: none; border-color: var(--primary); box-shadow: var(--ring); }
+
+    /* Sheets come up softly (the one reduced-motion rule in base.css stops it) */
+    @keyframes nb-fade { from { opacity: 0; } }
+    @keyframes nb-rise { from { opacity: 0; transform: translateY(16px); } }
     /* ═══ SoP (FarmBox SOP) — scoped to the SoP tab ═══ */
     #viewSop img { display: block; max-width: 100%; height: auto; }
     #viewSop button { cursor: pointer; background: none; border: none; font: inherit; color: inherit; }
@@ -489,25 +523,28 @@
     #viewSop .hidden { display: none !important; }
     #viewSop .sop-bar, #viewFarmbox .sop-bar, #viewGallery .sop-bar { position: sticky; top: 0; z-index: 50; padding: calc(env(safe-area-inset-top) + var(--space-2)) var(--space-4) var(--space-2); display: flex; align-items: center; gap: var(--space-2); background: color-mix(in srgb, var(--bg) 55%, transparent); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
     #viewSop .hdr-title, #viewFarmbox .hdr-title, #viewGallery .hdr-title { flex: 1; min-width: 0; font-weight: 700; font-size: var(--text-base); letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    #viewSop .hdr-title span { font-weight: 800; }
-    #viewSop .btn-icon, #viewFarmbox .btn-icon, #viewGallery .btn-icon { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; height: 44px; padding: 0 var(--space-3); border-radius: var(--radius-full); background: var(--glass); border: 1px solid var(--border); color: var(--text); font-size: 1.15rem; box-shadow: var(--shadow-sm); }
-    #viewSop .btn-icon:hover { background: var(--surface); }
+    #viewSop .hdr-title span { font-weight: 700; }
+    #viewSop .btn-icon, #viewFarmbox .btn-icon, #viewGallery .btn-icon { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; height: 44px; padding: 0 var(--space-3); border-radius: var(--radius-full); background: transparent; border: 1px solid transparent; color: var(--text); font-size: 1.15rem; box-shadow: none; }   /* ghost (21 Nov 2026) */
+    #viewSop .btn-icon:hover, #viewFarmbox .btn-icon:hover, #viewGallery .btn-icon:hover { background: var(--hover); }
     #viewSop .btn-icon:disabled { opacity: 0.35; cursor: not-allowed; }
-    #viewSop .net-pill { font-size: var(--text-xs); font-weight: 650; padding: 4px 12px; border-radius: var(--radius-full); background: var(--coral); color: #fff; white-space: nowrap; }
+    #viewSop .net-pill { font-size: var(--text-xs); font-weight: 600; padding: 4px 12px; border-radius: var(--radius-full); background: var(--coral); color: #fff; white-space: nowrap; }
     #viewSop .sop-main, #viewFarmbox .sop-main, #viewGallery .sop-main { max-width: 46rem; margin: 0 auto; padding: var(--space-2) var(--space-4) calc(env(safe-area-inset-bottom) + 7rem); }
     #viewSop .hero { margin: var(--space-3) 0 var(--space-5); }
-    #viewSop .hero h1 { font-size: clamp(1.9rem, 1.4rem + 2.2vw, 2.5rem); font-weight: 750; letter-spacing: -0.035em; line-height: 1.08; }
+    #viewSop .hero h1 { font-size: clamp(1.9rem, 1.4rem + 2.2vw, 2.5rem); font-weight: 700; letter-spacing: -0.035em; line-height: 1.08; }
     #viewSop .hero p { color: var(--text-muted); margin-top: var(--space-2); font-size: var(--text-base); }
     #viewSop .sec-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin: var(--space-6) 0 var(--space-3); }
     #viewSop .sec-head h2 { font-size: 1.3rem; font-weight: 650; letter-spacing: -0.02em; }
     #viewSop .lbl, #viewSop .field label { display: block; font-size: var(--text-sm); font-weight: 650; color: var(--text-muted); margin-bottom: var(--space-2); }
     #viewSop .hint { font-size: var(--text-sm); color: var(--text-muted); margin-top: var(--space-1); }
-    #viewSop .btn, #viewFarmbox .btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: 48px; padding: var(--space-2) var(--space-5); border-radius: var(--radius-full); font-weight: 650; font-size: var(--text-sm); background: var(--surface); color: var(--text); border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
-    #viewSop .btn:hover, #viewFarmbox .btn:hover { background: var(--surface-2); }
+    #viewSop .btn, #viewFarmbox .btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: 48px; padding: var(--space-2) var(--space-5); border-radius: var(--radius-full); font-weight: 600; font-size: var(--text-sm); background: var(--surface); color: var(--text); border: 1px solid var(--border); box-shadow: none; }
+    #viewSop .btn:hover, #viewFarmbox .btn:hover { background: var(--surface-offset); border-color: var(--border-strong); }
     #viewSop .btn:disabled, #viewFarmbox .btn:disabled { opacity: 0.45; cursor: not-allowed; }
-    #viewSop .btn-primary, #viewFarmbox .btn-primary { background: var(--primary); color: var(--text-inverse); border-color: transparent; }
-    #viewSop .btn-primary:hover, #viewFarmbox .btn-primary:hover { background: var(--primary-hover); }
+    #viewSop .btn-primary, #viewFarmbox .btn-primary { background: var(--primary); color: var(--text-inverse); border-color: transparent; box-shadow: var(--shadow-accent); }
+    #viewSop .btn-primary:hover, #viewFarmbox .btn-primary:hover { background: var(--primary-hover); border-color: transparent; }
     #viewSop .btn-danger, #viewFarmbox .btn-danger { background: var(--coral-soft); color: var(--error); border-color: transparent; }
+    #viewSop .btn-danger:hover, #viewFarmbox .btn-danger:hover { background: var(--coral-soft); border-color: transparent; }
+    #viewSop .btn-ghost, #viewFarmbox .btn-ghost { background: transparent; border-color: transparent; box-shadow: none; color: var(--text-muted); }
+    #viewSop .btn-ghost:hover, #viewFarmbox .btn-ghost:hover { background: var(--hover); border-color: transparent; color: var(--text); }
     #viewSop .btn-block, #viewFarmbox .btn-block { width: 100%; }
     #viewSop .btn-lg, #viewFarmbox .btn-lg { min-height: 58px; font-size: var(--text-base); }
     #viewSop .btn-sm, #viewFarmbox .btn-sm { min-height: 38px; padding: var(--space-1) var(--space-4); font-size: var(--text-sm); }
@@ -525,7 +562,7 @@
     #viewSop .chips::-webkit-scrollbar { display: none; }
     #viewSop .chip { flex-shrink: 0; min-height: 40px; padding: var(--space-1) var(--space-4); border-radius: var(--radius-full); font-size: var(--text-sm); font-weight: 650; background: var(--glass); border: 1px solid var(--border); color: var(--text); }
     #viewSop .chip.active { background: var(--accent-soft); border-color: var(--accent); color: var(--text); box-shadow: inset 0 0 0 1px var(--accent); }
-    #viewSop .card { display: block; width: 100%; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: var(--space-4) var(--space-4); margin-bottom: var(--space-3); box-shadow: var(--shadow-md); color: inherit; text-decoration: none; }
+    #viewSop .card { display: block; width: 100%; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: var(--space-4) var(--space-4); margin-bottom: var(--space-3); box-shadow: var(--shadow-sm); color: inherit; text-decoration: none; }
     #viewSop button.card:active, #viewSop a.card:active { transform: scale(0.99); }
     #viewSop .sop-card { display: flex; gap: var(--space-3); align-items: center; }
     #viewSop .sc-icon { width: 52px; height: 52px; border-radius: 50%; background: var(--surface-offset); display: flex; align-items: center; justify-content: center; font-size: 1.55rem; flex-shrink: 0; }
@@ -553,9 +590,9 @@
     #viewSop .bottom-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; padding: var(--space-4) var(--space-4) calc(env(safe-area-inset-bottom) + var(--space-3)); background: linear-gradient(to top, var(--bg-end) 55%, transparent); }
     #viewSop .bottom-bar > div { max-width: 46rem; margin: 0 auto; }
     #viewSop .bottom-bar .btn { box-shadow: var(--shadow-lg); }
-    #viewSop .sop-head h1 { font-size: clamp(1.75rem, 1.3rem + 2vw, 2.25rem); font-weight: 750; line-height: 1.12; letter-spacing: -0.03em; margin: var(--space-2) 0 var(--space-3); }
+    #viewSop .sop-head h1 { font-size: clamp(1.75rem, 1.3rem + 2vw, 2.25rem); font-weight: 700; line-height: 1.12; letter-spacing: -0.03em; margin: var(--space-2) 0 var(--space-3); }
     #viewSop .sop-head .note { color: var(--text-muted); font-size: var(--text-base); margin-top: var(--space-3); }
-    #viewSop #sop-view > .doc { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: var(--space-5) var(--space-5); box-shadow: var(--shadow-md); }
+    #viewSop #sop-view > .doc { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: var(--space-5) var(--space-5); box-shadow: var(--shadow-sm); }
     #viewSop .doc, #viewFarmbox .doc { margin-top: var(--space-4); overflow-wrap: anywhere; line-height: 1.6; }
     #viewSop .doc > * + *, #viewFarmbox .doc > * + * { margin-top: var(--space-3); }
     #viewSop .doc > :first-child, #viewFarmbox .doc > :first-child { margin-top: 0; }
@@ -567,7 +604,7 @@
     #viewSop .doc li::marker { font-weight: 700; }
     #viewSop .doc li > .kids { margin-top: var(--space-1); }
     #viewSop .doc .todo { display: flex; gap: var(--space-2); align-items: flex-start; }
-    #viewSop .doc .todo .box { flex-shrink: 0; width: 1.15rem; height: 1.15rem; margin-top: 0.25rem; border: 2px solid var(--text-faint); border-radius: 6px; }
+    #viewSop .doc .todo .box { flex-shrink: 0; width: 1.15rem; height: 1.15rem; margin-top: 0.25rem; border: 2px solid var(--text-faint); border-radius: var(--radius-xs); }
     #viewSop .doc .todo .box.on { background: var(--accent); border-color: var(--accent); }
     #viewSop .doc .callout { display: flex; gap: var(--space-3); background: var(--lavender-soft); border-radius: var(--radius-lg); padding: var(--space-3) var(--space-4); }
     #viewSop .doc .callout.warn { background: var(--coral-soft); }
@@ -575,7 +612,7 @@
     #viewSop .doc .callout > div > * + * { margin-top: var(--space-2); }
     #viewSop .doc blockquote { border-left: 3px solid var(--text); padding-left: var(--space-3); color: var(--text-muted); }
     #viewSop .doc hr { border: none; border-top: 1px solid var(--divider); margin: var(--space-5) 0; }
-    #viewSop .doc code { font-family: ui-monospace, Consolas, monospace; font-size: 0.9em; background: var(--surface-dynamic); padding: 1px 6px; border-radius: 6px; }
+    #viewSop .doc code { font-family: var(--font-mono); font-size: 0.9em; background: var(--surface-dynamic); padding: 1px 6px; border-radius: var(--radius-xs); }
     #viewSop .doc pre { background: var(--surface-dynamic); padding: var(--space-3); border-radius: var(--radius-md); overflow-x: auto; font-size: var(--text-sm); }
     #viewSop .doc a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
     #viewSop .doc figure img { border-radius: var(--radius-lg); }
@@ -601,15 +638,15 @@
     #viewSop .progress-fill { height: 100%; background: var(--accent); border-radius: var(--radius-full); transition: width 250ms; }
     #viewSop .progress { display: flex; flex-direction: column; }
     #viewSop .progress-label { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-2); order: 1; }
-    #viewSop .progress-label span:first-child { font-size: 1.35rem; font-weight: 750; letter-spacing: -0.02em; }
+    #viewSop .progress-label span:first-child { font-size: 1.35rem; font-weight: 700; letter-spacing: -0.02em; }
     #viewSop .progress-label span:last-child { font-size: var(--text-xs); color: var(--ink-muted); text-align: right; }
     #viewSop .run-section { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; margin: var(--space-6) 0 var(--space-3); }
-    #viewSop .step { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); margin-bottom: var(--space-3); overflow: hidden; box-shadow: var(--shadow-md); transition: background var(--transition); }
+    #viewSop .step { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); margin-bottom: var(--space-3); overflow: hidden; box-shadow: var(--shadow-sm); transition: background var(--transition); }
     #viewSop .step.done { background: var(--accent); border-color: transparent; color: var(--text-inverse); }
     #viewSop .step-main { display: flex; gap: var(--space-3); width: 100%; text-align: left; padding: var(--space-4) var(--space-4); min-height: 64px; align-items: flex-start; font-size: var(--text-base); line-height: 1.45; }
-    #viewSop .step-check { flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%; border: 2.5px solid var(--text-faint); display: flex; align-items: center; justify-content: center; font-weight: 800; color: transparent; }
+    #viewSop .step-check { flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%; border: 2.5px solid var(--text-faint); display: flex; align-items: center; justify-content: center; font-weight: 700; color: transparent; }
     #viewSop .step.done .step-check { background: var(--text-inverse); border-color: var(--text-inverse); color: var(--accent); }
-    #viewSop .step-num { font-weight: 800; margin-right: 2px; }
+    #viewSop .step-num { font-weight: 700; margin-right: 2px; }
     #viewSop .step-time { font-size: var(--text-xs); font-weight: 700; margin-top: var(--space-1); color: rgba(18,18,18,0.7); }
     #viewSop .step-extra { padding: 0 var(--space-4) var(--space-4) calc(var(--space-4) + 34px + var(--space-3)); }
     #viewSop .step-extra .doc { margin-top: 0; font-size: var(--text-sm); }
@@ -633,12 +670,12 @@
     #viewSop .ed-locked-label { font-size: var(--text-sm); color: var(--text-muted); font-style: italic; }
     #viewSop .ed-add { display: flex; gap: var(--space-2); flex-wrap: wrap; margin: var(--space-3) 0; }
     #viewSop .ed-img { max-height: 200px; border-radius: var(--radius-md); }
-    #viewSop .overlay { position: fixed; inset: 0; z-index: 150; background: rgba(10,10,12,0.45); display: flex; align-items: flex-end; justify-content: center; }
-    #viewSop .sheet { background: var(--surface); width: 100%; max-width: 32rem; max-height: 90dvh; overflow-y: auto; border-radius: 28px 28px 0 0; padding: var(--space-3) var(--space-5) calc(env(safe-area-inset-bottom) + var(--space-5)); box-shadow: var(--shadow-lg); }
+    #viewSop .overlay { position: fixed; inset: 0; z-index: 150; background: rgba(10,10,12,0.45); display: flex; align-items: flex-end; justify-content: center; animation: nb-fade 180ms var(--ease); }
+    #viewSop .sheet { background: var(--surface); width: 100%; max-width: 32rem; max-height: 90dvh; overflow-y: auto; border-radius: var(--radius-xl) var(--radius-xl) 0 0; padding: var(--space-3) var(--space-5) calc(env(safe-area-inset-bottom) + var(--space-5)); box-shadow: var(--shadow-lg); animation: nb-rise 260ms var(--ease); }
     #viewSop .sheet::before { content: ''; display: block; width: 40px; height: 5px; border-radius: 3px; background: var(--surface-dynamic); margin: 0 auto var(--space-4); }
     @media (min-width: 600px) {
     #viewSop .overlay { align-items: center; }
-    #viewSop .sheet { border-radius: 28px; }
+    #viewSop .sheet { border-radius: var(--radius-xl); }
     }
     #viewSop .sheet h2 { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: var(--space-2); }
     #viewSop .sheet p { color: var(--text-muted); font-size: var(--text-base); margin-bottom: var(--space-4); }
@@ -705,11 +742,10 @@
     .editable-textarea { min-height: 72px; }
     /* ── FarmBox cloud Tasks ─────────────────────────────────────────────── */
     #viewFarmbox .hidden { display: none !important; }
-    #viewFarmbox .net-pill { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: var(--radius-full);
+    #viewFarmbox .net-pill { font-size: var(--text-xs); font-weight: 600; padding: 4px 10px; border-radius: var(--radius-full);
       background: var(--coral-soft); color: var(--coral); }
     #viewFarmbox .spin { animation: fb-spin 1s linear infinite; }
     @keyframes fb-spin { to { transform: rotate(360deg); } }
-    @media (prefers-reduced-motion: reduce) { #viewFarmbox .spin { animation: none; } }
     /* Gallery tab (0.11.144): only in FarmBox mode; its view shows with the tab */
     body:not(.src-cloud) .app-tab[data-mode="gallery"] { display: none; }
     body.mode-gallery.src-cloud #viewGallery { display: block; }
@@ -720,15 +756,15 @@
     #viewGallery .gl-strip { display: flex; gap: 10px; overflow-x: auto; padding: 6px 6px 8px 0; }
     #viewGallery .gl-th { position: relative; flex: none; width: 84px; height: 84px; }
     #viewGallery .gl-th img { width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius-md); display: block; background: var(--surface-offset); }
-    #viewGallery .gl-th button { position: absolute; top: -6px; right: -6px; width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--surface); background: var(--ink); color: var(--ink-text); font-weight: 800; line-height: 1; }
+    #viewGallery .gl-th button { position: absolute; top: -6px; right: -6px; width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--surface); background: var(--ink); color: var(--ink-text); font-weight: 700; line-height: 1; }
     #viewGallery .gl-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: var(--space-2) 0; }
     #viewGallery .gl-note { width: 100%; min-height: 0; font-size: var(--text-sm); padding: 8px 10px; border-radius: var(--radius-md); background: var(--surface-offset); box-shadow: none; resize: none; }
-    #viewGallery .gl-send { background: var(--accent); border-color: var(--accent); color: var(--text-inverse); font-weight: 800; min-height: 48px; flex: 1; }
+    #viewGallery .gl-send { background: var(--accent); border-color: var(--accent); color: var(--text-inverse); font-weight: 700; min-height: 48px; flex: 1; box-shadow: var(--shadow-accent); }
     #viewGallery .gl-send:disabled, #viewGallery .gl-add .fb-btn:disabled { opacity: .5; }
     #viewGallery .gl-head { margin: var(--space-5) 0 var(--space-2); }
     #viewGallery .gl-row { cursor: default; flex-wrap: wrap; }
     #viewGallery .gl-row .fb-actions { flex: 1 0 100%; }
-    #viewGallery .gl-row img, #viewGallery .gl-row .gl-ph { width: 56px; height: 56px; flex: none; border-radius: 8px; object-fit: cover; }
+    #viewGallery .gl-row img, #viewGallery .gl-row .gl-ph { width: 56px; height: 56px; flex: none; border-radius: var(--radius-sm); object-fit: cover; }
     #viewGallery .gl-bad { color: var(--error); }
     #viewGallery .gl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: var(--space-3); }
     #viewGallery .gl-tile { min-width: 0; padding: 0; background: none; border: 0; text-align: left; font: inherit; color: var(--text); cursor: pointer; }
@@ -741,12 +777,12 @@
     body.mode-sop.src-cloud #viewFarmbox { display: block; }
     #viewFarmbox .field { margin-bottom: var(--space-3); }
     #viewFarmbox .field label { display:block; font-size: var(--text-xs); font-weight:600; color: var(--text-muted); margin-bottom: 4px; }
-    #viewFarmbox .field input { width:100%; font:inherit; padding:10px 12px; border:1px solid var(--border);
-      border-radius: var(--radius-md); background: var(--surface-offset); color: var(--text); }
+    #viewFarmbox .field input { width:100%; font:inherit; padding:10px 12px; border:1px solid var(--border); min-height: var(--tap);
+      border-radius: var(--radius-md); background: var(--field-bg); color: var(--text); }
     /* the week header earns one line, not a quarter of the screen */
     #viewFarmbox .hero { margin: var(--space-2) 0 var(--space-3);
       display:flex; align-items:baseline; gap: var(--space-2); flex-wrap:wrap; }
-    #viewFarmbox .hero h1 { font-size: var(--text-lg); font-weight:750; letter-spacing:-0.02em; }
+    #viewFarmbox .hero h1 { font-size: var(--text-lg); font-weight: 700; letter-spacing:-0.02em; }
     #viewFarmbox .hero p { margin:0; color: var(--text-muted); font-size: var(--text-sm); }
     .fb-day { margin-top: var(--space-4); }
     .fb-slot { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted);
@@ -756,7 +792,7 @@
     /* the clock (0.11.38): in and out from the phone, offline through the outbox */
     .fb-clock:empty { display: none; }
     .fb-clock { display:flex; align-items:center; gap: var(--space-3); margin: var(--space-2) 0; padding: 10px 14px;
-      border-radius: 14px; background: var(--surface); border: 1px solid var(--border); }
+      border-radius: var(--radius-lg); background: var(--surface); border: 1px solid var(--border); }
     .fb-clock.on { border-color: var(--success, #2e7d32); background: color-mix(in srgb, var(--success, #2e7d32) 10%, var(--surface)); }
     .fb-clock .fb-clock-text { flex: 1; min-width: 0; font-size: var(--text-sm); }
     .fb-clock .fb-clock-text b { display:block; font-size: var(--text-base); }
@@ -765,32 +801,32 @@
     .fb-who > * { flex: 1; min-width: 0; }
     /* sister units (0.11.37): one heading per unit inside the day, in the unit's colour */
     .fb-unit { display:flex; align-items:center; gap: 8px; margin: var(--space-3) 0 2px; padding: 6px 10px;
-      border-radius: 10px; background: color-mix(in srgb, var(--u, var(--text-muted)) 14%, transparent);
+      border-radius: var(--radius-md); background: color-mix(in srgb, var(--u, var(--text-muted)) 14%, transparent);
       border-left: 4px solid var(--u, var(--text-muted)); font-weight: 700; font-size: var(--text-sm); }
-    .fb-unit .fb-ubadge { font-size: 11px; font-weight: 800; letter-spacing: .04em; color: #fff; background: var(--u, #888);
-      border-radius: 6px; padding: 2px 6px; }
+    .fb-unit .fb-ubadge { font-size: 11px; font-weight: 700; letter-spacing: .04em; color: #fff; background: var(--u, #888);
+      border-radius: var(--radius-xs); padding: 2px 6px; }
     .fb-unit .fb-ucount { margin-left: auto; font-weight: 600; color: var(--text-muted); font-size: 12px; }
-    .fb-who-sel { width:100%; font-size: var(--text-base); padding: 10px 12px; border-radius: 12px;
-      border: 1px solid var(--border); background: var(--surface); color: var(--text); font-weight: 600; }
+    .fb-who-sel { width:100%; font-size: var(--text-base); padding: 10px 12px; border-radius: var(--radius-md); min-height: var(--tap);
+      border: 1px solid var(--border); background: var(--field-bg); color: var(--text); font-weight: 600; }
     .fb-slot.any { border-top: 1px dashed var(--border); }
     .fb-day h2 { font-size: var(--text-sm); text-transform: uppercase; letter-spacing:.08em;
       color: var(--text-muted); margin: 0 0 var(--space-2); font-weight: 700; }
     .fb-card { display:flex; align-items:center; gap: var(--space-3); width:100%; text-align:left;
-      background: var(--surface); border:1px solid var(--border); border-left:6px solid var(--border);
-      border-radius: var(--radius-md);
+      background: var(--surface); border:1px solid var(--border); border-left:4px solid var(--border);
+      border-radius: var(--radius-lg);
       padding: var(--space-2) var(--space-3); margin-bottom: 6px; cursor:pointer;
-      font: inherit; color: var(--text); box-shadow: var(--shadow-sm); }
+      font: inherit; color: var(--text); box-shadow: none; }   /* 21 Nov 2026: flat, as Naked Heart's cards; the family bar 4 px */
     .fb-card:active { transform: scale(.995); }
     .fb-card.done { opacity:.5; }
     /* the whole greenhouse (0.11.122): not a zone and not a task — the accent's own colour, a dashed edge */
     .fb-card.fb-gh { border-left-color: var(--primary); border-style: dashed; border-left-style: solid; box-shadow: none; margin-bottom: var(--space-3); }
     /* swipe (0.11.27): the card slides over a band saying what the swipe does */
-    .fb-swipe { position:relative; margin-bottom: 6px; border-radius: var(--radius-md); }
+    .fb-swipe { position:relative; margin-bottom: 6px; border-radius: var(--radius-lg); }
     .fb-swipe > .fb-card { margin-bottom: 0; position:relative; z-index:1; touch-action: pan-y; }
     .fb-swipe.moving > .fb-card { transition:none; }
     .fb-swipe > .fb-card { transition: transform .18s ease; }
-    .fb-swipe-bg { position:absolute; inset:0; border-radius: var(--radius-md); display:none; align-items:center;
-      padding: 0 16px; font-weight:800; font-size: var(--text-sm); }
+    .fb-swipe-bg { position:absolute; inset:0; border-radius: var(--radius-lg); display:none; align-items:center;
+      padding: 0 16px; font-weight: 700; font-size: var(--text-sm); }
     .fb-swipe-bg.left { background: var(--accent); color: var(--text-inverse); justify-content:flex-start; }
     .fb-swipe-bg.right { background: var(--coral); color:#fff; justify-content:flex-end; }
     .fb-swipe.to-right .fb-swipe-bg.left, .fb-swipe.to-left .fb-swipe-bg.right { display:flex; }
@@ -800,12 +836,11 @@
       font-size: var(--text-sm); }
     .fb-undo.show { display:flex; animation: fb-undo-in .18s ease-out; }
     @keyframes fb-undo-in { from { transform: translateY(-12px); opacity: 0; } to { transform: none; opacity: 1; } }
-    @media (prefers-reduced-motion: reduce) { .fb-undo.show { animation: none; } }
     .fb-sc-notraps { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 8px 0; }
     .fb-dim { opacity: 0.4; pointer-events: none; }
     .fb-auto-view { display: flex; align-items: center; gap: 8px; width: 100%; padding: 4px; border: 1px solid var(--border); border-radius: var(--radius-md);
       background: var(--surface); color: var(--text-muted); font: inherit; font-size: var(--text-xs); text-align: left; cursor: pointer; }
-    .fb-auto-view img { height: 72px; width: auto; border-radius: 6px; flex: none; }
+    .fb-auto-view img { height: 72px; width: auto; border-radius: var(--radius-xs); flex: none; }
     .fb-auto-view.ok { border-color: var(--success, #2e7d32); color: var(--success, #2e7d32); }
     .fb-sizecheck { max-height: 94vh; overflow: auto; }
     .fb-sizecheck-img { display: block; width: 100%; max-height: 62vh; object-fit: contain; border-radius: var(--radius-md); background: #000; margin: 8px 0; }
@@ -813,9 +848,9 @@
     .fb-sizecheck-sizes { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0; }
     .fb-sizecheck .hidden { display: none !important; }   /* the sheet sits on <body>, outside #viewFarmbox's rule */
     .fb-undo span { flex:1; }
-    .fb-undo .fb-link { color: var(--accent); font-weight:800; }
-    .fb-sheet { position:fixed; inset:0; z-index:1400; background: rgba(0,0,0,.45); display:flex; align-items:flex-end; }
-    .fb-sheet-card { width:100%; background: var(--surface); border-radius: var(--radius-xl) var(--radius-xl) 0 0; padding: var(--space-5) var(--space-4) var(--space-6); }
+    .fb-undo .fb-link { color: var(--accent); font-weight: 700; }
+    .fb-sheet { position:fixed; inset:0; z-index:1400; background: rgba(0,0,0,.45); display:flex; align-items:flex-end; animation: nb-fade 180ms var(--ease); }
+    .fb-sheet-card { width:100%; background: var(--surface); border-radius: var(--radius-xl) var(--radius-xl) 0 0; padding: var(--space-5) var(--space-4) var(--space-6); animation: nb-rise 260ms var(--ease); }
     .fb-sheet-card h3 { margin:0 0 2px; }
     .fb-sheet-card .fb-actions { margin-top: var(--space-3); }
     /* last synced, under the top bar, and the one-time swipe hint (0.11.147) */
@@ -828,7 +863,7 @@
     /* the question sheet (0.11.147): two 48 px buttons side by side, the answer that does the thing on the right */
     .fb-ask .fb-actions { flex-wrap: nowrap; }
     .fb-ask .fb-btn { flex: 1; min-height: 48px; }
-    .fb-ask-yes { background: var(--accent); border-color: var(--accent); color: var(--text-inverse); }
+    .fb-ask-yes { background: var(--accent); border-color: var(--accent); color: var(--text-inverse); box-shadow: var(--shadow-accent); }
     .fb-btn-primary { background: var(--coral); border-color: var(--coral); color:#fff; }
     /* the family, as the card's ground and as the bar down its edge */
     .fb-card.fam-agriculture { background: var(--fam-ag-bg); border-left-color: var(--fam-ag); }
@@ -836,24 +871,24 @@
     .fb-card.fam-office      { background: var(--fam-of-bg); border-left-color: var(--fam-of); }
     .fb-when { min-width: 42px; font-variant-numeric: tabular-nums; font-weight:700; font-size: var(--text-sm); }
     .fb-body { flex:1; min-width:0; }
-    .fb-name { font-weight:620; line-height:1.25; font-size: var(--text-sm); }
+    .fb-name { font-weight: 600; line-height:1.25; font-size: var(--text-sm); }
     .fb-meta { font-size: var(--text-xs); color: var(--text-muted); margin-top:1px; }
     .fb-where { font-weight:700; color: var(--text); }
-    .fb-chip { font-size:12px; font-weight:700; padding:4px 9px; border-radius: var(--radius-full);
+    .fb-chip { font-size: var(--text-xs); font-weight:600; padding:4px 9px; border-radius: var(--radius-full);
       background: var(--surface-offset); color: var(--text-muted); white-space:nowrap; }
     .fb-chip.ok { background: var(--success-bg); color: var(--success); }
     .fb-chip.ok.over { color: var(--error, #c0392b); }
     /* 0.11.57: a tick is red until tapped green; zones as buttons; one notes box; Pause beside Finish */
     .fb-step.todo { border-color: color-mix(in srgb, var(--error, #c0392b) 55%, var(--border)); }
-    .fb-tick, .fb-zchip { font: inherit; font-weight: 800; border-radius: var(--radius-full); cursor: pointer;
+    .fb-tick, .fb-zchip { font: inherit; font-weight: 700; border-radius: var(--radius-full); cursor: pointer;
       border: 2px solid var(--error, #c0392b); background: color-mix(in srgb, var(--error, #c0392b) 12%, var(--surface)); color: var(--error, #c0392b); }
     .fb-tick { min-height: 48px; padding: 0 22px; font-size: var(--text-base); }
     .fb-tick.on, .fb-zchip.on { border-color: var(--success, #2e7d32); background: var(--success-bg, #e3f2e5); color: var(--success, #2e7d32); }
     .fb-zchips { display: flex; flex-wrap: wrap; gap: 10px; margin: var(--space-3) 0 var(--space-1); }
     .fb-zchip { min-width: 64px; min-height: 52px; padding: 0 14px; font-size: var(--text-lg); font-variant-numeric: tabular-nums; }
     .fb-run-end { margin-top: var(--space-4); display: grid; gap: var(--space-2); }
-    .fb-runnote { width: 100%; box-sizing: border-box; font: inherit; padding: 10px 12px; border-radius: var(--radius-lg, 12px);
-      border: 1px solid var(--border); background: var(--surface); color: var(--text); resize: vertical; }
+    .fb-runnote { width: 100%; box-sizing: border-box; font: inherit; padding: 10px 12px; border-radius: var(--radius-md);
+      border: 1px solid var(--border); background: var(--field-bg); color: var(--text); resize: vertical; box-shadow: none; }
     .fb-chip.run { background: var(--primary); color: var(--text-inverse); }
     .fb-chip.run.other { background: transparent; color: var(--primary); box-shadow: inset 0 0 0 1.5px var(--primary); }   /* somebody else has it running */
     .fb-chip.ok.wait { box-shadow: inset 0 0 0 1.5px var(--warning, #d98a1f); }   /* done here, not on the server yet */
@@ -933,7 +968,7 @@
     /* a note, a person's or the AI's, as one block — Naked Heart's (viewer.js noteChip / aiNote, 0.7.273): the risk colour
        as the left edge and the ground, the face inside on the left (the robot's for the AI), the words in ink */
     .dg-block { display:flex; align-items:flex-start; gap: 6px; width: 100%; box-sizing: border-box; min-width: 0; padding: 5px 9px 5px 6px;
-      border-radius: 3px 10px 10px 10px; border-left: 4px solid var(--border); background: var(--surface-offset);
+      border-radius: 3px var(--radius-md) var(--radius-md) var(--radius-md); border-left: 4px solid var(--border); background: var(--surface-offset);
       font-size: 12px; font-weight: 500; line-height: 1.4; }
     .dg-block.r-green { border-left-color: var(--success); background: var(--success-bg); }
     .dg-block.r-yellow { border-left-color: var(--warning); background: var(--warning-bg); }
@@ -953,21 +988,21 @@
     /* the post as a comment flow (0.11.142): the AI's whole reading opened under its one line; the reactions under every
        comment — small emoji there only, the line icons everywhere else */
     .dg-ai-full { display:flex; flex-direction: column; gap: 6px; margin-left: 26px; padding: 8px 10px; border-left: 3px solid var(--accent);
-      background: var(--surface-offset); border-radius: 6px; }
+      background: var(--surface-offset); border-radius: var(--radius-xs); }
     .dg-ai-full[hidden] { display: none; }
     .dg-react { display:inline-flex; align-items: center; gap: 4px; }
     .dg-rb { min-height: 30px; min-width: 38px; padding: 2px 8px; font: inherit; font-size: 13px; line-height: 1; border-radius: var(--radius-full);
       border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; }
-    .dg-rb.on { border-color: var(--accent); background: var(--accent-soft); font-weight: 750; }
+    .dg-rb.on { border-color: var(--accent); background: var(--accent-soft); font-weight: 700; }
     .dg-rb:disabled { opacity: .55; cursor: default; }
     .dg-who-line { padding: 6px 2px; font-size: var(--text-sm); border-bottom: 1px solid var(--border); }
-    .dg-new { color: var(--accent); font-weight: 750; }
+    .dg-new { color: var(--accent); font-weight: 700; }
     .dg-thread { display:flex; flex-direction: column; gap: 10px; }
     .dg-msg { display:flex; flex-direction: column; gap: 3px; min-width: 0; }
     .dg-msg.reply { margin-left: 26px; }
     .dg-msg.sending { opacity: .75; }
     .dg-init { display:inline-flex; align-items:center; justify-content:center; flex: none; width: 1.6em; height: 1.6em; border-radius: 50%;
-      font-size: 10px; font-weight: 800; background: var(--surface-offset); color: var(--text); }
+      font-size: 10px; font-weight: 700; background: var(--surface-offset); color: var(--text); }
     /* the conversation in the same blocks: a comment in its risk colour, "Name · time" on top; the AI's answer indented
        under it with the accent edge, as Naked Heart's .vw-reply */
     .dg-msg .dg-block { font-size: var(--text-sm); padding: 7px 10px 7px 7px; }
@@ -991,11 +1026,11 @@
     .fb-step.dg-feed-item.risk-red { border-left-color: var(--error); }
     .fb-step.dg-feed-item.risk-orange { border-left-color: var(--warning); }
     .fb-step.dg-feed-item.risk-green { border-left-color: var(--success); }
-    .dg-verified { display:flex; align-items: baseline; gap: 6px; min-width: 0; font-size: var(--text-xs); padding: 3px 8px; border-radius: 6px;
+    .dg-verified { display:flex; align-items: baseline; gap: 6px; min-width: 0; font-size: var(--text-xs); padding: 3px 8px; border-radius: var(--radius-xs);
       background: var(--success-bg); border-left: 3px solid var(--success); }
-    .dg-verified-k { flex: none; font-weight: 750; color: var(--success); }
+    .dg-verified-k { flex: none; font-weight: 700; color: var(--success); }
     .dg-verified-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-    .dg-post-verified { display:flex; flex-direction: column; gap: 4px; padding: 8px 10px; border-left: 3px solid var(--success); background: var(--success-bg); border-radius: 6px; }
+    .dg-post-verified { display:flex; flex-direction: column; gap: 4px; padding: 8px 10px; border-left: 3px solid var(--success); background: var(--success-bg); border-radius: var(--radius-xs); }
     .dg-post-verified.r-yellow { border-left-color: var(--warning); } .dg-post-verified.r-red { border-left-color: var(--error); }
     .dg-post-verified .fb-sec { color: var(--success); }
     .dg-msg.verified .dg-block { box-shadow: inset 0 0 0 1.5px var(--success); }
@@ -1008,17 +1043,17 @@
     .fb-chip.paused { background: color-mix(in srgb, var(--warning, #b7791f) 16%, var(--surface)); color: var(--text); }
     .fb-chip.todo { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
     .fb-going { display:flex; align-items:center; gap: var(--space-2); margin: var(--space-2) 0 var(--space-3); padding: 10px 12px;
-      border-radius: var(--radius-lg, 12px); background: color-mix(in srgb, var(--primary) 16%, var(--surface)); border: 1px solid var(--primary); cursor: pointer; }
+      border-radius: var(--radius-lg); background: color-mix(in srgb, var(--primary) 16%, var(--surface)); border: 1px solid var(--primary); cursor: pointer; }
     .fb-going-text { flex: 1; min-width: 0; display: grid; }
-    .fb-going-text small { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); }
+    .fb-going-text small { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); }
     .fb-going-text b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .fb-going-time { font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .fb-going-time { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
     .fb-timer { display:flex; align-items:center; gap: var(--space-3); margin-top: var(--space-2); padding: 8px 12px;
-      border-radius: var(--radius-lg, 12px); background: color-mix(in srgb, var(--primary) 14%, var(--surface)); flex-basis: 100%; width: 100%; box-sizing: border-box; }
+      border-radius: var(--radius-lg); background: color-mix(in srgb, var(--primary) 14%, var(--surface)); flex-basis: 100%; width: 100%; box-sizing: border-box; }
     .fb-timer.paused { background: var(--surface-offset); }
-    .fb-timer-text { flex: 1; font-weight: 800; font-size: var(--text-base); font-variant-numeric: tabular-nums; }
+    .fb-timer-text { flex: 1; font-weight: 700; font-size: var(--text-base); font-variant-numeric: tabular-nums; }
     .fb-chip.late { background: var(--coral-soft); color: var(--coral); }
-    .fb-sc-few { margin: 6px 0; padding: 8px 10px; border-radius: var(--radius-sm, 8px); background: var(--coral-soft); color: var(--coral); font-size: 0.86rem; }
+    .fb-sc-few { margin: 6px 0; padding: 8px 10px; border-radius: var(--radius-sm); background: var(--coral-soft); color: var(--coral); font-size: 0.86rem; }
     .fb-sc-few .fb-sc-few-t { margin-bottom: 6px; }
     .fb-sc-few .fb-actions { margin: 0; flex-wrap: wrap; }
     .fb-sc-few.done { background: var(--success-bg); color: var(--success); }
@@ -1044,8 +1079,8 @@
     .fb-fbk-items { display: grid; gap: var(--space-2); margin: var(--space-3) 0; }
     .fb-fbk-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-2); }
     .fb-fbk-item audio, .fb-fbk-item video { width: 100%; display: block; }
-    .fb-fbk-item video { max-height: 240px; background: #000; border-radius: var(--radius-md, 8px); }
-    .fb-fbk-item img { width: 100%; max-height: 240px; object-fit: contain; display: block; border-radius: var(--radius-md, 8px); background: #000; }
+    .fb-fbk-item video { max-height: 240px; background: #000; border-radius: var(--radius-md); }
+    .fb-fbk-item img { width: 100%; max-height: 240px; object-fit: contain; display: block; border-radius: var(--radius-md); background: #000; }
     .fb-fbk-cap { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-top: 4px; }
     .fb-fbk-said { margin-top: var(--space-5); display: grid; gap: var(--space-2); }
     .fb-fbk-row { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-3); display: grid; gap: 4px; }
@@ -1053,13 +1088,13 @@
     .fb-fbk-head .fb-chip { margin-left: auto; }
     .fb-fbk-text { font-size: var(--text-sm); overflow-wrap: anywhere; }
     .fb-fbk-points { margin: 0; padding-left: 1.2em; font-size: var(--text-sm); color: var(--text-muted); }
-    .fb-fbk-reply { font-size: var(--text-sm); padding: var(--space-2) var(--space-3); border-radius: var(--radius-md, 8px);
+    .fb-fbk-reply { font-size: var(--text-sm); padding: var(--space-2) var(--space-3); border-radius: var(--radius-md);
       background: color-mix(in srgb, var(--primary) 12%, var(--surface)); }
     .fb-runfacts { margin: 4px 0 var(--space-2); color: var(--text-muted); font-size: var(--text-sm); }
-    .fb-hdr-timer { display:inline-flex; align-items:center; padding: 4px 12px; border-radius: var(--radius-full); font-weight: 800;
+    .fb-hdr-timer { display:inline-flex; align-items:center; padding: 4px 12px; border-radius: var(--radius-full); font-weight: 700;
       font-variant-numeric: tabular-nums; background: color-mix(in srgb, var(--primary) 16%, var(--surface)); color: var(--text); }
     .fb-hdr-timer.paused { background: var(--surface-offset); color: var(--text-muted); }
-    button.fb-hdr-timer { font: inherit; font-weight: 800; border: 0; cursor: pointer; min-height: 40px; }
+    button.fb-hdr-timer { font: inherit; font-weight: 700; border: 0; cursor: pointer; min-height: 40px; }
     .fb-notdone { display: block; margin: var(--space-2) auto 0; }
     .fb-batches { margin: 0 0 var(--space-2); }
     .fb-step.answered { border-color: var(--accent); }
@@ -1073,10 +1108,10 @@
       color: var(--text); cursor:pointer; }
     .fb-btn[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--text); box-shadow: inset 0 0 0 1px var(--accent); }   /* a chosen answer: a line in the accent, not a fill (19 Nov 2026, as Naked Heart) */
     .fb-btn.no[aria-pressed="true"] { background: var(--coral-soft); border-color: var(--coral); color: var(--text); box-shadow: inset 0 0 0 1px var(--coral); }
-    .fb-num { width: 120px; font:inherit; padding:8px 10px; border:1px solid var(--border);
-      border-radius: var(--radius-md); background: var(--surface-offset); color: var(--text); }
-    .fb-note { width:100%; font:inherit; font-size: var(--text-sm); padding:8px 10px; margin-top: var(--space-2);
-      border:1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-offset); color: var(--text); }
+    .fb-num { width: 120px; font:inherit; padding:10px 12px; min-height: var(--tap); border:1px solid var(--border);
+      border-radius: var(--radius-md); background: var(--field-bg); color: var(--text); }
+    .fb-note { width:100%; font:inherit; font-size: var(--text-sm); padding:10px 12px; min-height: var(--tap); margin-top: var(--space-2);
+      border:1px solid var(--border); border-radius: var(--radius-md); background: var(--field-bg); color: var(--text); }
     /* the risk of a plant photo's comment (0.11.130): the AI's three colours, beside the comment */
     .fb-note-row { display:flex; flex-wrap:wrap; gap: var(--space-2); align-items:flex-end; }
     .fb-note-row .fb-note { flex: 1 1 180px; min-width:0; }
@@ -1120,7 +1155,7 @@
     .fb-runbar { display:flex; justify-content:flex-end; margin: 0 0 var(--space-2); }
     .fb-shot { display:flex; align-items:center; gap: var(--space-2); margin-top: var(--space-2); flex-wrap:wrap; }
     .fb-traps { margin: var(--space-3) 0; }
-    .fb-trap-code { display:inline-block; font-family: ui-monospace, monospace; font-weight:800; font-size: var(--text-lg);
+    .fb-trap-code { display:inline-block; font-family: ui-monospace, monospace; font-weight: 700; font-size: var(--text-lg);
       letter-spacing:.04em; padding:2px 8px; border-radius: var(--radius-md); background: #f4d24a; color:#2b2400; }
     .fb-trap .fb-shot img { width:96px; height:96px; }
     .fb-cam { position:fixed; inset:0; z-index:1000; background:#000; display:flex; flex-direction:column; }
@@ -1129,9 +1164,9 @@
       font-size: var(--text-sm); background:rgba(0,0,0,.55); }
     .fb-cam-bar { display:flex; align-items:center; justify-content:space-around; padding:14px 16px 22px; background:#000; }
     /* a batch's card, its label scanned (0.11.127) */
-    .fb-lot-code { font-family: ui-monospace, monospace; font-weight:800; font-size:1.7rem; letter-spacing:.03em; }
+    .fb-lot-code { font-family: ui-monospace, monospace; font-weight: 700; font-size:1.7rem; letter-spacing:.03em; }
     .fb-lot-hold { margin: var(--space-3) 0; padding:10px 12px; border-radius: var(--radius-md); background:#fde8e8; color:#8a1c1c; font-weight:700; }
-    .fb-lot-h { font-size: var(--text-xs); font-weight:800; letter-spacing:.06em; text-transform:uppercase; color: var(--text-muted); margin: var(--space-4) 0 var(--space-1); }
+    .fb-lot-h { font-size: var(--text-xs); font-weight: 700; letter-spacing:.06em; text-transform:uppercase; color: var(--text-muted); margin: var(--space-4) 0 var(--space-1); }
     .fb-scan-frame { position:absolute; left:50%; top:42%; width:62vmin; height:62vmin; transform:translate(-50%,-50%);
       border:3px solid #f4d24a; border-radius:14px; pointer-events:none; }
     .fb-scan-type { display:flex; gap:8px; padding:10px 16px 0; background:#000; }
@@ -1146,7 +1181,7 @@
     .fb-cam .fb-btn[aria-pressed="true"] { background:#f4d24a; border-color:#f4d24a; color:#2b2400; }
     .fb-cam-zoom { display:flex; align-items:center; gap:10px; color:#fff; }
     .fb-cam-zoom input[type=range] { flex:1; accent-color:#f4d24a; }
-    .fb-cam-zval { min-width:38px; font-weight:800; font-variant-numeric: tabular-nums; }
+    .fb-cam-zval { min-width:38px; font-weight: 700; font-variant-numeric: tabular-nums; }
     .fb-cam .fb-cam-q { min-height:34px; padding:4px 10px; }
     .fb-cam-ring { position:fixed; width:72px; height:72px; margin:-36px 0 0 -36px; border:2px solid #fff; border-radius:50%;
       pointer-events:none; box-shadow:0 0 0 1px rgba(0,0,0,.35); transition:border-color .2s, transform .2s; transform:scale(1.15); }
@@ -1178,14 +1213,14 @@
       border-radius: 0; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px; background: transparent; color: var(--text-muted);
       display:flex; align-items:center; justify-content:center; gap: 6px; cursor: pointer; }
     .fb-sc-tab[aria-pressed="true"] { background: transparent; color: var(--text); border-bottom-color: var(--accent); }   /* underlined in the accent (19 Nov 2026) */
-    .fb-sc-n { font-size: 11px; min-width: 18px; padding: 1px 6px; border-radius: 999px; background: var(--accent); color: var(--text-inverse); }
+    .fb-sc-n { font-size: 11px; min-width: 18px; padding: 1px 6px; border-radius: var(--radius-full); background: var(--accent); color: var(--text-inverse); }
     .fb-sc-n.nok { background: var(--coral); color: #fff; }
     .fb-sc-add { margin: var(--space-3) 0; }
     /* 0.11.50: tabs with progress, the trap list, the code sheet */
     .fb-sc-tab { flex-direction: column; gap: 0; line-height: 1.15; }
     .fb-sc-sub { font-size: 12px; font-weight: 600; color: var(--text-muted); }
     /* Send everything now (0.11.87): in the top bar, beside Sync */
-    #viewFarmbox .fb-sendall { width: auto; padding: 0 12px; border-radius: var(--radius-full); font-size: var(--text-xs); font-weight: 800; white-space: nowrap; gap: 4px; }
+    #viewFarmbox .fb-sendall { width: auto; padding: 0 12px; border-radius: var(--radius-full); font-size: var(--text-xs); font-weight: 700; white-space: nowrap; gap: 4px; }
     #viewFarmbox .fb-sendall[disabled] { opacity: .6; }
     .fb-sendlist { margin: 8px 0 0; padding-left: 1.1em; display: grid; gap: 6px; font-size: var(--text-sm); }
     .fb-sendlist li.bad { color: var(--error, #c0392b); }
@@ -1198,7 +1233,7 @@
     .fb-tl-line { display: flex; align-items: stretch; }
     .fb-tl-row { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 12px 4px; min-height: 48px; font: inherit;
       background: none; border: 0; color: var(--text); text-align: left; cursor: pointer; }
-    .fb-tl-code { font-family: ui-monospace, monospace; font-weight: 800; min-width: 52px; }
+    .fb-tl-code { font-family: ui-monospace, monospace; font-weight: 700; min-width: 52px; }
     .fb-tl-text { flex: 1; min-width: 0; color: var(--text-muted); font-size: var(--text-sm); }
     .fb-tl-act { color: var(--text-muted); }
     .fb-tl-more { flex: none; min-width: 48px; font: inherit; font-size: var(--text-lg); background: none; border: 0; color: var(--text-muted); cursor: pointer; }
@@ -1217,7 +1252,7 @@
     .fb-tl-item .fb-sc-card { margin: 0 0 12px; }
     .fb-codesheet { display: flex; flex-direction: column; gap: 10px; }
     .fb-codesheet-img { width: 100%; max-height: 34vh; object-fit: contain; border-radius: var(--radius-md); background: var(--surface-offset); }
-    .fb-codesheet-code { width: 100%; font-family: ui-monospace, monospace; font-weight: 800; font-size: 28px; text-align: center; text-transform: uppercase; }
+    .fb-codesheet-code { width: 100%; font-family: ui-monospace, monospace; font-weight: 700; font-size: 28px; text-align: center; text-transform: uppercase; }
     .fb-codesheet-picks .fb-btn { min-height: 34px; padding: 4px 10px; font-family: ui-monospace, monospace; font-size: var(--text-xs); }
     .fb-sc-outcome { align-items: center; }
     .fb-sc-outcome .fb-btn.no { flex: none; min-width: 120px; }
@@ -1227,14 +1262,14 @@
     .fb-trap-side { border: 2px solid var(--border); border-radius: var(--radius-md); padding: 8px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
     .fb-trap-side.yellow { border-color: #e7c21a; }
     .fb-trap-side.blue { border-color: #2f7de1; }
-    .fb-trap-side img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 6px; }
+    .fb-trap-side img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--radius-xs); }
     .fb-trap-side input.fb-num { width: 72px; }
     /* a picture's ✕, in its top right corner (0.11.86) */
     .fb-pic { position: relative; flex: none; line-height: 0; }
     .fb-trap-side .fb-pic { width: 100%; }
     .fb-pic-x::after { content: ''; position: absolute; inset: -9px; }      /* the ✕ looks 26 px, the tap is 44 px */
     .fb-pic-x { position: absolute; top: 4px; right: 4px; width: 26px; height: 26px; padding: 0; border-radius: 50%; display: grid; place-items: center;
-      font: 800 13px/1 inherit; color: #fff; background: rgba(0,0,0,.62); border: 1.5px solid rgba(255,255,255,.75); cursor: pointer; }
+      font: 700 13px/1 inherit; color: #fff; background: rgba(0,0,0,.62); border: 1.5px solid rgba(255,255,255,.75); cursor: pointer; }
     .fb-pic-x:active { background: var(--danger, #d64545); }
     .fb-noscale-img { display: block; width: 100%; max-height: 38vh; object-fit: contain; border-radius: var(--radius-md); background: #000; margin: 8px 0; }
     .fb-trap-side .fb-btn { min-height: 34px; padding: 4px 10px; font-size: var(--text-xs); }
@@ -1256,7 +1291,7 @@
     .fb-trap-cnt { font-weight: 700; }
     .fb-sc-name { display: inline-flex; align-items: center; gap: 5px; }
     .fb-sc-v { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; border-radius: 50%;
-      font-size: 10px; font-weight: 900; line-height: 1; flex: none; }
+      font-size: 10px; font-weight: 700; line-height: 1; flex: none; }
     .fb-sc-v.nok { background: var(--coral, #d9534f); }
     .fb-sc-v.ok { background: var(--success, #2e7d32); color: #fff; }
     .fb-sc-tabs .fb-sc-tab { flex: 1 1 0; min-width: 0; padding: 8px 4px; }
@@ -1270,7 +1305,7 @@
     .fb-rv-sec { margin-bottom: var(--space-4); }
     .fb-rv-head { width: 100%; display: flex; align-items: center; gap: 8px; padding: 10px 2px; font: inherit; font-size: var(--text-base);
       background: none; border: 0; border-bottom: 2px solid var(--border); color: var(--text); cursor: pointer; text-align: left; }
-    .fb-rv-word { margin-left: auto; font-size: var(--text-sm); font-weight: 800; }
+    .fb-rv-word { margin-left: auto; font-size: var(--text-sm); font-weight: 700; }
     .fb-rv-word.ok { color: var(--success, #2e7d32); }
     .fb-rv-word.nok { color: var(--coral, #d9534f); }
     .fb-rv-note { margin: 6px 0; padding: 6px 10px; border-radius: var(--radius-md); background: var(--surface-offset); font-size: var(--text-sm); }
@@ -1286,7 +1321,7 @@
     .fb-sc-first { font-weight: 600; }
     .fb-missing { max-height: 80vh; overflow-y: auto; }
     .fb-miss-row { padding: 10px 0; border-top: 1px solid var(--border); }
-    .fb-miss-code { font-family: ui-monospace, monospace; font-weight: 800; font-size: var(--text-base); }
+    .fb-miss-code { font-family: ui-monospace, monospace; font-weight: 700; font-size: var(--text-base); }
     .fb-miss-row .fb-actions { margin-top: 6px; align-items: center; }
     .fb-miss-row .fb-btn[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--text); box-shadow: inset 0 0 0 1px var(--accent); }
     .fb-btn[disabled] { opacity: .45; }
@@ -1299,7 +1334,7 @@
     .fb-sc-card .fb-shot { align-items: flex-start; flex-wrap: nowrap; }
     .fb-sc-card .fb-shot img { width: 104px; height: 104px; flex: none; }
     .fb-sc-side { flex: 1; min-width: 0; display:flex; flex-direction:column; gap: 6px; }
-    .fb-sc-code { width: auto; min-width: 110px; font-family: ui-monospace, monospace; font-weight: 800; }
+    .fb-sc-code { width: auto; min-width: 110px; font-family: ui-monospace, monospace; font-weight: 700; }
     .fb-sc-side input.fb-num { width: 84px; }
     .fb-sc-level { font-size: var(--text-sm); font-weight: 700; padding: 6px 10px; border-radius: var(--radius-md); background: var(--surface-offset); }
     .fb-sc-level::before { content: ''; display:inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; background: var(--text-muted); }
@@ -1312,7 +1347,7 @@
     .fb-sc-card[data-tone="red"] { border-color: var(--coral); }
     .fb-sc-card[data-tone="orange"] { border-color: #f0a020; }
     .fb-sc-pos { align-items: center; margin-top: var(--space-2); }
-    .fb-sc-pos input.fb-num { width: 96px; text-transform: uppercase; font-family: ui-monospace, monospace; font-weight: 800; }
+    .fb-sc-pos input.fb-num { width: 96px; text-transform: uppercase; font-family: ui-monospace, monospace; font-weight: 700; }
     .fb-sc-measures { margin-top: var(--space-2); align-items: center; }
     .fb-lines .fb-measure-bar { flex-wrap: wrap; gap: 8px; justify-content: center; }
     .fb-size-pick { border-width: 2px; font-weight: 700; }
@@ -1322,7 +1357,7 @@
     .fb-size-pick[aria-pressed="true"].across { background: #ff4081; color: #fff; }
     .fb-sc-ai { margin-top: var(--space-2); padding: 8px 10px; border-radius: var(--radius-md); font-size: var(--text-sm);
       background: color-mix(in srgb, var(--accent) 12%, var(--surface)); border-left: 3px solid var(--accent); }
-    .fb-sc-ai::before { content: '✦ AI · '; font-weight: 800; }
+    .fb-sc-ai::before { content: '✦ AI · '; font-weight: 700; }
     .fb-sc-outcome .fb-btn { min-height: 48px; font-size: var(--text-base); }
     .fb-measure canvas { touch-action: none; }
     .fb-viewer { position: fixed; inset: 0; z-index: 1001; background: #000; display: flex; flex-direction: column; }
@@ -1370,7 +1405,7 @@
   <link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/splash-1242x2208.png">
   <link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="splash/splash-750x1334.png">
   <!-- MP4Box: demuxes the source AAC track so the compressor can remux audio into the output MP4 (iOS fix). Bundled for offline use. -->
-  <script src="mp4box.all.min.js"></script>
+  <script src="mp4box.all.min.js" defer></script>
 </head>
 <body class="mode-sop">
 <script>
@@ -1832,9 +1867,11 @@
     ['0.8.2', '2026-09-11', 'Bigger logo with "beta"', 'Warm gradient, update popup, launch fixes.'],
     ['0.8', '2026-09-11', 'The version under the nb. logo', 'New version scheme.'],
   ];
+  // drawn when Settings first opens (openSettings, js/capture/author-skins-settings.js; 21 Nov 2026), not at the app's start
   function renderVersionLog() {
     const box = document.getElementById('versionLog');
-    if (!box) return;
+    if (!box || box.dataset.drawn) return;
+    box.dataset.drawn = '1';
     box.textContent = '';
     const fmt = d => { try { return new Date(d + 'T12:00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'short' }); } catch (_) { return d; } };
     VERSION_LOG.forEach(([v, d, t, sum]) => {
@@ -1889,10 +1926,9 @@
 
   // Check for updates on page load
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => { updateVersionDisplay(); renderVersionLog(); checkForUpdates(); });
+    document.addEventListener('DOMContentLoaded', () => { updateVersionDisplay(); checkForUpdates(); });
   } else {
     updateVersionDisplay();
-    renderVersionLog();
     checkForUpdates();
   }
 
@@ -2147,7 +2183,7 @@ function addDaysYmd(day, n) {
       Enter Author
     </button>
     <button class="btn-icon" id="settingsBtn" aria-label="Settings" title="Settings">
-      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     </button>
   </div>
 </header>
@@ -2271,7 +2307,7 @@ function addDaysYmd(day, n) {
     <div class="cap-row">
       <div class="cap-item">
         <button class="record-btn cap-btn" id="recordBtn" aria-label="Start recording" aria-pressed="false">
-        <svg id="micIcon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg id="micIcon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
           <rect x="9" y="2" width="6" height="12" rx="3"/>
           <path d="M5 10c0 3.866 3.134 7 7 7s7-3.134 7-7"/>
           <line x1="12" y1="17" x2="12" y2="21"/>
@@ -2285,7 +2321,7 @@ function addDaysYmd(day, n) {
       </div>
       <div class="cap-item">
         <button class="record-btn cap-btn" id="videoSummaryPhotoBtn" aria-label="Attach photo">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
             <rect x="3" y="3" width="18" height="18" rx="2"/>
             <circle cx="8.5" cy="8.5" r="1.5"/>
             <polyline points="21 15 16 10 5 21"/>
@@ -2295,7 +2331,7 @@ function addDaysYmd(day, n) {
       </div>
       <div class="cap-item">
         <button class="record-btn cap-btn" id="videoSummaryVideoBtn" aria-label="Attach video">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
             <path d="M15 10l4.553-2.069A1 1 0 0 1 21 8.82v6.362a1 1 0 0 1-1.447.888L15 14"/><rect x="1" y="6" width="14" height="12" rx="2"/>
           </svg>
         </button>
@@ -2336,11 +2372,11 @@ function addDaysYmd(day, n) {
       <div class="section-label" style="margin-bottom:0">Voice transcription</div>
       <div class="editable-box-actions">
         <button class="btn-copy" id="copyTranscriptBtn" aria-label="Copy transcript">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           Copy
         </button>
         <button class="btn-copy" id="clearTranscriptBtn" aria-label="Clear transcript" style="color:var(--error)">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
           Clear
         </button>
       </div>
@@ -2359,15 +2395,15 @@ function addDaysYmd(day, n) {
       <div class="section-label" style="margin-bottom:0">Voice summary</div>
       <div class="editable-box-actions">
         <button class="btn-generate" id="generateSummaryBtn" aria-label="Write the voice summary with AI" title="Write the voice summary with AI">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
         AI
       </button>
         <button class="btn-copy" id="copySummaryBtn" aria-label="Copy summary">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           Copy
         </button>
         <button class="btn-copy" id="clearSummaryBtn" aria-label="Clear voice summary" style="color:var(--error)">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
           Clear
         </button>
       </div>
@@ -2385,11 +2421,11 @@ function addDaysYmd(day, n) {
       <div class="section-label" style="margin-bottom:0">Video transcription</div>
       <div class="editable-box-actions">
         <button class="btn-copy" id="copyVideoTranscriptBtn" aria-label="Copy video transcription">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           Copy
         </button>
         <button class="btn-copy" id="clearVideoTranscriptBtn" aria-label="Clear video transcription" style="color:var(--error)">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
           Clear
         </button>
       </div>
@@ -2408,15 +2444,15 @@ function addDaysYmd(day, n) {
       <div class="section-label" style="margin-bottom:0">Video summary</div>
       <div class="editable-box-actions">
         <button class="btn-generate" id="generateVideoSummaryBtn" aria-label="Write the video summary with AI" title="Write the video summary with AI">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
         AI
       </button>
         <button class="btn-copy" id="copyVideoSummaryBtn" aria-label="Copy video summary">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           Copy
         </button>
         <button class="btn-copy" id="clearVideoSummaryBtn" aria-label="Clear video summary" style="color:var(--error)">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
           Clear
         </button>
       </div>
@@ -2454,7 +2490,7 @@ function addDaysYmd(day, n) {
 <div id="settingsPage" class="hidden" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
   <div class="settings-head">
     <button class="btn-icon" id="settingsBack" aria-label="Back" title="Back">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
     <span style="font-weight:700">Settings</span>
   </div>
@@ -2556,7 +2592,7 @@ function addDaysYmd(day, n) {
         </div>
         <div style="display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap;">
           <button class="btn-generate" id="createDbBtn" style="padding:var(--space-2) var(--space-4);font-size:var(--text-sm);">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Create All 4 Databases
           </button>
           <div id="createDbResult" style="font-size:var(--text-xs);font-weight:600;display:none;align-items:center;gap:var(--space-1);"></div>
@@ -2566,7 +2602,7 @@ function addDaysYmd(day, n) {
       <!-- TEST BUTTONS -->
       <div style="display:flex;gap:var(--space-2);margin-top:var(--space-3);align-items:center;flex-wrap:wrap;">
         <button class="btn-generate" id="testNotionBtn" style="padding:var(--space-2) var(--space-4);font-size:var(--text-sm);">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
           Test Notion
         </button>
         <div id="notionTestResult" style="font-size:var(--text-xs);font-weight:600;display:none;align-items:center;gap:var(--space-1);"></div>
@@ -2595,7 +2631,7 @@ function addDaysYmd(day, n) {
 <div class="submit-area">
   <div class="submit-inner">
     <button class="btn-submit" id="submitBtn" disabled>
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
         <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
       </svg>
       Send to <span id="submitTabLabel">Ugly200</span>
@@ -3017,6 +3053,7 @@ const settingsPage = document.getElementById('settingsPage');
 function openSettings() {
   setConfigLocked(true);
   document.getElementById('settingsVersion').textContent = 'v ' + CURRENT_VERSION;
+  try { renderVersionLog(); } catch (e) { /* the list stays empty */ }   // drawn here, not at the start (21 Nov 2026)
   settingsPage.classList.remove('hidden');
   settingsPage.scrollTop = 0;
   document.body.style.overflow = 'hidden';
@@ -6124,6 +6161,14 @@ window.addEventListener('online', () => syncOutbox());
   const putAll = (store, rows) => rows && rows.length
     ? tx(store, 'readwrite', s => rows.forEach(r => s.put(r))) : Promise.resolve();
   const all = store => tx(store, 'readonly', s => s.getAll());
+  // a store read one row at a time, keeping only what pick(row) gives back (undefined: left out), within range (an
+  // IDBKeyRange, optional). 21 Nov 2026: all('outbox') and all('kv') loaded the bytes of every waiting photo at once,
+  // several times a minute; a cursor holds one row in memory at a time.
+  const scan = (store, pick, range) => tx(store, 'readonly', s => {
+    const out = [], q = s.openCursor(range);
+    q.onsuccess = () => { const c = q.result; if (!c) return; const v = pick(c.value); if (v !== undefined) out.push(v); c.continue(); };
+    return out;
+  });
   const getKVraw = async k => (await tx('kv', 'readonly', s => s.get(k)))?.v;
   const setKVraw = (k, v) => tx('kv', 'readwrite', s => s.put({ id: k, v }));
   const delRaw = (store, id) => tx(store, 'readwrite', s => s.delete(id));
@@ -6429,9 +6474,12 @@ window.addEventListener('online', () => syncOutbox());
   const errKind = e => { const m = String((e && e.message) || e || '');
     return /Failed to fetch|Load failed|NetworkError|network error|no answer in time/i.test(m) ? 'net' : /^5\d\d /.test(m) ? 'busy' : m === 'signed out' ? 'out' : ''; };
   // the tasks this phone has closed and whose report, tick or cancel is still in the outbox
-  const unsentTasks = async () => new Set((await all('outbox')).filter(r => !r.dead && r.payload && r.payload.task_id
-    && (r.payload.__tick || r.payload.__skip || (!r.payload.__timer && !r.payload.__upload && !r.payload.__clock
-        && !r.payload.__feedback && !r.payload.__ghnote && r.payload.status === 'completed'))).map(r => r.payload.task_id));
+  // read one row at a time, keeping only that task and whether the row is a clock event (21 Nov 2026: all('outbox')
+  // loaded every waiting photo's bytes at each sync)
+  const outboxLight = () => scan('outbox', r => { const p = r.payload;
+    return { task: !r.dead && p && p.task_id && (p.__tick || p.__skip || (!p.__timer && !p.__upload && !p.__clock
+        && !p.__feedback && !p.__ghnote && p.status === 'completed')) ? p.task_id : null, clock: !!(p && p.__clock) }; });
+  const unsentTasks = rows => new Set(rows.filter(x => x.task).map(x => x.task));
   async function sync(full, quiet) {
     if (syncing || !session) return;
     syncing = true; $('sync').classList.add('spin');
@@ -6443,7 +6491,7 @@ window.addEventListener('online', () => syncOutbox());
       // read before the call too (0.11.146): the outbox is sent beside the sync now, and a report that went up while
       // the server answered is no longer in the outbox after it
       let unsentBefore = new Set();
-      try { unsentBefore = await unsentTasks(); } catch (e) { /* read again below */ }
+      try { unsentBefore = unsentTasks(await outboxLight()); } catch (e) { /* read again below */ }
       const d = await api('/rest/v1/rpc/sync_since', {
         method: 'POST',
         body: JSON.stringify({ p_farm: farm.id, p_since: since || '-infinity' })
@@ -6453,8 +6501,10 @@ window.addEventListener('online', () => syncOutbox());
       // opening it gave an empty checklist to do again. Only while its report, tick or cancel is still in the outbox,
       // and never over a task the server cancelled. Anything unexpected here: the server's rows as they came, as before.
       let fromServer = d.tasks;
+      let outAfter = null;                     // the read after the call
       try {
-        const unsent = new Set([...unsentBefore, ...(await unsentTasks())]);
+        outAfter = await outboxLight();
+        const unsent = new Set([...unsentBefore, ...unsentTasks(outAfter)]);
         if (unsent.size && Array.isArray(d.tasks)) {
           const shut = st => st === 'done' || st === 'skipped';
           const had = new Map((await all('tasks')).map(t => [t.id, t]));
@@ -6514,7 +6564,7 @@ window.addEventListener('online', () => syncOutbox());
         if (mine && mine.name && typeof setAuthor === 'function' && typeof getAuthor === 'function' && getAuthor() !== mine.name) setAuthor(mine.name);
       } catch (e) { /* the name stays as it was */ }
       if (Array.isArray(d.task_times)) await setKV('task_times', d.task_times);   // FarmBox 0161
-      if (d.clock && !(await all('outbox')).some(r => r.payload && r.payload.__clock)) await setKV('clock', { ...d.clock, at: Date.now() });
+      if (d.clock && !(await outboxLight()).some(x => x.clock)) await setKV('clock', { ...d.clock, at: Date.now() });
       // sister units (FarmBox 0126): the tasks of every unit of the group come in one sync
       await setKV('sisters', Array.isArray(d.sisters) && d.sisters.length > 1 ? d.sisters : null);
       await putAll('sops', d.sops);
@@ -6562,7 +6612,9 @@ window.addEventListener('online', () => syncOutbox());
       try { dgMoved = await dgSyncCounts(); } catch (e) { /* the cards keep what they showed */ }
       liveOpen();
       // the reports kept for adding offline go after eight days
-      for (const r of (await all('kv')).filter(r => String(r.id).startsWith('sent:') && (r.v?.kept || 0) < Date.now() - 8 * 86400000)) await del('kv', r.id);
+      // only the 'sent:' keys, one at a time (21 Nov 2026: all('kv') read every draft's photos too)
+      const sentOld = Date.now() - 8 * 86400000;
+      for (const id of await scan('kv', r => ((r.v?.kept || 0) < sentOld ? r.id : undefined), IDBKeyRange.bound('sent:', 'sent:\uffff'))) await del('kv', id);
       // not waited for (0.11.146, review of 16 Nov): a flush with full photos runs for minutes, and every sync meanwhile
       // did nothing — the minute's, the live "moved", the ⟳ tap. flush() is one pass at a time by itself.
       flush().catch(e => console.warn('flush:', e));
@@ -6754,6 +6806,8 @@ window.addEventListener('online', () => syncOutbox());
   // the next pass. Rows from before 0.11.146 have no revision: their time tells them apart.
   const sameRow = (a, b) => !!a && !!b && (a.rev || null) === (b.rev || null) && (a.at || 0) === (b.at || 0);
   const newerRow = () => { outboxDirty = true; const e = new Error('a newer copy of it is waiting on this phone'); e.superseded = true; return e; };
+  // one outbox row as it is now, or null (tx() would hand back the request itself for a missing id)
+  const outboxRow = id => tx('outbox', 'readonly', s => { const o = { row: null }, q = s.get(id); q.onsuccess = () => { o.row = q.result || null; }; return o; }).then(o => o.row);
   async function outboxKeep(row) {
     let ok = false;
     await tx('outbox', 'readwrite', s => { const q = s.get(row.id); q.onsuccess = () => { ok = sameRow(q.result, row); if (ok) s.put(row); }; });
@@ -6803,8 +6857,14 @@ window.addEventListener('online', () => syncOutbox());
     const chainOf = r => { const u = r.payload || {}; if (u.__dg) return u.chain || 'dg:' + u.client_run_id; return u.__upload ? 'run:' + u.run_client_id : u.__timer ? 'tmr:' + u.task_id : u.__clock ? 'clock' : 'run:' + u.client_run_id; };
     const held = new Set();
     let told = 0;                            // what went up that the others should see at once (live, 0.11.93)
-    const rows = (await all('outbox')).sort((a, b) => isUp(a) - isUp(b) || (a.at || 0) - (b.at || 0) || String(a.id).localeCompare(String(b.id)));
-    for (const row of rows) {
+    // 21 Nov 2026: the order from a light read (one row in memory at a time), and each row read whole only at its turn —
+    // all('outbox') held the bytes of every waiting photo for the whole pass. Read at its turn, a row taken back
+    // meanwhile (a gallery photo discarded, Remove from this phone) is not sent; one rewritten meanwhile goes as it is now.
+    const order = (await scan('outbox', r => ({ id: r.id, at: r.at || 0, up: isUp(r) })))
+      .sort((a, b) => a.up - b.up || a.at - b.at || String(a.id).localeCompare(String(b.id)));
+    for (const o of order) {
+      const row = await outboxRow(o.id);
+      if (!row) continue;
       if (mayStop && outboxDirty && isUp(row)) break;   // something new is waiting: it goes before the rest of the photos (doFlush)
       if (row.dead) { if (!isUp(row)) held.add(chainOf(row)); continue; }
       // it failed earlier in this same flush: not again now, and what depends on it still waits for it
@@ -7212,8 +7272,9 @@ window.addEventListener('online', () => syncOutbox());
     try { const c = await getKV('dg_counts'); if (c && c.byTask) DG_COUNTS = c; } catch (e) { /* none yet */ }
     try { DG_UNSENT = new Set((await dgUnsentRounds()).map(x => x.key)); } catch (e) { DG_UNSENT = new Set(); }
     // the tasks whose report is still on this phone (0.11.91): their card says "waiting to send"
-    try { WAITING = new Set((await all('outbox')).filter(r => r.payload && r.payload.task_id && !r.payload.__timer && !r.payload.__upload && !r.payload.__feedback)
-                              .map(r => r.payload.task_id)); } catch (e) { WAITING = new Set(); }
+    // read one row at a time, keeping only the task (21 Nov 2026: all('outbox') read every waiting photo's bytes)
+    try { WAITING = new Set(await scan('outbox', r => (r.payload && r.payload.task_id && !r.payload.__timer && !r.payload.__upload && !r.payload.__feedback
+                              ? r.payload.task_id : undefined))); } catch (e) { WAITING = new Set(); }
   }
   const saveTimers = () => setKV('timers', TIMERS).catch(() => {});
   // 0.11.91 (FarmBox 0201): a stretch nobody closed ends when the person stops touching the checklist — the idle limit
@@ -9312,8 +9373,10 @@ window.addEventListener('online', () => syncOutbox());
       const cut = ctl ? setTimeout(() => ctl.abort(), 20000) : null;
       let big = null;
       try {
+        const b = await window.fbBearer();       // a token near its end is refreshed first (21 Nov 2026)
+        if (!b) throw new Error('signed out');
         const r = await fetch(URL_BASE + '/storage/v1/object/authenticated/evidence/' + p.photo_path,
-                              { headers: { apikey: ANON, Authorization: 'Bearer ' + session.access_token }, ...(ctl ? { signal: ctl.signal } : {}) });
+                              { headers: { apikey: ANON, Authorization: 'Bearer ' + b.token }, ...(ctl ? { signal: ctl.signal } : {}) });
         if (r.ok) big = await r.blob();
       } catch (e) { big = null; }
       finally { clearTimeout(cut); img.classList.remove('loading'); }
@@ -9781,7 +9844,9 @@ window.addEventListener('online', () => syncOutbox());
     if (!navigator.onLine || !session) { showToast('Listening needs signal', 'error'); return; }
     btn.disabled = true;
     try {
-      const r = await fetch(URL_BASE + '/storage/v1/object/authenticated/evidence/' + path, { headers: { apikey: ANON, Authorization: 'Bearer ' + session.access_token } });
+      const b = await window.fbBearer();         // a token near its end is refreshed first (21 Nov 2026)
+      if (!b) throw new Error('signed out');
+      const r = await fetch(URL_BASE + '/storage/v1/object/authenticated/evidence/' + path, { headers: { apikey: ANON, Authorization: 'Bearer ' + b.token } });
       if (!r.ok) throw new Error(String(r.status));
       const url = URL.createObjectURL(await r.blob());
       const a = new Audio(url); a.onended = () => URL.revokeObjectURL(url);
@@ -11101,8 +11166,6 @@ window.addEventListener('online', () => syncOutbox());
     if (String(task.generation_key || '').startsWith('ipm:') && task.notes) {
       head.append(el('p', 'fb-runfacts', (/ L of water/.test(task.notes) ? 'Mix: ' : 'Planned: ') + task.notes));
     }
-    // the scouting's how-to, folded under its title (0.11.74; it was the ? tab)
-    if (isScouting(sop)) head.append(howItWorks());
     // a crop task's batches, folded under the facts (they were on the task page)
     const batches = task.positions.filter(p => !isItem(p));
     if (batches.length && !isScouting(sop)) {
@@ -11181,13 +11244,6 @@ window.addEventListener('online', () => syncOutbox());
     show('run', detail && !detail.resume ? (detail.addOnly ? 'Add' : 'Edit') : isScouting(sop) ? 'Scouting' : 'Checklist',
          async () => {
            setKV('run_open', null).catch(() => {});
-           // 0.11.101: Back from a zone of an extra scouting sends what was captured there — nothing waits for a Finish
-           const R = run;
-           if (R?.task?.extraZone && R.sc && R.sc.photos.size && !R.edit && !R.sentOk) {
-             await finishScouting();
-             if (R.sentOk) return;                                     // sent: it went back by itself
-             showToast('Not sent yet — kept on this phone. Open the zone again to finish it.', 'info');
-           }
            await leaveRun(); backFromRun();
          });
     run.paintTimer?.();          // after show(), which writes the bar's title
@@ -11243,7 +11299,7 @@ window.addEventListener('online', () => syncOutbox());
     const tt = timerTaskOf(R.task); if (!tt) return;
     if (groupRunning(R.task)) {
       await timerPause(tt.id);
-      if (R.sc) saveScDraft(); else saveRunDraft();
+      saveRunDraft();
       showToast('Paused — the answers are kept', 'success');
     } else await timerStart(tt.id);
     R.paintTimer?.();
@@ -11257,7 +11313,7 @@ window.addEventListener('online', () => syncOutbox());
     addStop(R);
     if (R.edit && !R.resume) return;
     const tt = timerTaskOf(R.task); if (!tt) return;
-    const entered = R.touched || R.resume || localMin(tt.id) >= 1 || R.answers.size > 0 || !!(R.sc && R.sc.photos.size);
+    const entered = R.touched || R.resume || localMin(tt.id) >= 1 || R.answers.size > 0;
     if (!entered) { await timerRelease(tt.id); return; }
     if (timerRunning(tt.id)) await timerPause(tt.id);
   }
@@ -11279,36 +11335,27 @@ window.addEventListener('online', () => syncOutbox());
     if (!await askSheet({ title: 'Hand this task over?', text: 'What you have entered so far is sent as it stands, your time is kept, and the task is free for the next person to continue and finish.', yes: 'Hand it over', no: 'Keep working' })) return;   // 0.11.147: askSheet
     const cid = R.edit?.run?.client_run_id || R.clientId;
     try {
-      if (R.sc) {
-        // the scouting as it stands goes the way of the Send button (its photos and counted trap sides)
-        if (R.sc.photos.size) { R.sc.cid = R.sc.cid || cid; }
-        clearTimeout(scDraftTimer);
-        await setKV(scDraftKey(R.task), { saved: Date.now(), cid: R.sc.cid || null, tab: R.sc.tab, outcome: R.sc.outcome, outcomeNote: R.sc.outcomeNote, verdict: R.sc.verdict,
-          lastPos: R.sc.lastPos, extra: [...R.sc.extra], status: [...R.sc.status], noTraps: !!R.sc.noTraps, photos: [...R.sc.photos.values()] });
-      } else {
-        const steps = [...R.answers.entries()].filter(([, a]) => a && (a.result || a.value_num != null || (a.value_text != null && a.value_text !== '')))
-          .map(([k, a]) => { const blobs = (R.media.get(k) || []).filter(f => f instanceof Blob);
-            const saved = (R.media.get(k) || []).filter(f => f && f.saved).map(f => typeof f.saved === 'string' ? { path: f.saved, kind: 'photo' } : f.saved);
-            return { ...a, media: saved, ...(blobs.length ? { media_blobs: blobs } : {}), recorded_at: new Date().toISOString() }; })
-          .filter(x => Number.isFinite(Number(x.seq)));
-        if (steps.length) {
-          R.draftCid = cid;
-          await queue([{ farm_id: tt.farm_id || farm.id, task_id: tt.id, sop_version_id: tt.sop_version_id || R.task.sop_version_id, client_run_id: cid,
-            status: 'partial', ...(R.resume ? { edit: true, append: true } : {}), started_at: R.edit?.run?.started_at || R.started, finished_at: new Date().toISOString(),
-            steps, notes: String(document.getElementById('fb-runNote')?.value || '').trim() || null }]);
-          clearTimeout(draftTimer);
-          await setKV(runDraftKey(R.task), { saved: Date.now(), sentSaved: Date.now(), cid, answers: [...R.answers.entries()],
-            runNote: document.getElementById('fb-runNote')?.value || '', media: [] });
-        }
+      const steps = [...R.answers.entries()].filter(([, a]) => a && (a.result || a.value_num != null || (a.value_text != null && a.value_text !== '')))
+        .map(([k, a]) => { const blobs = (R.media.get(k) || []).filter(f => f instanceof Blob);
+          const saved = (R.media.get(k) || []).filter(f => f && f.saved).map(f => typeof f.saved === 'string' ? { path: f.saved, kind: 'photo' } : f.saved);
+          return { ...a, media: saved, ...(blobs.length ? { media_blobs: blobs } : {}), recorded_at: new Date().toISOString() }; })
+        .filter(x => Number.isFinite(Number(x.seq)));
+      if (steps.length) {
+        R.draftCid = cid;
+        await queue([{ farm_id: tt.farm_id || farm.id, task_id: tt.id, sop_version_id: tt.sop_version_id || R.task.sop_version_id, client_run_id: cid,
+          status: 'partial', ...(R.resume ? { edit: true, append: true } : {}), started_at: R.edit?.run?.started_at || R.started, finished_at: new Date().toISOString(),
+          steps, notes: String(document.getElementById('fb-runNote')?.value || '').trim() || null }]);
+        clearTimeout(draftTimer);
+        const t = Date.now();              // one moment for both (21 Nov 2026): two calls could differ by a millisecond
+        await setKV(runDraftKey(R.task), { saved: t, sentSaved: t, cid, answers: [...R.answers.entries()],
+          runNote: document.getElementById('fb-runNote')?.value || '', media: [] });
       }
       addStop(R);
       await timerRelease(tt.id);
       await setKV('run_open', null);
       showToast('Handed over — the task is free for the next person', 'success');
-      const wasSc = !!R.sc;
       run = null;
       await backFromRun();
-      if (wasSc && navigator.onLine) sendAllNow();
     } catch (e) { showToast('Could not hand over — ' + String(e.message || e).slice(0, 80), 'error'); }
   }
   // "Not done…" under Finish (0.11.60): what the task page offered, for the Admin and the task's own people
@@ -11335,7 +11382,7 @@ window.addEventListener('online', () => syncOutbox());
         const tt = timerTaskOf(R.task); if (!tt) return;
         if (groupRunning(R.task)) {
           await timerPause(tt.id);
-          if (R.sc) saveScDraft(); else saveRunDraft();
+          saveRunDraft();
           showToast('Paused — the answers are kept', 'success');
         } else {
           await timerStart(tt.id);
@@ -11465,8 +11512,6 @@ window.addEventListener('online', () => syncOutbox());
     }, 0);
     return el('div', 'config-hint', 'Opening Digital scouting…');
   }
-  async function finishScouting() { /* run.sc is no longer set by anything: nothing to finish */ }
-  const howItWorks = () => document.createDocumentFragment();
   async function trapRound(task, sop, item = null) {
     const box = el('div', 'fb-traps');
     box.append(el('div', 'config-hint', 'The sticky traps are read in Digital scouting now (the scouting task of the day) — this checklist no longer takes trap photos.'));
@@ -11498,20 +11543,9 @@ window.addEventListener('online', () => syncOutbox());
     paint();
     return risk;
   }
+  // an old round's draft key: still read (scoutSections above, the swipe's "mine" check); run.sc, saveScDraft,
+  // finishScouting and howItWorks were removed on 21 Nov 2026 — nothing set run.sc since 17 Nov
   const scDraftKey = task => 'scout2:' + (task.key || task.id);
-  let scDraftTimer = null;
-  function saveScDraft() {
-    if (!run?.sc) return;
-    run.touched = true;
-    clearTimeout(scDraftTimer);
-    const r = run;
-    scDraftTimer = setTimeout(async () => {
-      try {
-        await setKV(scDraftKey(r.task), { saved: Date.now(), cid: r.sc.cid || null, tab: r.sc.tab, outcome: r.sc.outcome, outcomeNote: r.sc.outcomeNote, verdict: r.sc.verdict,
-          lastPos: r.sc.lastPos, extra: [...r.sc.extra], status: [...r.sc.status], noTraps: !!r.sc.noTraps, photos: [...r.sc.photos.values()] });
-      } catch (e) { console.warn('scouting draft not saved', e); }
-    }, 250);
-  }
   const parsePos = code => {
     const m = /^([0-9]+)([A-Z]+)([0-9]+(?:[.,][0-9]+)?)?$/.exec(String(code || '').toUpperCase().replace(/[\s\-_.·/]/g, ''));
     return m ? { n: m[1], row: m[2], m: m[3] ? m[3].replace(',', '.') : null } : null;
@@ -11738,7 +11772,7 @@ window.addEventListener('online', () => syncOutbox());
   async function measurePhoto(p, done) {
     let bmp;
     try { bmp = await createImageBitmap(p.full, { resizeWidth: 1600, resizeQuality: 'medium' }); }
-    catch (e) { showToast('This photo could not be opened', 'error'); return; }
+    catch (e) { showToast('This photo could not be opened', 'error'); done?.(); return; }   // the caller waits for done (21 Nov 2026)
     let ppm = p.px_per_mm ? p.px_per_mm * (bmp.width / p.full_w) : null;
     let calibrating = !ppm;
     const ov = el('div', 'fb-cam fb-measure');
@@ -11748,6 +11782,7 @@ window.addEventListener('online', () => syncOutbox());
     const close = el('button', 'fb-btn', 'Done');
     ov.append(cv, hint, bar);
     document.body.append(ov);
+    ov._close = () => close.onclick();   // Back (screens.js) closes it as Done does: the photo's caller is not left waiting
     const fit = () => {
       const W = ov.clientWidth, H = ov.clientHeight - 120;
       const k = Math.min(W / bmp.width, H / bmp.height);
@@ -11785,9 +11820,8 @@ window.addEventListener('online', () => syncOutbox());
           if (!(v > 0) || px < 20) { showToast('Tap two marks further apart and give the centimetres between them', 'error'); return; }
           ppm = px / (v * 10);
           p.px_per_mm = Math.round(ppm * (p.full_w / bmp.width) * 1000) / 1000; p.scale_source = 'ruler'; p.scale_cm = v;
-          if (p.section === 'growth') run?.sc?.sizeCheck?.(p);        // the scale is set: tap the fruit to measure it
           calibrating = false; a = b = null; saved = `Scale set: ${v} cm on the ruler. Now tap the two ends of what you measure.`;
-          draw(); paintBar(); saveScDraft();
+          draw(); paintBar();
         };
         bar.append(cm, el('span', 'fb-cam-end', 'cm'), set);
       } else if (!calibrating && a && b) {
@@ -11796,7 +11830,7 @@ window.addEventListener('online', () => syncOutbox());
         MEASURE_WHAT.forEach(([v, l]) => {
           const k = el('button', 'fb-btn', l); k.type = 'button';
           k.onclick = () => { p.measures = [...(p.measures || []), { what: v, mm, scale: p.scale_source || 'marker' }]; a = b = null;
-            saved = `Saved: ${l.toLowerCase()} ${mm} mm. Tap two more points, or Done.`; draw(); paintBar(); saveScDraft(); };
+            saved = `Saved: ${l.toLowerCase()} ${mm} mm. Tap two more points, or Done.`; draw(); paintBar(); };
           bar.append(k);
         });
       } else hint.textContent = idle();
@@ -12949,7 +12983,6 @@ window.addEventListener('online', () => syncOutbox());
   }
 
   async function finishRun() {
-    if (run?.sc) return finishScouting();
     const R = run;   // the run being finished: the person may open another task while it saves (0.11.55)
     // the trap round: every trap needs its photo and a number before the round can close
     if (run.traps) {
@@ -13387,9 +13420,10 @@ window.addEventListener('online', () => syncOutbox());
   }
 
   async function paintFoot() {
-    const all_ = await all('outbox');
+    // only the flags, one row at a time (21 Nov 2026: all('outbox') read every waiting photo's bytes at each sync)
+    const all_ = await scan('outbox', r => ({ dead: !!r.dead, photo: !!(r.payload?.__upload || r.payload?.__gallery), error: r.error || '' }));
     const dead = all_.filter(r => r.dead), rows = all_.filter(r => !r.dead);
-    const photos = rows.filter(r => r.payload?.__upload || r.payload?.__gallery).length;
+    const photos = rows.filter(r => r.photo).length;
     const pending = rows.length - photos;
     const at = await getKV('synced_at');
     paintLastSync();                                   // 0.11.147: the same moment, under the top bar
@@ -13406,7 +13440,12 @@ window.addEventListener('online', () => syncOutbox());
     try { const at = dead.length ? $('next') : $('empty'); if (at && foot.previousElementSibling !== at) at.after(foot); } catch (e) { /* stays where it is */ }
     foot.title = dead.map(r => r.error).filter(Boolean).join('\n');
     // tap: the rows set aside go back in the queue once more (0.11.55)
-    foot.onclick = dead.length ? async () => { await putAll('outbox', dead.map(r => ({ ...r, dead: false }))); flush(); } : null;
+    // each row as it is at the tap, one at a time (the light read above has no payload to write back)
+    foot.onclick = dead.length ? async () => {
+      await tx('outbox', 'readwrite', s => { const q = s.openCursor();
+        q.onsuccess = () => { const c = q.result; if (!c) return; if (c.value.dead) c.update({ ...c.value, dead: false }); c.continue(); }; });
+      flush().catch(() => {});
+    } : null;
   }
 
   function paintAccount() {
@@ -13463,9 +13502,10 @@ window.addEventListener('online', () => syncOutbox());
     if (tc !== cv) freeCanvas(tc);
     freeCanvas(cv);
     if (!main || !thumb) throw new Error('not a picture');
-    // a file chosen from the phone remembers when it was taken; a photo from the camera is of now
-    const lm = file instanceof File ? file.lastModified : 0;
-    const taken = lm > Date.UTC(2015, 0, 1) && lm <= Date.now() + 86400000 ? lm : Date.now();
+    // a file chosen from the phone: when it was taken — its camera's own time first, then the file's date (21 Nov 2026,
+    // dgShotTime: the file's date alone is often the day it was copied or picked); a photo from the camera is of now
+    const st = file instanceof File ? await dgShotTime(file) : null;
+    const taken = st && st > Date.UTC(2015, 0, 1) ? st : Date.now();
     return { main, thumb, width, height, bytes: main.size, taken, url: URL.createObjectURL(thumb) };
   }
   async function glAdd(files) {
@@ -13565,6 +13605,11 @@ window.addEventListener('online', () => syncOutbox());
     const u = row.payload;
     GL.sending = row.id; glSoon();
     try {
+      // 21 Nov 2026: still the row on the phone? A photo discarded (or replaced) since the pass read it is not uploaded
+      // nor published; superseded: the pass writes nothing back and goes on
+      const still = async () => { const now = await outboxRow(row.id);
+        if (!sameRow(now, row)) { const e = new Error('taken off the phone meanwhile'); e.superseded = true; throw e; } };
+      await still();
       const put = async (key, path, flag, keep) => {
         if (u[flag]) return;
         const blob = unBlob(u[key]);
@@ -13572,10 +13617,12 @@ window.addEventListener('online', () => syncOutbox());
         try { await api('/storage/v1/object/farm-gallery/' + path, { method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: blob }); }
         catch (e) { if (!/Duplicate|already exists/i.test(String(e.message || e))) throw e; }
         u[flag] = true; if (!keep) u[key] = null;           // the small copy stays for the list until the photo is written
-        try { await putAll('outbox', [row]); } catch (e) { /* not noted: a resend meets "Duplicate", taken as done */ }
+        // only over the same row (outboxKeep): putAll wrote a discarded photo back onto the phone
+        try { await outboxKeep(row); } catch (e) { if (e.superseded) throw e; /* not noted: a resend meets "Duplicate", taken as done */ }
       };
       await put('blob', u.path, 'up_main', false);
       await put('thumb', u.thumb_path, 'up_thumb', true);
+      await still();
       await api('/rest/v1/rpc/add_farm_photo', { method: 'POST', body: JSON.stringify({ p: {
         farm_id: u.farm_id, path: u.path, thumb_path: u.thumb_path, taken_at: u.taken_at, tag: u.tag, note: u.note,
         width: u.width, height: u.height, bytes: u.bytes, client_ref: u.client_run_id } }) });
@@ -13780,8 +13827,8 @@ window.addEventListener('online', () => syncOutbox());
     const tt = timerTaskOf(run.task); if (tt) timerTouch(tt.id);
   }, { capture: true, passive: true }));
   const upSel = document.getElementById('fb-uploadNet');
-  if (upSel) { upSel.value = uploadNet(); upSel.onchange = () => { try { localStorage.setItem('fb_upload_net', upSel.value); } catch (e) {} flush(); }; }
-  navigator.connection?.addEventListener?.('change', () => flush());
+  if (upSel) { upSel.value = uploadNet(); upSel.onchange = () => { try { localStorage.setItem('fb_upload_net', upSel.value); } catch (e) {} flush().catch(() => {}); }; }
+  navigator.connection?.addEventListener?.('change', () => flush().catch(() => {}));
 
   document.querySelectorAll('[data-source]').forEach(btn => btn.addEventListener('click', () => {
     setSource(btn.dataset.source);
@@ -13805,7 +13852,7 @@ window.addEventListener('online', () => syncOutbox());
       try { for (const id of Object.keys(TIMERS)) if (timerRunning(id)) await timerPause(id); } catch (e) { /* as before */ }
       try {
         if (session && navigator.onLine) await Promise.race([flush().catch(() => {}), new Promise(res => setTimeout(res, 8000))]);
-        const left = (await all('outbox')).length;
+        const left = await tx('outbox', 'readonly', s => s.count());   // counted, not read (21 Nov 2026)
         // the app's own sheet (17 Nov 2026), the same question as the browser's confirm() it replaces
         if (left && !await askSheet({ title: 'Sign out anyway?', yes: 'Sign out anyway', no: 'Stay signed in', danger: true,
           text: `${left} thing${left === 1 ? '' : 's'} you did ${left === 1 ? 'is' : 'are'} not sent yet.\n\nIf you sign out now, ${left === 1 ? 'it goes' : 'they go'} up later under the next person's name.` })) return;
@@ -13862,7 +13909,7 @@ window.addEventListener('online', () => syncOutbox());
   }
 
   const netPill = () => $('net')?.classList.toggle('hidden', navigator.onLine);
-  addEventListener('online', () => { netPill(); session ? sync(false) : flush(); });
+  addEventListener('online', () => { netPill(); session ? sync(false) : flush().catch(() => {}); });
   // who is doing what stays current (0.11.84): a quiet sync every minute while the app is on screen and connected
   setInterval(() => {
     if (!document.hidden && navigator.onLine && session && document.body.classList.contains('src-cloud')
@@ -13872,7 +13919,7 @@ window.addEventListener('online', () => syncOutbox());
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) { liveClose(); return; }
     liveOpen();
-    if (document.body.classList.contains('src-cloud')) { (session && navigator.onLine) ? sync(false, true) : flush(); }
+    if (document.body.classList.contains('src-cloud')) { (session && navigator.onLine) ? sync(false, true) : flush().catch(() => {}); }
   });
   addEventListener('online', () => liveOpen());
 
@@ -14053,14 +14100,14 @@ window.addEventListener('online', () => syncOutbox());
     box.append(el('div', 'fb-lot-h', 'Open cases'));
     const cg = el('div', 'set-group');
     if (!cases.length) cg.append(el('div', 'fb-meta', 'None on its zone'));
-    cases.forEach(x => { const r = el('div', 'set-row'); r.append(el('span', null, x.label || x.title), el('span', null, `${x.severity} · since ${lotDay(String(x.opened).slice(0, 10))}`)); cg.append(r); });
+    cases.forEach(x => { const r = el('div', 'set-row'); r.append(el('span', null, x.label || x.title), el('span', null, `${x.severity} · since ${lotDay(x.opened ? farmDay(x.opened) : String(x.opened).slice(0, 10))}`)); cg.append(r); });
     box.append(cg);
 
     const sprays = c.sprays || [];
     const sprayDone = sprays.filter(s => s.status === 'done'), sprayNext = sprays.filter(s => s.status !== 'done');
     const sprayRow = (s, doneOne) => { const r = el('div', 'set-row');
       r.append(el('span', null, (doneOne ? '{i:check} ' : '') + (s.product || 'Treatment')),
-               el('span', null, `${lotDay(String(doneOne ? (s.done_at || s.date) : s.date).slice(0, 10))}${s.phi_days ? ' · wait ' + s.phi_days + ' d' : ''}`));
+               el('span', null, `${lotDay(doneOne && s.done_at ? farmDay(s.done_at) : String(s.date).slice(0, 10))}${s.phi_days ? ' · wait ' + s.phi_days + ' d' : ''}`));
       return r; };
     box.append(el('div', 'fb-lot-h', 'Sprays'));
     const sg = el('div', 'set-group');

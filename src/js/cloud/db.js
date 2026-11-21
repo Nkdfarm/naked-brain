@@ -82,6 +82,14 @@
   const putAll = (store, rows) => rows && rows.length
     ? tx(store, 'readwrite', s => rows.forEach(r => s.put(r))) : Promise.resolve();
   const all = store => tx(store, 'readonly', s => s.getAll());
+  // a store read one row at a time, keeping only what pick(row) gives back (undefined: left out), within range (an
+  // IDBKeyRange, optional). 21 Nov 2026: all('outbox') and all('kv') loaded the bytes of every waiting photo at once,
+  // several times a minute; a cursor holds one row in memory at a time.
+  const scan = (store, pick, range) => tx(store, 'readonly', s => {
+    const out = [], q = s.openCursor(range);
+    q.onsuccess = () => { const c = q.result; if (!c) return; const v = pick(c.value); if (v !== undefined) out.push(v); c.continue(); };
+    return out;
+  });
   const getKVraw = async k => (await tx('kv', 'readonly', s => s.get(k)))?.v;
   const setKVraw = (k, v) => tx('kv', 'readwrite', s => s.put({ id: k, v }));
   const delRaw = (store, id) => tx(store, 'readwrite', s => s.delete(id));

@@ -45,9 +45,10 @@
     if (tc !== cv) freeCanvas(tc);
     freeCanvas(cv);
     if (!main || !thumb) throw new Error('not a picture');
-    // a file chosen from the phone remembers when it was taken; a photo from the camera is of now
-    const lm = file instanceof File ? file.lastModified : 0;
-    const taken = lm > Date.UTC(2015, 0, 1) && lm <= Date.now() + 86400000 ? lm : Date.now();
+    // a file chosen from the phone: when it was taken — its camera's own time first, then the file's date (21 Nov 2026,
+    // dgShotTime: the file's date alone is often the day it was copied or picked); a photo from the camera is of now
+    const st = file instanceof File ? await dgShotTime(file) : null;
+    const taken = st && st > Date.UTC(2015, 0, 1) ? st : Date.now();
     return { main, thumb, width, height, bytes: main.size, taken, url: URL.createObjectURL(thumb) };
   }
   async function glAdd(files) {
@@ -147,6 +148,11 @@
     const u = row.payload;
     GL.sending = row.id; glSoon();
     try {
+      // 21 Nov 2026: still the row on the phone? A photo discarded (or replaced) since the pass read it is not uploaded
+      // nor published; superseded: the pass writes nothing back and goes on
+      const still = async () => { const now = await outboxRow(row.id);
+        if (!sameRow(now, row)) { const e = new Error('taken off the phone meanwhile'); e.superseded = true; throw e; } };
+      await still();
       const put = async (key, path, flag, keep) => {
         if (u[flag]) return;
         const blob = unBlob(u[key]);
@@ -154,10 +160,12 @@
         try { await api('/storage/v1/object/farm-gallery/' + path, { method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: blob }); }
         catch (e) { if (!/Duplicate|already exists/i.test(String(e.message || e))) throw e; }
         u[flag] = true; if (!keep) u[key] = null;           // the small copy stays for the list until the photo is written
-        try { await putAll('outbox', [row]); } catch (e) { /* not noted: a resend meets "Duplicate", taken as done */ }
+        // only over the same row (outboxKeep): putAll wrote a discarded photo back onto the phone
+        try { await outboxKeep(row); } catch (e) { if (e.superseded) throw e; /* not noted: a resend meets "Duplicate", taken as done */ }
       };
       await put('blob', u.path, 'up_main', false);
       await put('thumb', u.thumb_path, 'up_thumb', true);
+      await still();
       await api('/rest/v1/rpc/add_farm_photo', { method: 'POST', body: JSON.stringify({ p: {
         farm_id: u.farm_id, path: u.path, thumb_path: u.thumb_path, taken_at: u.taken_at, tag: u.tag, note: u.note,
         width: u.width, height: u.height, bytes: u.bytes, client_ref: u.client_run_id } }) });

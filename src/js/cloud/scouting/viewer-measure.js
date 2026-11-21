@@ -110,7 +110,7 @@
   async function measurePhoto(p, done) {
     let bmp;
     try { bmp = await createImageBitmap(p.full, { resizeWidth: 1600, resizeQuality: 'medium' }); }
-    catch (e) { showToast('This photo could not be opened', 'error'); return; }
+    catch (e) { showToast('This photo could not be opened', 'error'); done?.(); return; }   // the caller waits for done (21 Nov 2026)
     let ppm = p.px_per_mm ? p.px_per_mm * (bmp.width / p.full_w) : null;
     let calibrating = !ppm;
     const ov = el('div', 'fb-cam fb-measure');
@@ -120,6 +120,7 @@
     const close = el('button', 'fb-btn', 'Done');
     ov.append(cv, hint, bar);
     document.body.append(ov);
+    ov._close = () => close.onclick();   // Back (screens.js) closes it as Done does: the photo's caller is not left waiting
     const fit = () => {
       const W = ov.clientWidth, H = ov.clientHeight - 120;
       const k = Math.min(W / bmp.width, H / bmp.height);
@@ -157,9 +158,8 @@
           if (!(v > 0) || px < 20) { showToast('Tap two marks further apart and give the centimetres between them', 'error'); return; }
           ppm = px / (v * 10);
           p.px_per_mm = Math.round(ppm * (p.full_w / bmp.width) * 1000) / 1000; p.scale_source = 'ruler'; p.scale_cm = v;
-          if (p.section === 'growth') run?.sc?.sizeCheck?.(p);        // the scale is set: tap the fruit to measure it
           calibrating = false; a = b = null; saved = `Scale set: ${v} cm on the ruler. Now tap the two ends of what you measure.`;
-          draw(); paintBar(); saveScDraft();
+          draw(); paintBar();
         };
         bar.append(cm, el('span', 'fb-cam-end', 'cm'), set);
       } else if (!calibrating && a && b) {
@@ -168,7 +168,7 @@
         MEASURE_WHAT.forEach(([v, l]) => {
           const k = el('button', 'fb-btn', l); k.type = 'button';
           k.onclick = () => { p.measures = [...(p.measures || []), { what: v, mm, scale: p.scale_source || 'marker' }]; a = b = null;
-            saved = `Saved: ${l.toLowerCase()} ${mm} mm. Tap two more points, or Done.`; draw(); paintBar(); saveScDraft(); };
+            saved = `Saved: ${l.toLowerCase()} ${mm} mm. Tap two more points, or Done.`; draw(); paintBar(); };
           bar.append(k);
         });
       } else hint.textContent = idle();

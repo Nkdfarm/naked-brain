@@ -44,6 +44,8 @@
   // the next pass. Rows from before 0.11.146 have no revision: their time tells them apart.
   const sameRow = (a, b) => !!a && !!b && (a.rev || null) === (b.rev || null) && (a.at || 0) === (b.at || 0);
   const newerRow = () => { outboxDirty = true; const e = new Error('a newer copy of it is waiting on this phone'); e.superseded = true; return e; };
+  // one outbox row as it is now, or null (tx() would hand back the request itself for a missing id)
+  const outboxRow = id => tx('outbox', 'readonly', s => { const o = { row: null }, q = s.get(id); q.onsuccess = () => { o.row = q.result || null; }; return o; }).then(o => o.row);
   async function outboxKeep(row) {
     let ok = false;
     await tx('outbox', 'readwrite', s => { const q = s.get(row.id); q.onsuccess = () => { ok = sameRow(q.result, row); if (ok) s.put(row); }; });
@@ -93,8 +95,14 @@
     const chainOf = r => { const u = r.payload || {}; if (u.__dg) return u.chain || 'dg:' + u.client_run_id; return u.__upload ? 'run:' + u.run_client_id : u.__timer ? 'tmr:' + u.task_id : u.__clock ? 'clock' : 'run:' + u.client_run_id; };
     const held = new Set();
     let told = 0;                            // what went up that the others should see at once (live, 0.11.93)
-    const rows = (await all('outbox')).sort((a, b) => isUp(a) - isUp(b) || (a.at || 0) - (b.at || 0) || String(a.id).localeCompare(String(b.id)));
-    for (const row of rows) {
+    // 21 Nov 2026: the order from a light read (one row in memory at a time), and each row read whole only at its turn —
+    // all('outbox') held the bytes of every waiting photo for the whole pass. Read at its turn, a row taken back
+    // meanwhile (a gallery photo discarded, Remove from this phone) is not sent; one rewritten meanwhile goes as it is now.
+    const order = (await scan('outbox', r => ({ id: r.id, at: r.at || 0, up: isUp(r) })))
+      .sort((a, b) => a.up - b.up || a.at - b.at || String(a.id).localeCompare(String(b.id)));
+    for (const o of order) {
+      const row = await outboxRow(o.id);
+      if (!row) continue;
       if (mayStop && outboxDirty && isUp(row)) break;   // something new is waiting: it goes before the rest of the photos (doFlush)
       if (row.dead) { if (!isUp(row)) held.add(chainOf(row)); continue; }
       // it failed earlier in this same flush: not again now, and what depends on it still waits for it

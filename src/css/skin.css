@@ -6,9 +6,9 @@
       background: color-mix(in srgb, var(--bg) 55%, transparent); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
     .logo-icon { color: var(--text); }
     .logo-text { font-size: var(--text-base); font-weight: 700; }
-    .logo-text span { color: var(--text); font-weight: 800; }
-    .btn-icon { width: 44px; height: 44px; border-radius: 50%; background: var(--glass); border: 1px solid var(--border); color: var(--text); box-shadow: var(--shadow-sm); }
-    .btn-icon:hover { background: var(--surface); color: var(--text); }
+    .logo-text span { color: var(--text); font-weight: 700; }
+    .btn-icon { width: 44px; height: 44px; border-radius: 50%; background: transparent; border: 1px solid transparent; color: var(--text); box-shadow: none; }   /* ghost, as Naked Heart's (21 Nov 2026); the glass is the bar's */
+    .btn-icon:hover { background: var(--hover); color: var(--text); }
     #authorBtn { border-radius: var(--radius-full) !important; min-height: 36px; padding: 0 var(--space-4) !important; }
 
     /* Tabs: which Notion database this capture goes to. Since 19 Nov 2026 words, the open one underlined in the accent (green),
@@ -21,12 +21,12 @@
 
     main { padding-top: var(--space-2); }
     .hero { margin: var(--space-2) 0 var(--space-5); }
-    .hero h1 { font-size: clamp(1.9rem, 1.4rem + 2.2vw, 2.5rem); font-weight: 750; letter-spacing: -0.035em; line-height: 1.08; }
+    .hero h1 { font-size: clamp(1.9rem, 1.4rem + 2.2vw, 2.5rem); font-weight: 700; letter-spacing: -0.035em; line-height: 1.08; }
     .hero p { color: var(--text-muted); margin-top: var(--space-2); font-size: var(--text-base); }
     .section-label { font-size: var(--text-sm); font-weight: 650; text-transform: none; letter-spacing: -0.01em; color: var(--text); }
 
     /* Cards */
-    .recorder-card, .entry-card, .config-panel { border-radius: var(--radius-xl); border: 1px solid var(--border); box-shadow: var(--shadow-md); background: var(--surface); }
+    .recorder-card, .entry-card, .config-panel { border-radius: var(--radius-xl); border: 1px solid var(--border); box-shadow: var(--shadow-sm); background: var(--surface); }
     .record-btn { background: var(--primary); color: var(--text-inverse); box-shadow: var(--shadow-lg); }
     .record-btn:hover { background: var(--primary-hover); }
     .record-btn:active { background: var(--primary-active); }
@@ -42,6 +42,7 @@
 
     /* Pills */
     .btn-copy, .btn-generate, .btn-attach, .btn-sm, .tag-chip { border-radius: var(--radius-full); min-height: 40px; padding: 0 var(--space-4); font-weight: 600; }   /* 40 px: a thumb, a glove */
+    .btn-copy, .btn-attach { border: 1px solid var(--border); }
     .btn-copy { background: var(--surface); color: var(--text); }
     .btn-generate { background: var(--accent); color: var(--text-inverse); border: none; }
     .btn-generate:hover { background: var(--primary); color: var(--text-inverse); }
@@ -53,6 +54,7 @@
     .selected-tag { background: var(--accent-soft); color: var(--text); border: 1px solid var(--accent); border-radius: var(--radius-full); padding: var(--space-1) var(--space-3); }
     .priority-tag { background: var(--ink); color: var(--ink-text); border-radius: var(--radius-full); }
     .tab-field-text, .tag-custom-row input, .video-link-row input { border-radius: var(--radius-md); min-height: 44px; font-size: var(--text-base); }
+    .tab-field-text { background: var(--field-bg); padding: 10px 12px; }
 
     /* Config */
     .config-toggle { border-radius: var(--radius-full); background: var(--glass); color: var(--text); min-height: 48px; box-shadow: var(--shadow-sm); }
@@ -67,7 +69,7 @@
 
     /* Send */
     .submit-area { background: linear-gradient(to top, var(--bg-end) 55%, transparent); padding-bottom: calc(env(safe-area-inset-bottom) + var(--space-3)); }
-    .btn-submit { border-radius: var(--radius-full); min-height: 58px; background: var(--primary); color: var(--text-inverse); box-shadow: var(--shadow-lg); font-weight: 650; }
+    .btn-submit { border-radius: var(--radius-full); min-height: 58px; background: var(--primary); color: var(--text-inverse); box-shadow: var(--shadow-accent); font-weight: 650; }
     .btn-submit:hover { background: var(--primary-hover); }
 
     /* Toast */
@@ -78,25 +80,25 @@
 
     /* Password gate */
     #passwordGate { background: var(--bg-grad); }
-    .pw-card { border-radius: 28px; border: none; }
+    .pw-card { border-radius: var(--radius-xl); border: none; }
     .pw-input-wrap input { border-radius: var(--radius-md); min-height: 48px; background: var(--surface-offset); }
-    .pw-unlock-btn { border-radius: var(--radius-full); min-height: 52px; }
+    .pw-unlock-btn { border-radius: var(--radius-full); min-height: 52px; box-shadow: var(--shadow-accent); }
 
     /* SETTINGS PAGE */
     .logo { gap: var(--space-3); }
     .logo-words { display: inline-flex; flex-direction: column; line-height: 1.1; }
     .logo-beta { font-size: 11px; font-style: italic; font-weight: 500; color: var(--text-muted); letter-spacing: 0.01em; }
     /* 0.11.33: the wordmark of Naked Heart's rail — NAKED, bold capitals, the app's name small underneath */
-    .logo-text { font-size: 0.875rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text); }
+    .logo-text { font-size: 0.875rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text); }
     .logo-beta { font-size: 0.75rem; font-style: normal; font-weight: 500; color: var(--text-faint); letter-spacing: 0; }
     #settingsPage { position: fixed; inset: 0; z-index: 500; overflow-y: auto; -webkit-overflow-scrolling: touch; background: var(--bg-grad); }
     #settingsPage.hidden { display: none; }
     .settings-head { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: var(--space-3); padding: calc(env(safe-area-inset-top) + var(--space-2)) var(--space-4) var(--space-2);
       background: color-mix(in srgb, var(--bg) 55%, transparent); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
     .settings-body { max-width: 640px; margin: 0 auto; padding: var(--space-2) var(--space-4) calc(env(safe-area-inset-bottom) + var(--space-8)); }
-    .set-select { font: inherit; font-size: var(--text-sm); color: var(--text); background: var(--surface-offset); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 6px 10px; max-width: 60%; }
+    .set-select { font: inherit; font-size: var(--text-sm); color: var(--text); background: var(--field-bg); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px 12px; min-height: var(--tap); max-width: 60%; }
     .set-title { display: flex; align-items: center; gap: var(--space-2); font-size: 1.15rem; font-weight: 700; letter-spacing: -0.02em; margin: var(--space-5) 0 var(--space-2); }
-    .set-group { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: var(--shadow-md); padding: var(--space-4); }
+    .set-group { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: var(--shadow-sm); padding: var(--space-4); }
     .set-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: 48px; }
     .set-row + .set-row { border-top: 1px solid var(--divider); }
     .segmented { display: flex; gap: 4px; padding: 4px; background: var(--surface-offset); border-radius: var(--radius-full); }
@@ -134,3 +136,24 @@
     #authorGate.hidden, #authorGateCancel.hidden { display: none; }
     #authorGateCancel { min-height: 44px; border-radius: var(--radius-full); font-weight: 600; color: var(--text-muted); }
 
+    /* ═══ 21 Nov 2026 — closer to Naked Heart, the colours unchanged ════════════════════════════════════════════
+       Buttons: pills with a 1 px edge, semi-bold; a press shrinks a button a little (only buttons: a card or a picture
+       has a transform of its own from swipe-open.js and viewer-measure.js). Hover only where there is a mouse, never
+       on a chosen answer (its line in the accent stays), a fill or the camera's buttons. */
+    .btn, .fb-btn, .btn-copy, .btn-attach, .btn-generate, .btn-submit, .pw-unlock-btn {
+      transition: color var(--transition), background var(--transition), border-color var(--transition), box-shadow var(--transition), opacity var(--transition), transform var(--transition); }
+    .btn:active:not(:disabled), .fb-btn:active:not(:disabled), .btn-copy:active, .btn-attach:active, .btn-generate:active:not(:disabled),
+    .btn-submit:active:not(:disabled), .pw-unlock-btn:active:not(:disabled) { transform: scale(0.985); }
+    @media (hover: hover) {
+      .fb-btn:hover:not(:disabled):not(:where([aria-pressed="true"], .on, .fb-btn-primary, .fb-ask-yes, .gl-send, .fb-size-pick, .fb-cam .fb-btn)) {
+        background: var(--surface-offset); border-color: var(--border-strong); }
+    }
+
+    /* Fields: one look for every box to type or choose in, as Naked Heart's .field */
+    .fb-num:hover, .fb-note:hover, .fb-runnote:hover, .fb-who-sel:hover, .set-select:hover, .tab-field-text:hover, #viewFarmbox .field input:hover { border-color: var(--border-strong); }
+    .fb-num:focus-visible, .fb-note:focus-visible, .fb-runnote:focus-visible, .fb-who-sel:focus-visible, .set-select:focus-visible, .tab-field-text:focus-visible,
+    #viewFarmbox .field input:focus-visible { outline: none; border-color: var(--primary); box-shadow: var(--ring); }
+
+    /* Sheets come up softly (the one reduced-motion rule in base.css stops it) */
+    @keyframes nb-fade { from { opacity: 0; } }
+    @keyframes nb-rise { from { opacity: 0; transform: translateY(16px); } }
